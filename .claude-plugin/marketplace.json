@@ -1,0 +1,8 @@
+{
+  "name": "ichiba",
+  "description": "Internal Claude Code plugin marketplace for sharing team customizations and tools",
+  "version": "1.0.0",
+  "author": "nickmeehan",
+  "repository": "nickmeehan/ichiba",
+  "plugins": []
+}
