@@ -1,14 +1,24 @@
 # Contributing Plugins
 
-Thank you for contributing to the Ichiba marketplace! We welcome plugins that:
+## Status: Not Accepting Contributions Yet
 
-- **Solve real problems** in development workflows
-- **Demonstrate best practices** for plugin structure and design
-- **Help others learn** by providing clear, well-documented examples
+This marketplace is currently in its initial development phase and **we are not accepting external contributions at this time**. We plan to open up contributions in the future once we have established a solid foundation and initial set of example plugins.
 
-This guide will help you add your plugin to the marketplace.
+In the meantime, this document serves as:
+- Reference documentation for plugin structure and best practices
+- An example contribution guide that teams can use for their own internal marketplaces
+- Educational material for understanding how Claude Code plugins work
 
-## Quick Start
+**Watch this repository** for updates on when we'll begin accepting contributions.
+
+---
+
+## Reference: Creating Plugins
+
+This section provides reference material for creating Claude Code plugins. While we're not accepting contributions yet, this information is useful for:
+- Teams building their own internal marketplaces
+- Learning how to structure plugins properly
+- Understanding the plugin development workflow
 
 ### Option 1: Using Anthropic's Plugin-Dev Toolkit (Recommended)
 
@@ -46,7 +56,7 @@ mv ~/.config/claude/plugins/your-plugin-name /path/to/ichiba/plugins/
 }
 ```
 
-5. **Open a pull request**
+5. Test your plugin locally
 
 ### Option 2: Manual Creation
 
@@ -56,7 +66,7 @@ If you prefer to create your plugin manually:
 2. Create `.claude-plugin/plugin.json` in your plugin directory
 3. Add your commands, agents, skills, hooks, or MCP configurations
 4. Update the marketplace manifest
-5. Open a pull request
+5. Test your plugin locally
 
 ## Plugin Structure
 
@@ -108,18 +118,6 @@ Your `plugins/your-plugin-name/.claude-plugin/plugin.json` should look like:
   }
 }
 ```
-
-## Review Process
-
-- **One approval required**: A maintainer will review your plugin
-- **Review checks**:
-  - Does it work as described?
-  - Is the description accurate and helpful?
-  - Are all required files present?
-  - Is the JSON valid?
-- **Timeline**: Reviews typically happen within a few days
-
-At this early stage, we're keeping the bar low to encourage sharing. We're not doing deep architectural reviews - if it works and solves a real problem, ship it!
 
 ## Commit Message Guidelines
 
@@ -189,11 +187,10 @@ Consider creating separate plugins when:
 
 ## Questions?
 
-If you have questions or need help creating your plugin:
+For questions about plugin development or this marketplace:
 
 1. Check the [Claude Code Plugins Documentation](https://docs.anthropic.com/en/docs/claude-code/plugins)
-2. Open an issue in this repository
-3. Reach out to the maintainers
+2. Open an issue in this repository for questions about the documentation or structure
 
 ## Code of Conduct
 
@@ -203,6 +200,6 @@ If you have questions or need help creating your plugin:
 - Share knowledge and help others learn
 - Write clear documentation so others can understand and adapt your work
 
-## License
+## Future License
 
-By contributing to this marketplace, you agree that your plugins will be available under the MIT License, free for anyone to use and modify. This helps the broader community learn from and build upon your work.
+When we do begin accepting contributions, all contributed plugins will be available under the MIT License, free for anyone to use and modify. This helps the broader community learn from and build upon shared work.
