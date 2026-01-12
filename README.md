@@ -1,10 +1,16 @@
-# Ichiba - Internal Claude Code Plugin Marketplace
+# Ichiba - Claude Code Plugin Marketplace
 
-Welcome to the Ichiba plugin marketplace! This repository enables teams to share Claude Code customizations including commands, agents, skills, hooks, and MCP servers.
+Welcome to the Ichiba plugin marketplace! This is a public repository for sharing useful Claude Code plugins including commands, agents, skills, hooks, and MCP servers.
 
 ## What is Ichiba?
 
-Ichiba (市場, Japanese for "marketplace") is our internal plugin marketplace for Claude Code. It helps reduce duplication of effort across teams by providing a central place to discover and share useful Claude Code plugins.
+Ichiba (市場, Japanese for "marketplace") is a public plugin marketplace for Claude Code. The goals are:
+
+- **Share useful plugins** for development workflows and productivity
+- **Help people learn** by providing examples of well-structured plugins
+- **Demonstrate patterns** that teams can adopt internally for their own conventions and best practices
+
+This marketplace shows how organizations can build internal plugin ecosystems where everyone benefits from continuously improving tooling and shared best practices.
 
 ## Getting Started
 
@@ -52,10 +58,21 @@ ichiba/
 └── README.md
 ```
 
+## For Teams
+
+This marketplace is a working example of how teams can build their own internal plugin marketplaces. Key benefits:
+
+- **Reduce duplication** - Share solutions across teams instead of reinventing them
+- **Spread best practices** - Codify conventions in plugins everyone can use
+- **Continuous improvement** - Tooling gets better as people contribute enhancements
+- **Low friction adoption** - Easy for team members to discover and install useful tools
+
+See the [internal marketplace documentation](https://docs.anthropic.com/en/docs/claude-code/plugin-marketplaces) for guidance on setting up your own.
+
 ## Questions or Issues?
 
 If you have questions or run into issues, please open an issue in this repository.
 
 ## License
 
-Internal use only - nickmeehan organization.
+MIT License - free to use and modify for your own purposes.

@@ -1,6 +1,12 @@
 # Contributing Plugins
 
-Thank you for contributing to the Ichiba marketplace! This guide will help you add your plugin to the marketplace.
+Thank you for contributing to the Ichiba marketplace! We welcome plugins that:
+
+- **Solve real problems** in development workflows
+- **Demonstrate best practices** for plugin structure and design
+- **Help others learn** by providing clear, well-documented examples
+
+This guide will help you add your plugin to the marketplace.
 
 ## Quick Start
 
@@ -113,7 +119,47 @@ Your `plugins/your-plugin-name/.claude-plugin/plugin.json` should look like:
   - Is the JSON valid?
 - **Timeline**: Reviews typically happen within a few days
 
-At this early stage, we're keeping the bar low to encourage sharing. We're not doing deep architectural reviews - if it works and solves a problem, ship it!
+At this early stage, we're keeping the bar low to encourage sharing. We're not doing deep architectural reviews - if it works and solves a real problem, ship it!
+
+## Commit Message Guidelines
+
+We use [Conventional Commits](https://www.conventionalcommits.org/) for clear, consistent commit messages:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Types
+
+- **feat**: A new plugin or feature
+- **fix**: A bug fix in an existing plugin
+- **docs**: Documentation changes
+- **refactor**: Code changes that neither fix bugs nor add features
+- **test**: Adding or updating tests
+- **chore**: Maintenance tasks, dependency updates
+
+### Examples
+
+```
+feat(commit-helper): add conventional commits plugin
+
+Generates commit messages following conventional commits format.
+Includes configurable scopes and automatic type detection.
+```
+
+```
+fix(pr-template): handle repositories without package.json
+
+Falls back to git log when package.json is not available.
+```
+
+```
+docs: add installation instructions to README
+```
 
 ## Best Practices
 
@@ -153,9 +199,10 @@ If you have questions or need help creating your plugin:
 
 - Be respectful and constructive in all interactions
 - Provide helpful feedback on others' contributions
-- Focus on solving real problems for the team
+- Focus on solving real problems and improving developer experience
 - Share knowledge and help others learn
+- Write clear documentation so others can understand and adapt your work
 
 ## License
 
-By contributing to this marketplace, you agree that your plugins will be available for internal use within the organization.
+By contributing to this marketplace, you agree that your plugins will be available under the MIT License, free for anyone to use and modify. This helps the broader community learn from and build upon your work.
