@@ -7,7 +7,7 @@ You are being asked to create a new Claude Code plugin for the Ichiba marketplac
 
 ## Task
 
-Generate a new blank plugin by executing the plugin generator script located at `scripts/generate-plugin.sh`.
+Generate a new blank plugin by executing the plugin generator script located at `bin/generate-plugin.sh`.
 
 ## Steps
 
@@ -18,7 +18,7 @@ Generate a new blank plugin by executing the plugin generator script located at 
 
 2. Run the generator script with the provided information:
    ```bash
-   ./scripts/generate-plugin.sh "<plugin-name>" "<description>" "<author>"
+   ./bin/generate-plugin.sh "<plugin-name>" "<description>" "<author>"
    ```
 
 3. After the plugin is created, inform the user:
