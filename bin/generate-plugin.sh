@@ -99,14 +99,14 @@ EOF
 
 # Function to generate example command template
 generate_command_template() {
-    cat > "$PLUGIN_DIR/commands/example-command.md" << 'EOF'
+    cat > "$PLUGIN_DIR/commands/example.md" << 'EOF'
 ---
-name: example-command
+name: example
 description: Brief description of what this command does
 argument-hint: [optional-argument]
 ---
 
-You are being asked to perform a specific task via the example-command.
+You are being asked to perform a specific task via the example command.
 
 ## Task
 
@@ -126,7 +126,7 @@ You are being asked to perform a specific task via the example-command.
 
 ## Example
 
-When user runs: \`/example-command "some value"\`
+When user runs: \`/example "some value"\`
 
 The command receives "some value" in \$ARGUMENTS
 EOF
@@ -134,9 +134,9 @@ EOF
 
 # Function to generate example agent template
 generate_agent_template() {
-    cat > "$PLUGIN_DIR/agents/example-agent.md" << 'EOF'
+    cat > "$PLUGIN_DIR/agents/example.md" << 'EOF'
 ---
-name: example-agent
+name: example
 description: Brief description of what this agent does
 ---
 
@@ -169,11 +169,11 @@ EOF
 
 # Function to generate example skill template
 generate_skill_template() {
-    mkdir -p "$PLUGIN_DIR/skills/example-skill"
+    mkdir -p "$PLUGIN_DIR/skills/example"
 
-    cat > "$PLUGIN_DIR/skills/example-skill/SKILL.md" << 'EOF'
+    cat > "$PLUGIN_DIR/skills/example/SKILL.md" << 'EOF'
 ---
-name: example-skill
+name: example
 description: Brief description of what this skill does and when to use it
 ---
 
