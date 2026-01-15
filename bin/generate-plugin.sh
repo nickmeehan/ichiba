@@ -97,6 +97,217 @@ MIT
 EOF
 }
 
+# Function to generate example command template
+generate_command_template() {
+    cat > "$PLUGIN_DIR/commands/example-command.md" << 'EOF'
+---
+name: example-command
+description: Brief description of what this command does
+argument-hint: [optional-argument]
+---
+
+You are being asked to perform a specific task via the example-command.
+
+## Task
+
+[Describe what this command should do]
+
+## Steps
+
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+
+## Notes
+
+- You can use \$ARGUMENTS to access arguments passed to the command
+- Remove this file and create your actual command files
+- Commands are automatically loaded from any .md file in this directory
+
+## Example
+
+When user runs: \`/example-command "some value"\`
+
+The command receives "some value" in \$ARGUMENTS
+EOF
+}
+
+# Function to generate example agent template
+generate_agent_template() {
+    cat > "$PLUGIN_DIR/agents/example-agent.md" << 'EOF'
+---
+name: example-agent
+description: Brief description of what this agent does
+---
+
+You are a specialized agent for [specific task].
+
+## Your Role
+
+[Describe the agent's purpose and capabilities]
+
+## Available Tools
+
+You have access to:
+- [Tool 1]
+- [Tool 2]
+- [Tool 3]
+
+## Guidelines
+
+1. [Guideline 1]
+2. [Guideline 2]
+3. [Guideline 3]
+
+## Notes
+
+- Remove this file and create your actual agent files
+- Agents are markdown files that define specialized behaviors
+- They are invoked via the Task tool with the agent name
+EOF
+}
+
+# Function to generate example skill template
+generate_skill_template() {
+    mkdir -p "$PLUGIN_DIR/skills/example-skill"
+
+    cat > "$PLUGIN_DIR/skills/example-skill/SKILL.md" << 'EOF'
+---
+name: example-skill
+description: Brief description of what this skill does and when to use it
+---
+
+# Example Skill
+
+[Detailed description of what this skill does]
+
+## When to Use This Skill
+
+Use this skill when:
+- [Condition 1]
+- [Condition 2]
+- [Condition 3]
+
+## How It Works
+
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+
+## Examples
+
+### Example 1
+[Description and example]
+
+### Example 2
+[Description and example]
+
+## Notes
+
+- The description in frontmatter is critical - it's how Claude decides to use this skill
+- Remove this example and create your actual skills
+- Each skill should be in its own directory with a SKILL.md file
+- Skills are automatically discovered and available to Claude
+EOF
+}
+
+# Function to generate example hooks configuration
+generate_hooks_template() {
+    cat > "$PLUGIN_DIR/hooks/hooks.json" << 'EOF'
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'File modified: ${TOOL_INPUT}'",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
+EOF
+
+    cat > "$PLUGIN_DIR/hooks/README.md" << 'EOF'
+# Hooks
+
+Hooks are shell commands that run at specific points in Claude Code's lifecycle.
+
+## Available Hook Events
+
+- `PreToolUse` - Before a tool runs
+- `PostToolUse` - After a tool completes successfully
+- `Notification` - When Claude sends an alert
+- `Stop` - When the AI agent finishes its response
+- `UserPromptSubmit` - When user submits a prompt
+- `SessionStart` - When a session starts
+
+## Example Configuration
+
+The `hooks.json` file contains an example hook. Modify it for your needs.
+
+## Hook Communication
+
+Hooks receive JSON via stdin and communicate through:
+- Exit code 0 = Success
+- Exit code non-zero = Failure
+- stdout = Output shown to user (or added to context for certain events)
+- stderr = Error messages
+
+## Remove This
+
+Remove the example hooks.json and create your actual hooks configuration.
+EOF
+}
+
+# Function to generate MCP configuration template
+generate_mcp_template() {
+    cat > "$PLUGIN_DIR/.mcp.json.example" << 'EOF'
+{
+  "mcpServers": {
+    "example-server": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@example/mcp-server"
+      ],
+      "env": {
+        "API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+EOF
+
+    cat > "$PLUGIN_DIR/MCP_README.md" << 'EOF'
+# MCP (Model Context Protocol) Configuration
+
+MCP servers provide external tools and resources to Claude Code.
+
+## Setup
+
+1. Rename `.mcp.json.example` to `.mcp.json`
+2. Configure your MCP server(s)
+3. Update plugin.json to set "mcp": true
+
+## Example Servers
+
+Popular MCP servers include:
+- `@modelcontextprotocol/server-filesystem` - File system access
+- `@modelcontextprotocol/server-github` - GitHub integration
+- `@modelcontextprotocol/server-postgres` - PostgreSQL access
+- Custom servers built for your specific needs
+
+## Remove This
+
+Remove this file and .mcp.json.example once you've set up your MCP configuration.
+EOF
+}
+
 # Function to update marketplace.json
 update_marketplace_json() {
     local name=$1
@@ -182,11 +393,13 @@ main() {
     generate_plugin_json "$PLUGIN_NAME" "$PLUGIN_DESCRIPTION" "$PLUGIN_AUTHOR"
     generate_readme "$PLUGIN_NAME" "$PLUGIN_DESCRIPTION"
 
-    # Create .gitkeep files for empty directories
-    touch "$PLUGIN_DIR/commands/.gitkeep"
-    touch "$PLUGIN_DIR/agents/.gitkeep"
-    touch "$PLUGIN_DIR/skills/.gitkeep"
-    touch "$PLUGIN_DIR/hooks/.gitkeep"
+    # Generate template files for each component type
+    print_info "Creating template files..."
+    generate_command_template
+    generate_agent_template
+    generate_skill_template
+    generate_hooks_template
+    generate_mcp_template
 
     print_success "Created plugin structure at $PLUGIN_DIR"
 
