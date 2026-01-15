@@ -150,16 +150,11 @@ main() {
         exit 1
     fi
 
-    # Get author name
+    # Get author name (default to nickmeehan)
     if [ -z "$3" ]; then
-        # Try to get from git config
-        GIT_AUTHOR=$(git config user.name 2>/dev/null || echo "")
-        if [ -n "$GIT_AUTHOR" ]; then
-            read -p "Enter author name [$GIT_AUTHOR]: " PLUGIN_AUTHOR
-            PLUGIN_AUTHOR="${PLUGIN_AUTHOR:-$GIT_AUTHOR}"
-        else
-            read -p "Enter author name: " PLUGIN_AUTHOR
-        fi
+        DEFAULT_AUTHOR="nickmeehan"
+        read -p "Enter author name [$DEFAULT_AUTHOR]: " PLUGIN_AUTHOR
+        PLUGIN_AUTHOR="${PLUGIN_AUTHOR:-$DEFAULT_AUTHOR}"
     else
         PLUGIN_AUTHOR="$3"
     fi
