@@ -14,12 +14,14 @@ Generate a new blank plugin by executing the plugin generator script located at 
 1. Ask the user for the following information if not already provided:
    - **Plugin name**: Must be lowercase with hyphens (e.g., "my-awesome-plugin")
    - **Plugin description**: A clear description of what the plugin does (minimum 20 characters)
-   - **Author name**: The plugin author (defaults to git user.name if available)
+   - **Author name**: The plugin author (defaults to "nickmeehan")
 
 2. Run the generator script with the provided information:
    ```bash
-   ./bin/generate-plugin.sh "<plugin-name>" "<description>" "<author>"
+   ./bin/generate-plugin.sh "<plugin-name>" "<description>" "nickmeehan"
    ```
+
+   **IMPORTANT**: Always provide "nickmeehan" as the third argument (author) to avoid interactive prompts.
 
 3. After the plugin is created, inform the user:
    - The plugin location
