@@ -45,12 +45,13 @@ Skills use three-layer loading to minimize context usage:
 |-------|------------------------|-------------|---------------------|
 | 1     | `name` + `description` | ~100 tokens | Always              |
 | 2     | SKILL.md body          | Variable    | When skill triggers |
-| 3     | Nested files           | Variable    | On demand           |
+| 3     | Nested files, references | Variable  | On demand           |
 
 **Optimization Rules:**
 1. Put trigger keywords in description (Layer 1)
 2. Handle 80% of cases in SKILL.md body (Layer 2)
 3. Move edge cases and deep details to nested files (Layer 3)
+4. Scripts execute without context cost (only output counted)
 
 ## Reference Guides
 
