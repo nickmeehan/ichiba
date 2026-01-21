@@ -75,4 +75,4 @@ If you have questions or run into issues, please open an issue in this repositor
 
 ## License
 
-MIT License - free to use and modify for your own purposes.
+Apache 2.0 with Commons Clause - Free to use and modify (including commercially), but you can't sell the files themselves. See [LICENSE](./LICENSE) and [NOTICE](./NOTICE) for details.
