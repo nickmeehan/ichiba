@@ -1,5 +1,16 @@
 # Constraints
 
+## Philosophy
+
+**Claude is already very smart.** Only add context it doesn't already have.
+
+- Challenge each paragraph: "Does this justify its token cost?"
+- Prefer concise examples over verbose explanations
+- The context window is a shared resource — skills share it with system prompt,
+  conversation history, other skills, and the user's actual request
+- Think of skills as "onboarding guides" — procedural knowledge that no model
+  can fully possess, not general knowledge Claude already has
+
 ## ALWAYS
 
 - Include `name` and `description` in SKILL.md frontmatter

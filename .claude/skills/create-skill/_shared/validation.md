@@ -1,6 +1,12 @@
 # Validation Checklist
 
-Run before finalizing any skill.
+Run before finalizing any skill. Use the automated validator for faster checks:
+
+```bash
+ruby scripts/validate_skill.rb <path-to-skill-directory>
+```
+
+Or verify manually with the checklist below.
 
 ## Structure Validation
 
@@ -21,6 +27,7 @@ Run before finalizing any skill.
 [ ] description: includes what it does (action verbs)
 [ ] description: includes when to use (trigger conditions)
 [ ] description: includes relevant keywords users would say
+[ ] No extra frontmatter fields beyond name and description
 ```
 
 ## Body Validation
@@ -32,13 +39,15 @@ Run before finalizing any skill.
 [ ] All nested file references use correct relative paths
 [ ] Instructions use imperative form
 [ ] No duplicated content between SKILL.md and references/
+[ ] No TODO placeholders remaining
+[ ] Conciseness check: does each paragraph justify its token cost?
 ```
 
 ## Scripts Validation
 
 ```
 [ ] All scripts have been executed and tested
-[ ] Scripts have proper shebangs
+[ ] Scripts have proper shebangs (#!/usr/bin/env ruby, etc.)
 [ ] Script errors produce clear messages
 [ ] Script usage documented in SKILL.md
 ```
@@ -48,7 +57,10 @@ Run before finalizing any skill.
 Test all relative paths:
 
 ```bash
-# From skill root, verify each referenced path exists
+# Automated: run the validator
+ruby scripts/validate_skill.rb <path-to-skill-directory>
+
+# Manual: from skill root, verify each referenced path exists
 ls -la ./[referenced-path]
 ls -la ./_shared/[file]
 ls -la ./[domain]/[file].md
