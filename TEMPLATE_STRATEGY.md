@@ -4,10 +4,7 @@ This document describes how to convert a copy of this repository into a reusable
 
 ## Overview
 
-1. Copy this entire repo to a new GitHub repository: `ichiba-template`
-2. Apply the generalizations described below
-3. Enable "Template repository" in GitHub Settings > General
-4. Users click "Use this template" to create their own marketplace
+This repo has already been copied to `ichiba-template`. Apply the generalizations described below, then enable "Template repository" in GitHub Settings > General.
 
 ## File-by-File Changes
 
