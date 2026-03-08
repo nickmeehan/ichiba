@@ -49,13 +49,13 @@ plugins/<plugin-name>/
 ├── .claude-plugin/
 │   └── plugin.json       # Plugin manifest with metadata
 ├── commands/
-│   └── .gitkeep          # Ready for slash commands
+│   └── .gitkeep
 ├── agents/
-│   └── .gitkeep          # Ready for specialized agents
+│   └── .gitkeep
 ├── skills/
-│   └── .gitkeep          # Ready for agent skills
+│   └── .gitkeep
 ├── hooks/
-│   └── .gitkeep          # Ready for event handlers
+│   └── .gitkeep
 └── README.md             # Plugin documentation
 ```
 
@@ -63,7 +63,7 @@ plugins/<plugin-name>/
 
 - The plugin.json will be initialized with empty component arrays
 - The marketplace.json will be automatically updated with the new plugin entry
-- All directories are created but empty (with .gitkeep files)
+- Directories are created empty (with .gitkeep files) — add only what you need
 - The README includes a basic template to fill out
 
 ## After Creation
