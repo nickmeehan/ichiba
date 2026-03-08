@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "ichiba": {
+      "source": {
+        "source": "github",
+        "repo": "nickmeehan/ichiba"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "dev-workflow@ichiba": true
+  }
+}
