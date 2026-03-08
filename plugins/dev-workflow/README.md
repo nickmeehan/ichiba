@@ -1,6 +1,6 @@
 # dev-workflow
 
-A plugin for developer workflow automation including conventional commits and git operations
+Developer workflow automation for Claude Code.
 
 ## Installation
 
@@ -8,25 +8,15 @@ A plugin for developer workflow automation including conventional commits and gi
 /plugin install dev-workflow@nickmeehan/ichiba
 ```
 
-## Components
+## Skills
 
-This plugin includes:
+### `commit`
 
-<!-- Update this section as you add components -->
-- No components yet
+Stages and creates a [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/) based on the current repository state.
 
-## Usage
+Invoke by asking Claude to commit, e.g.:
+- "commit my changes"
+- "make a commit"
+- "commit this"
 
-<!-- Add usage examples here -->
-
-## Configuration
-
-<!-- Add any configuration options here -->
-
-## Requirements
-
-<!-- List any requirements or dependencies -->
-
-## License
-
-MIT
+The skill gathers `git status`, `git diff HEAD`, current branch, and recent log before composing the message. It enforces the full Conventional Commits v1.0.0 spec (types, scopes, breaking changes) without needing to look anything up at runtime.
