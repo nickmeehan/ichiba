@@ -1,3 +1,11 @@
+---
+name: commit
+description: >
+  Stage and create a conventional git commit based on the current repository
+  state. Use when asked to commit, make a commit, save changes, or create a
+  git commit. Enforces Conventional Commits v1.0.0 (feat, fix, chore, etc.).
+---
+
 # Commit Skill
 
 Create a conventional git commit based on the current repository state.
