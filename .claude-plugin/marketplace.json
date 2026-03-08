@@ -4,5 +4,12 @@
   "version": "1.0.0",
   "author": "nickmeehan",
   "repository": "nickmeehan/ichiba",
-  "plugins": []
+  "plugins": [
+    {
+      "name": "dev-workflow",
+      "version": "1.0.0",
+      "description": "A plugin for developer workflow automation including conventional commits and git operations",
+      "path": "plugins/dev-workflow"
+    }
+  ]
 }
