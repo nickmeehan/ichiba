@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "dev-workflow",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "A plugin for developer workflow automation including conventional commits and git operations",
       "path": "plugins/dev-workflow"
     }
