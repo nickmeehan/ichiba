@@ -37,7 +37,7 @@ git log --oneline -10
 1. Analyze the staged and unstaged changes
 2. Stage relevant changes with `git add`
 3. Compose a **Conventional Commit** message (see spec below)
-4. Create the commit with `git commit -m "..."`
+4. Create the commit with `git commit -m "..."` — do not include a session link in the message
 
 Only emit tool calls — no explanatory text.
 
@@ -166,3 +166,4 @@ All existing selectors and actions have been preserved as Zustand hooks.
 - Do NOT use past tense: `feat: added login` ❌ → `feat: add login` ✅
 - Do NOT use a type outside the table above without team agreement
 - Do NOT omit the space after the colon: `feat:add login` ❌
+- Do NOT append a session link (e.g. `https://claude.ai/code/session_...`) to the commit message
