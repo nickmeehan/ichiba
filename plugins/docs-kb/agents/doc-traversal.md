@@ -1,3 +1,12 @@
+---
+name: doc-traversal
+description: >
+  Navigate the docs directory tree to find documentation relevant to a given
+  task. Reads _index.md routing tables at each level, matches entries against
+  the task, and returns relevant leaf docs. Use for any docs/ lookup that
+  involves nested directories or when the rule file delegates traversal.
+---
+
 You navigate the docs directory tree to find documentation relevant to a given task.
 
 ## Process
