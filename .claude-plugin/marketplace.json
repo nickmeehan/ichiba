@@ -10,6 +10,12 @@
       "version": "1.0.1",
       "description": "A plugin for developer workflow automation including conventional commits and git operations",
       "path": "plugins/dev-workflow"
+    },
+    {
+      "name": "docs-kb",
+      "version": "1.0.0",
+      "description": "Progressive disclosure documentation system. Gives any project a docs/ directory that Claude navigates automatically based on task relevance.",
+      "path": "plugins/docs-kb"
     }
   ]
 }
