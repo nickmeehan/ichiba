@@ -115,14 +115,11 @@ Initialize a docs/ progressive disclosure system for this project.
 
 ## CLAUDE.md Docs Section Template
 
-Replace `<DOCS-DIR>` with the actual docs directory the user chose (e.g. `docs`, `knowledge`, or `.` for root-level).
-For root-level placement, use just `_index.md` (no directory prefix).
-
 ```markdown
 ## Docs
 
 Scan the index below on every turn. If an entry is relevant, read the file before responding.
-Do not guess — retrieve first. For deeper topics, use the docs-kb:doc-traversal agent starting at `<DOCS-DIR>/_index.md`.
+Do not guess — retrieve first. For deeper topics, use the docs-kb:doc-traversal agent starting at `docs/_index.md`.
 
 <!-- DOCS-INDEX-START -->
 <!-- DO NOT REMOVE THESE MARKERS — used by the docs progressive disclosure plugin -->
