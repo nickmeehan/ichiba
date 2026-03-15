@@ -54,8 +54,25 @@ Create a new doc file and register it in the docs index.
 
 5. **Write the index description.** Ask the user: "Describe when Claude should
    read this doc. Format: `<domain nouns> — read when <task trigger>`"
-   If the description is too vague (no task trigger, generic nouns only),
-   suggest an improvement using situation-based language.
+
+   Validate the description against these quality criteria:
+   - **Has a task trigger** — rejects generic descriptions without concrete
+     triggers (e.g., "read when needed").
+   - **Is scope-specific** — the description must indicate the doc's layer or
+     scope (e.g., "API-layer auth" not just "auth") so the doc-traversal agent
+     can distinguish it from similar docs in other parts of the tree.
+   - **Uses discriminating keywords** — the nouns and triggers should
+     differentiate this doc from nearby siblings and cousins. Before writing
+     the description, read the sibling entries in the target `_index.md` and
+     check for overlap. If another entry covers a related topic, ensure the
+     new description highlights what makes *this* doc different.
+
+   If the description fails any criterion, suggest an improved version.
+   Examples of good vs. bad:
+   - Bad: `authentication — read when working on auth`
+   - Good: `API-layer auth: token validation, API keys, 401/403 responses — read when adding auth to endpoints or debugging API auth errors`
+   - Bad: `deployment — read when deploying`
+   - Good: `production deploys: release process, rollback procedures — read when cutting a release or rolling back a failed deploy`
 
 6. **Update the local `_index.md`.** Add the entry to the `_index.md` of the
    directory where the file was placed. Only update the root CLAUDE.md docs
