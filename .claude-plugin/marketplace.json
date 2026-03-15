@@ -1,7 +1,7 @@
 {
   "name": "ichiba",
   "description": "Public Claude Code plugin marketplace for sharing useful development plugins and demonstrating best practices",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "nickmeehan",
   "repository": "nickmeehan/ichiba",
   "plugins": [
@@ -13,7 +13,7 @@
     },
     {
       "name": "docs-kb",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Progressive disclosure documentation system. Gives any project a docs/ directory that Claude navigates automatically based on task relevance.",
       "path": "plugins/docs-kb"
     }

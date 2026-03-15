@@ -24,8 +24,9 @@ You navigate the docs directory tree to find documentation relevant to a given t
 - Always start at the docs directory's `_index.md`. If it does not exist, report that docs are not initialized. The docs directory may be the repo root (`.`) — in that case, `_index.md` lives at the repo root. Path handling is unchanged; paths are always relative to the repo root.
 - **Err on the side of inclusion.** If you are uncertain whether an entry is relevant, read it. The cost of reading an irrelevant 200-line doc is far lower than the cost of missing a relevant one (incorrect code).
 - Return the content of leaf docs, not intermediate indexes.
-- If more than 7 leaf docs match, return the 7 most relevant and **report what was omitted**: "Also matched but not returned: [list of paths]." The main agent can request specific omitted docs if needed.
+- **Hard cap: return at most 7 leaf docs.** If more than 7 match, you MUST select the 7 most relevant and append an omission notice: "Also matched but not returned: [list of paths with one-line descriptions]." The main agent can request specific omitted docs if needed. Never exceed 7 — if in doubt, drop the least relevant match.
 - Use paths relative to the repo root (e.g., `docs/architecture/services/auth.md`).
 - Track visited paths. If you detect a cycle, stop and report it.
 - Keep your response concise. Summarize each doc in 2-3 sentences, then include the full content.
+- **Minimize read calls.** Read `_index.md` files first to decide which branches to explore. Only read leaf docs after confirming relevance from their index description. Avoid reading leaf docs "just in case" when the index description clearly doesn't match.
 - **Output your decision log**: list which entries you considered, which you matched, and which you skipped with a brief reason. This enables description quality improvement.
