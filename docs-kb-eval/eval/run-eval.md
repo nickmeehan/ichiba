@@ -4,12 +4,12 @@ Run this as a prompt to execute the full eval suite. It spawns doc-traversal age
 
 ## Instructions
 
-1. Read `plugins/docs-kb/eval/eval-config.json` to load test definitions.
-2. Create `plugins/docs-kb/eval/results/` directory for output.
+1. Read `eval/eval-config.json` to load test definitions.
+2. Create `eval/results/` directory for output.
 3. For each test, run N trials (configured in eval-config.json) by spawning doc-traversal agents.
 4. **Parallelization**: Run all 6 tests in parallel per round. Run 10 rounds sequentially.
 5. For each agent response, parse the `eval-results` block and save a JSON result file.
-6. After all trials complete, run `python3 plugins/docs-kb/eval/score-results.py plugins/docs-kb/eval/results/` to compute scores.
+6. After all trials complete, run `python3 eval/score-results.py eval/results/` to compute scores.
 
 ## Agent Prompt Template
 
