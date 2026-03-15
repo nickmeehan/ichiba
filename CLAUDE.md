@@ -17,6 +17,26 @@ Use semantic versioning (`MAJOR.MINOR.PATCH`):
 - Minor bump (`1.0.0` → `1.1.0`): new skills, commands, or agents added; new plugin added to marketplace
 - Major bump (`1.0.0` → `2.0.0`): breaking changes or complete rewrites
 
+## Docs
+
+Scan the index below on every turn. If an entry is relevant, read the file before responding.
+Do not guess — retrieve first. For deeper topics, use the docs-kb:doc-traversal agent starting at `docs/_index.md`.
+
+<!-- DOCS-INDEX-START -->
+<!-- DO NOT REMOVE THESE MARKERS — used by the docs progressive disclosure plugin -->
+- `docs/getting-started.md|desc: onboarding, setup, first steps — read when setting up Nimbus locally or onboarding a new developer`
+- `docs/project-overview.md|desc: architecture overview, system boundaries — read when needing high-level understanding of the Nimbus platform`
+- `docs/glossary.md|desc: terminology, domain terms — read when encountering unfamiliar Nimbus-specific terms`
+- `docs/architecture/|desc: system design, services, infrastructure — read when modifying core architecture or adding new services`
+- `docs/api/|desc: REST API, GraphQL, endpoints, contracts — read when implementing or modifying API endpoints`
+- `docs/guides/|desc: developer guides, deployment, security — read when following operational procedures`
+- `docs/testing/|desc: test strategy, test types, CI — read when writing or modifying tests`
+- `docs/conventions/|desc: coding standards, patterns, workflows — read when unsure about project conventions`
+- `docs/frontend/|desc: React, components, state, UI — read when working on frontend code`
+- `docs/data/|desc: data models, validation, ETL — read when working with data layer`
+- `docs/ops/|desc: operations, alerting, runbooks — read when handling incidents or operational tasks`
+<!-- DOCS-INDEX-END -->
+
 ## Updating in Consuming Projects
 
 After pushing a version bump, users in consuming projects must run:
