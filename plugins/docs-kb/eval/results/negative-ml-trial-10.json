@@ -1,0 +1,11 @@
+{
+  "test_id": "negative-ml",
+  "trial": 10,
+  "query": "machine learning model training",
+  "returned_docs": [
+    "docs/data/etl-pipelines.md"
+  ],
+  "read_count": 7,
+  "cap_respected": true,
+  "had_eval_block": true
+}

@@ -1,0 +1,17 @@
+{
+  "test_id": "wide-api",
+  "trial": 3,
+  "query": "setting up a new API endpoint",
+  "returned_docs": [
+    "docs/api/rest-overview.md",
+    "docs/conventions/api-design.md",
+    "docs/api/authentication.md",
+    "docs/architecture/system-design.md",
+    "docs/architecture/data-flow.md",
+    "docs/data/validation.md",
+    "docs/api/error-codes.md"
+  ],
+  "read_count": 12,
+  "cap_respected": true,
+  "had_eval_block": true
+}

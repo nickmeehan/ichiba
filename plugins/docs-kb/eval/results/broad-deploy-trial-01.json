@@ -1,0 +1,17 @@
+{
+  "test_id": "broad-deploy",
+  "trial": 1,
+  "query": "deploying the application",
+  "returned_docs": [
+    "docs/guides/deployment/ci-cd.md",
+    "docs/guides/deployment/staging.md",
+    "docs/guides/deployment/production.md",
+    "docs/guides/deployment/rollback.md",
+    "docs/guides/deployment/blue-green.md",
+    "docs/guides/deployment/canary.md",
+    "docs/architecture/infrastructure/kubernetes.md"
+  ],
+  "read_count": 11,
+  "cap_respected": true,
+  "had_eval_block": true
+}

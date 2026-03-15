@@ -1,0 +1,171 @@
+{
+  "description": "Eval suite for the docs-kb doc-traversal agent. Each test defines a query, expected relevant docs (must_include), acceptable docs (may_include), and constraints.",
+  "trials_per_test": 10,
+  "agent_model": "haiku",
+  "tests": [
+    {
+      "id": "narrow-oauth",
+      "name": "Narrow query — OAuth token refresh",
+      "query": "implementing OAuth token refresh",
+      "type": "narrow",
+      "must_include": [
+        "docs/architecture/services/integrations/oauth-flows.md",
+        "docs/architecture/services/auth.md",
+        "docs/api/authentication.md"
+      ],
+      "may_include": [
+        "docs/guides/security/secrets-management.md",
+        "docs/architecture/services/integrations/sso-providers/azure-ad.md",
+        "docs/architecture/services/integrations/sso-providers/okta/troubleshooting.md",
+        "docs/architecture/services/integrations/sso-providers/google-workspace.md",
+        "docs/frontend/data-fetching.md"
+      ],
+      "must_not_include": [
+        "docs/ops/runbooks.md",
+        "docs/testing/api-tests.md",
+        "docs/conventions/api-design.md",
+        "docs/data/validation.md"
+      ],
+      "constraints": {
+        "max_returned_docs": 7,
+        "max_read_calls": 25
+      }
+    },
+    {
+      "id": "wide-api",
+      "name": "Wide index — new API endpoint",
+      "query": "setting up a new API endpoint",
+      "type": "wide",
+      "must_include": [
+        "docs/api/rest-overview.md",
+        "docs/api/authentication.md",
+        "docs/conventions/api-design.md"
+      ],
+      "may_include": [
+        "docs/api/error-codes.md",
+        "docs/conventions/file-structure.md",
+        "docs/data/validation.md",
+        "docs/testing/api-tests.md",
+        "docs/architecture/error-handling.md",
+        "docs/api/rate-limiting.md",
+        "docs/api/versioning.md"
+      ],
+      "must_not_include": [
+        "docs/ops/disaster-recovery.md",
+        "docs/guides/deployment/production.md",
+        "docs/architecture/services/integrations/oauth-flows.md"
+      ],
+      "constraints": {
+        "max_returned_docs": 7,
+        "max_read_calls": 25
+      }
+    },
+    {
+      "id": "broad-deploy",
+      "name": "Broad topic — deploying the application",
+      "query": "deploying the application",
+      "type": "broad",
+      "must_include": [
+        "docs/guides/deployment/ci-cd.md",
+        "docs/guides/deployment/production.md"
+      ],
+      "may_include": [
+        "docs/guides/deployment/blue-green.md",
+        "docs/guides/deployment/canary.md",
+        "docs/guides/deployment/rollback.md",
+        "docs/guides/deployment/staging.md",
+        "docs/architecture/infrastructure/kubernetes.md",
+        "docs/ops/disaster-recovery.md",
+        "docs/ops/runbooks.md",
+        "docs/getting-started.md"
+      ],
+      "must_not_include": [
+        "docs/api/authentication.md",
+        "docs/data/validation.md",
+        "docs/conventions/api-design.md"
+      ],
+      "constraints": {
+        "max_returned_docs": 7,
+        "max_read_calls": 25
+      }
+    },
+    {
+      "id": "cross-auth-debug",
+      "name": "Cross-category — debugging auth issues",
+      "query": "debugging auth issues",
+      "type": "cross-category",
+      "must_include": [
+        "docs/architecture/services/auth.md",
+        "docs/api/authentication.md",
+        "docs/guides/debugging.md"
+      ],
+      "may_include": [
+        "docs/api/error-codes.md",
+        "docs/api/permissions-endpoint.md",
+        "docs/architecture/error-handling.md",
+        "docs/guides/security/secrets-management.md",
+        "docs/guides/security/threat-model.md",
+        "docs/ops/runbooks.md",
+        "docs/glossary.md",
+        "docs/architecture/services/integrations/sso-providers/okta/troubleshooting.md"
+      ],
+      "must_not_include": [
+        "docs/guides/deployment/production.md",
+        "docs/data/validation.md",
+        "docs/frontend/state-management.md"
+      ],
+      "constraints": {
+        "max_returned_docs": 7,
+        "max_read_calls": 25
+      }
+    },
+    {
+      "id": "deep-okta",
+      "name": "Deep nesting — Okta SSO SCIM provisioning",
+      "query": "configuring Okta SSO SCIM provisioning",
+      "type": "deep",
+      "must_include": [
+        "docs/architecture/services/integrations/sso-providers/okta/scim.md",
+        "docs/architecture/services/integrations/sso-providers/okta/setup.md"
+      ],
+      "may_include": [
+        "docs/architecture/services/integrations/sso-providers/okta/config/app-registration.md",
+        "docs/architecture/services/integrations/sso-providers/okta/config/attribute-mapping.md",
+        "docs/architecture/services/integrations/sso-providers/okta/config/mfa-policies.md",
+        "docs/architecture/services/integrations/sso-providers/okta/troubleshooting.md",
+        "docs/architecture/services/auth.md",
+        "docs/api/authentication.md"
+      ],
+      "must_not_include": [
+        "docs/guides/deployment/production.md",
+        "docs/data/validation.md",
+        "docs/frontend/state-management.md"
+      ],
+      "constraints": {
+        "max_returned_docs": 7,
+        "max_read_calls": 25
+      }
+    },
+    {
+      "id": "negative-ml",
+      "name": "Negative — machine learning model training",
+      "query": "machine learning model training",
+      "type": "negative",
+      "must_include": [],
+      "may_include": [],
+      "must_not_include": [],
+      "expected_behavior": "Agent should report that no relevant documentation was found. Zero or near-zero leaf docs returned.",
+      "constraints": {
+        "max_returned_docs": 1,
+        "max_read_calls": 15
+      }
+    }
+  ],
+  "scoring": {
+    "must_include_recall": "Fraction of must_include docs that appear in the returned set. Target: 1.0",
+    "precision": "Fraction of returned docs that are in must_include + may_include. Target: > 0.8",
+    "cap_adherence": "Whether the 7-doc cap was respected. Target: 100%",
+    "read_efficiency": "Number of Read tool calls used. Lower is better.",
+    "consistency": "Jaccard similarity of returned doc sets across trials for the same query. Target: > 0.7"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "test_id": "negative-ml",
+  "trial": 8,
+  "query": "machine learning model training",
+  "returned_docs": [],
+  "read_count": 4,
+  "cap_respected": true,
+  "had_eval_block": true
+}
