@@ -1,6 +1,6 @@
 {
   "name": "docs-kb",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Progressive disclosure documentation system. Gives any project a docs/ directory that Claude navigates automatically based on task relevance.",
   "author": "nickmeehan",
   "components": {

@@ -8,6 +8,7 @@
     }
   },
   "enabledPlugins": {
-    "dev-workflow@ichiba": true
+    "dev-workflow@ichiba": true,
+    "docs-kb@ichiba": true
   }
 }
