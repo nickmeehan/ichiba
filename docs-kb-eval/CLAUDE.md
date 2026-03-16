@@ -71,10 +71,32 @@ To compare before/after when changing the agent or descriptions:
 | deep-okta | deep | "configuring Okta SSO SCIM provisioning" | 7 levels deep in tree |
 | negative-ml | negative | "machine learning model training" | Should return ~0 docs (nothing relevant) |
 
-## Updating the Agent
+## Development Workflow
 
-The `agents/doc-traversal.md` file is a **copy** of the agent from the docs-kb plugin (`plugins/docs-kb/agents/doc-traversal.md` in the ichiba repo). When testing changes:
+The `agents/doc-traversal.md` file is the working copy of the agent. The upstream source of truth lives in the docs-kb plugin at `plugins/docs-kb/agents/doc-traversal.md` in the [ichiba](https://github.com/nickmeehan/ichiba) repo.
 
-1. Edit `agents/doc-traversal.md` here
-2. Run evals to validate improvement
-3. Copy the improved version back to the plugin repo
+### Before starting work
+
+Sync the latest agent from upstream so you're starting from the current production version:
+
+```bash
+# From the eval repo root — adjust the path to your local ichiba clone
+cp /path/to/ichiba/plugins/docs-kb/agents/doc-traversal.md agents/doc-traversal.md
+```
+
+### Making and validating changes
+
+1. Run baseline evals against the current agent (copy results to `eval/results-baseline/`)
+2. Edit `agents/doc-traversal.md` (or `docs/**/_index.md` descriptions)
+3. Re-run evals
+4. Compare metrics — look for improvements without regressions
+
+### Promoting changes to upstream
+
+Once evals show improvement, copy the agent back to the plugin repo:
+
+```bash
+cp agents/doc-traversal.md /path/to/ichiba/plugins/docs-kb/agents/doc-traversal.md
+```
+
+Then bump versions in ichiba per its CLAUDE.md plugin version rules.
