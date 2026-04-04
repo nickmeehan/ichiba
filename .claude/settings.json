@@ -5,10 +5,17 @@
         "source": "github",
         "repo": "nickmeehan/ichiba"
       }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
     }
   },
   "enabledPlugins": {
     "dev-workflow@ichiba": true,
-    "docs-kb@ichiba": true
+    "docs-kb@ichiba": true,
+    "skill-creator@claude-plugins-official": true
   }
 }
