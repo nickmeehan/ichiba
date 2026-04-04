@@ -1,0 +1,156 @@
+{
+  "skill_name": "create-pr",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I just finished adding a new login page with OAuth support. Can you create a PR for this branch?",
+      "expected_output": "PR with feat: prefix, Summary + Test plan body, PR URL returned.",
+      "files": [],
+      "expectations": [
+        "PR title starts with 'feat:' since this is a new feature",
+        "PR title is under 70 characters",
+        "PR title uses lowercase description with no trailing period, imperative mood",
+        "PR body contains exactly two sections: '## Summary' and '## Test plan' — no extra sections",
+        "PR body '## Test plan' section uses checkbox format (- [ ])",
+        "Commands include 'git push -u origin' to push before creating PR",
+        "Runs 'which gh' to detect environment and uses the correct tool: gh CLI if available, mcp__github__create_pull_request MCP tool if not"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "open a pr. i fixed the bug where the sidebar was overlapping the main content on mobile screens",
+      "expected_output": "PR with fix: prefix, Summary + Test plan body, PR URL returned.",
+      "files": [],
+      "expectations": [
+        "PR title starts with 'fix:' since this is a bug fix",
+        "PR title is under 70 characters",
+        "PR title uses lowercase description with no trailing period, imperative mood",
+        "PR body contains exactly two sections: '## Summary' and '## Test plan' — no extra sections",
+        "PR body '## Test plan' section uses checkbox format (- [ ])",
+        "Commands include 'git push -u origin' to push before creating PR",
+        "Runs 'which gh' to detect environment and uses the correct tool: gh CLI if available, mcp__github__create_pull_request MCP tool if not"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Submit a PR for the dependency updates I just did — bumped react from 18 to 19 and updated the lockfile",
+      "expected_output": "PR with chore: prefix, Summary + Test plan body, PR URL returned.",
+      "files": [],
+      "expectations": [
+        "PR title starts with 'chore:' since this is a dependency update",
+        "PR title is under 70 characters",
+        "PR title uses lowercase description with no trailing period, imperative mood",
+        "PR body contains exactly two sections: '## Summary' and '## Test plan' — no extra sections",
+        "PR body '## Test plan' section uses checkbox format (- [ ])",
+        "Commands include 'git push -u origin' to push before creating PR",
+        "Runs 'which gh' to detect environment and uses the correct tool: gh CLI if available, mcp__github__create_pull_request MCP tool if not"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "ok great, now open a PR for all that",
+      "expected_output": "PR composed from conversation context without running redundant git commands. feat: prefix, Summary + Test plan body.",
+      "files": [],
+      "context": "The assistant wrote the code in this conversation: added UserProfile component, /profile route, and getProfile API call.",
+      "expectations": [
+        "Skips git diff, git log, and git status since the assistant already knows what changed from conversation context",
+        "PR title starts with 'feat:' since this is a new feature",
+        "PR title is under 70 characters",
+        "PR title uses lowercase description with no trailing period, imperative mood",
+        "PR body contains exactly two sections: '## Summary' and '## Test plan' — no extra sections",
+        "PR body '## Test plan' section uses checkbox format (- [ ])",
+        "Runs 'which gh' to detect environment and uses the correct tool"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "I rewrote the auth module to use JWTs instead of session cookies. No new features, just restructured the code. Can you make a PR?",
+      "expected_output": "PR with refactor: prefix, Summary + Test plan body, PR URL returned.",
+      "files": [],
+      "expectations": [
+        "PR title starts with 'refactor:' since this is code restructuring with no new features",
+        "PR title is under 70 characters",
+        "PR title uses lowercase description with no trailing period, imperative mood",
+        "PR body contains exactly two sections: '## Summary' and '## Test plan' — no extra sections",
+        "PR body '## Test plan' section uses checkbox format (- [ ])",
+        "Commands include 'git push -u origin' to push before creating PR",
+        "Runs 'which gh' to detect environment and uses the correct tool"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "I added a getting started guide and API reference to the docs folder. please open a pr",
+      "expected_output": "PR with docs: prefix, Summary + Test plan body, PR URL returned.",
+      "files": [],
+      "expectations": [
+        "PR title starts with 'docs:' since this is a documentation change",
+        "PR title is under 70 characters",
+        "PR title uses lowercase description with no trailing period, imperative mood",
+        "PR body contains exactly two sections: '## Summary' and '## Test plan' — no extra sections",
+        "PR body '## Test plan' section uses checkbox format (- [ ])",
+        "Commands include 'git push -u origin' to push before creating PR",
+        "Runs 'which gh' to detect environment and uses the correct tool"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "pr pls",
+      "expected_output": "Even with minimal prompt, creates a proper PR by gathering git context. Correct type prefix, Summary + Test plan body.",
+      "files": [],
+      "expectations": [
+        "PR title uses a conventional commit prefix appropriate to the actual changes",
+        "PR title is under 70 characters",
+        "PR title uses lowercase description with no trailing period, imperative mood",
+        "PR body contains exactly two sections: '## Summary' and '## Test plan' — no extra sections",
+        "PR body '## Test plan' section uses checkbox format (- [ ])",
+        "Gathers git context (diff/log) since the user provided no description of changes",
+        "Runs 'which gh' to detect environment and uses the correct tool"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "I cleaned up the CI pipeline — removed the deprecated Node 16 job, consolidated the lint and test stages, and pinned all action versions. Create a PR for this.",
+      "expected_output": "PR with chore: or ci: prefix, Summary + Test plan body, PR URL returned.",
+      "files": [],
+      "expectations": [
+        "PR title starts with 'chore:' or 'ci:' since this is CI/maintenance work",
+        "PR title is under 70 characters",
+        "PR title uses lowercase description with no trailing period, imperative mood",
+        "PR body contains exactly two sections: '## Summary' and '## Test plan' — no extra sections",
+        "PR body '## Test plan' section uses checkbox format (- [ ])",
+        "Commands include 'git push -u origin' to push before creating PR",
+        "Runs 'which gh' to detect environment and uses the correct tool"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "The search wasn't returning results when the query had special characters like & or +. I patched the query encoding. Open a PR targeting the release/2.1 branch.",
+      "expected_output": "PR with fix: prefix targeting release/2.1 (not main), Summary + Test plan body.",
+      "files": [],
+      "expectations": [
+        "PR title starts with 'fix:' since this is a bug fix",
+        "PR title is under 70 characters",
+        "PR title uses lowercase description with no trailing period, imperative mood",
+        "PR body contains exactly two sections: '## Summary' and '## Test plan' — no extra sections",
+        "PR body '## Test plan' section uses checkbox format (- [ ])",
+        "PR targets the release/2.1 branch instead of main, since the user explicitly requested it",
+        "Runs 'which gh' to detect environment and uses the correct tool"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "I moved the utils from src/helpers into a shared package and updated all the imports. It's kind of a refactor but also adds the new @company/shared-utils package. Make a PR?",
+      "expected_output": "PR with feat: or refactor: prefix (ambiguous — either is defensible). Summary + Test plan body.",
+      "files": [],
+      "expectations": [
+        "PR title starts with 'feat:' or 'refactor:' — either is acceptable since the change includes both restructuring and a new package",
+        "PR title is under 70 characters",
+        "PR title uses lowercase description with no trailing period, imperative mood",
+        "PR body contains exactly two sections: '## Summary' and '## Test plan' — no extra sections",
+        "PR body '## Test plan' section uses checkbox format (- [ ])",
+        "Commands include 'git push -u origin' to push before creating PR",
+        "Runs 'which gh' to detect environment and uses the correct tool"
+      ]
+    }
+  ]
+}
