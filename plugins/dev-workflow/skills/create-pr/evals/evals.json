@@ -13,7 +13,7 @@
         "PR body contains a '## Summary' section with bullet points",
         "PR body contains a '## Test plan' section with checkbox items",
         "Commands include 'git push -u origin' to push before creating PR",
-        "Output mentions subscribing to PR activity events (subscribe_pr_activity)"
+        "Runs 'which gh' to detect environment and uses the correct tool: gh CLI if available, mcp__github__create_pull_request MCP tool if not"
       ]
     },
     {
@@ -28,7 +28,7 @@
         "PR body contains a '## Summary' section with bullet points",
         "PR body contains a '## Test plan' section with checkbox items",
         "Commands include 'git push -u origin' to push before creating PR",
-        "Output mentions subscribing to PR activity events (subscribe_pr_activity)"
+        "Runs 'which gh' to detect environment and uses the correct tool: gh CLI if available, mcp__github__create_pull_request MCP tool if not"
       ]
     },
     {
@@ -43,7 +43,7 @@
         "PR body contains a '## Summary' section with bullet points",
         "PR body contains a '## Test plan' section with checkbox items",
         "Commands include 'git push -u origin' to push before creating PR",
-        "Output mentions subscribing to PR activity events (subscribe_pr_activity)"
+        "Runs 'which gh' to detect environment and uses the correct tool: gh CLI if available, mcp__github__create_pull_request MCP tool if not"
       ]
     }
   ]
