@@ -1,0 +1,134 @@
+{
+  "skill_name": "commit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "commit this",
+      "expected_output": "Stages changes, composes conventional commit, creates commit. No explanatory text.",
+      "files": [],
+      "expectations": [
+        "Runs git status and git diff to understand current changes",
+        "Stages relevant files with git add",
+        "Commit message starts with a valid conventional commit type (feat, fix, chore, etc.)",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "ok looks good, commit it",
+      "expected_output": "Uses conversation context instead of redundant git commands. Creates commit with correct type.",
+      "files": [],
+      "context": "The assistant just finished adding a new search bar component with debounce filtering to the dashboard page.",
+      "expectations": [
+        "Skips git diff and git log since the assistant already knows what changed from conversation context",
+        "May run git status to confirm staging, but skips full diff analysis",
+        "Commit message starts with 'feat:' since a new feature was added",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I fixed the race condition in the websocket handler where messages could arrive before the connection was fully initialized",
+      "expected_output": "Commit with fix: prefix and concise description.",
+      "files": [],
+      "expectations": [
+        "Commit message starts with 'fix:' since this is a bug fix",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Description captures the essence of the fix concisely — does not repeat the entire user prompt",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "commit — I updated the README with the new API endpoints and added a troubleshooting section",
+      "expected_output": "Commit with docs: prefix.",
+      "files": [],
+      "expectations": [
+        "Commit message starts with 'docs:' since this is a documentation change",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "please commit, I just bumped axios from 1.4.0 to 1.6.0 and regenerated the lockfile",
+      "expected_output": "Commit with chore(deps): prefix.",
+      "files": [],
+      "expectations": [
+        "Commit message starts with 'chore(deps):' or 'chore:' since this is a dependency update",
+        "Scope 'deps' is used if a scope is included",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "commit these changes. I moved all the validation logic from the controllers into a shared middleware layer. No behavior changes.",
+      "expected_output": "Commit with refactor: prefix.",
+      "files": [],
+      "expectations": [
+        "Commit message starts with 'refactor:' since this is code restructuring with no behavior change",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not use 'feat:' even though new files may have been created — user explicitly said no behavior changes",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "commit. this removes the deprecated /api/v1 endpoints — it's a breaking change",
+      "expected_output": "Commit with ! breaking change indicator and/or BREAKING CHANGE footer.",
+      "files": [],
+      "expectations": [
+        "Commit message includes '!' after type/scope (e.g., 'feat(api)!:') and/or includes a 'BREAKING CHANGE:' footer",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "/commit",
+      "expected_output": "Handles bare invocation by gathering git context and committing with correct type.",
+      "files": [],
+      "expectations": [
+        "Runs git status and git diff since no description was provided",
+        "Determines the correct conventional commit type from the actual changes",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "commit — I added unit tests for the auth middleware and fixed a flaky integration test",
+      "expected_output": "Commit with test: prefix since the changes are purely test-related.",
+      "files": [],
+      "expectations": [
+        "Commit message starts with 'test:' since all changes are test-related",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "go ahead and commit, I added a caching layer to the database queries which should speed things up significantly",
+      "expected_output": "Commit with perf: prefix since the change is a performance improvement.",
+      "files": [],
+      "expectations": [
+        "Commit message starts with 'perf:' since this is a performance improvement, not a new feature",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    }
+  ]
+}
