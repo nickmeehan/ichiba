@@ -2,116 +2,68 @@
 name: create-pr
 description: >
   Create a pull request for the current branch. Use when the user asks to
-  create a pull request, open a PR, or submit a PR. Supports both CLI
-  (gh CLI) and Claude Code Web/Desktop (MCP tool) environments.
+  create a pull request, open a PR, or submit a PR. Make sure to use this
+  skill whenever the user mentions PRs, pull requests, submitting code for
+  review, or pushing changes for merge, even if they don't explicitly say
+  "create a PR."
 ---
 
 # Create PR Skill
 
-Create a pull request for the current branch using conventional commit title format.
-
 ## Environment Detection
 
-Determine which environment you are running in before proceeding:
+Run `which gh` before anything else — `gh` CLI isn't available in Claude Code Web or Desktop.
 
-1. **CLI (terminal/laptop)**: Run `which gh` — if it succeeds, use `gh pr create` for PR creation.
-2. **Claude Code Web or Desktop app**: `gh` CLI is NOT available. Use the `mcp__github__create_pull_request` MCP tool instead with `owner`, `repo`, `title`, `head`, `base`, and `body` parameters.
+- **Found** → use `gh pr create`
+- **Not found** → use `mcp__github__create_pull_request` MCP tool. Parse `git remote get-url origin` for `owner` and `repo`.
 
-If `which gh` fails and MCP tools are not available, inform the user that neither method is available and stop.
-
-## Allowed Tools
-
-- `Bash(git status:*)`
-- `Bash(git diff:*)`
-- `Bash(git log:*)`
-- `Bash(git branch:*)`
-- `Bash(git push:*)`
-- `Bash(git rev-parse:*)`
-- `Bash(git remote:*)`
-- `Bash(which gh:*)`
-- `Bash(gh pr create:*)`
-- `mcp__github__create_pull_request`
+Stop and tell the user if neither `gh` nor MCP tools are available.
 
 ## Token Efficiency
 
-If you already have context from the current conversation about what changed (because you wrote the code or reviewed the commits), do NOT re-run exploratory git commands like `git diff`, `git log`, or `git status`. Only run those if you genuinely don't know what changed.
+Skip `git diff`, `git log`, and `git status` when you already know what changed from the current conversation (you wrote the code or reviewed commits). Only gather context when you genuinely lack knowledge of what's on the branch.
 
 ## Process
 
-1. **Detect environment** — run `which gh` to determine CLI vs Web/Desktop.
+1. **Detect environment** — `which gh`
 
-2. **Gather context** (only if you don't already know what changed):
-   ```bash
-   git status
-   git diff <base-branch>...HEAD
-   git log --oneline <base-branch>..HEAD
-   ```
+2. **Gather context** (skip when you already know what changed):
+   `git status`, `git diff <base>...HEAD`, `git log --oneline <base>..HEAD`
 
-3. **Determine branch info**:
+3. **Get branch name and push**:
    ```bash
    git branch --show-current
-   git rev-parse --abbrev-ref HEAD@{upstream} 2>/dev/null || echo "no upstream"
-   ```
-
-4. **Push to remote**:
-   ```bash
    git push -u origin <branch-name>
    ```
 
-5. **Compose PR title** — use conventional commits format:
+4. **Compose PR title** — conventional commits, under 70 chars, lowercase, no period, imperative mood:
 
-   | Prefix | When to use |
-   |--------|-------------|
+   | Prefix | Use for |
+   |--------|---------|
    | `feat:` | New feature |
    | `fix:` | Bug fix |
-   | `chore:` | Maintenance, dependency updates |
-   | `docs:` | Documentation changes |
-   | `refactor:` | Code restructuring |
+   | `chore:` | Maintenance, deps |
+   | `docs:` | Documentation |
+   | `refactor:` | Restructuring |
 
-   Rules:
-   - Keep under 70 characters
-   - Lowercase description, no trailing period
-   - Imperative mood: `feat: add login` not `feat: added login`
-
-6. **Compose PR body** using this template:
-
+5. **Compose PR body** — exactly two sections, nothing else:
    ```
    ## Summary
-   - <bullet point 1>
-   - <bullet point 2>
-   - <bullet point 3 (optional)>
+   - <what changed and why>
 
    ## Test plan
-   - [ ] <testing step>
-   - [ ] <testing step>
+   - [ ] <verification step>
    ```
 
-7. **Create the PR**:
+6. **Create the PR**:
 
-   **CLI environment** — use a heredoc for the body:
-   ```bash
-   gh pr create --title "<title>" --body "$(cat <<'EOF'
-   ## Summary
-   - ...
+   CLI: `gh pr create --title "<title>" --body "<body>"`
 
-   ## Test plan
-   - [ ] ...
-   EOF
-   )"
-   ```
-
-   **Web/Desktop environment** — use the MCP tool:
+   Web/Desktop:
    ```
    mcp__github__create_pull_request(
-     owner: "<org-or-user>",
-     repo: "<repo-name>",
-     title: "<title>",
-     head: "<branch-name>",
-     base: "main",
-     body: "## Summary\n- ...\n\n## Test plan\n- [ ] ..."
+     owner, repo, title, head: "<branch>", base: "main", body
    )
    ```
 
-8. **After creation**:
-   - Return the PR URL to the user.
-   - Ask if they'd like to subscribe to PR activity events (comments, CI status, reviews) via `subscribe_pr_activity`.
+7. **Show the PR URL** to the user.

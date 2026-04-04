@@ -1,0 +1,50 @@
+{
+  "skill_name": "create-pr",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I just finished adding a new login page with OAuth support. Can you create a PR for this branch?",
+      "expected_output": "A PR is created with a conventional commit title (feat: ...), a body with Summary and Test plan sections, and the PR URL is returned.",
+      "files": [],
+      "expectations": [
+        "PR title starts with 'feat:' since this is a new feature",
+        "PR title is under 70 characters",
+        "PR title uses lowercase description with no trailing period",
+        "PR body contains a '## Summary' section with bullet points",
+        "PR body contains a '## Test plan' section with checkbox items",
+        "Commands include 'git push -u origin' to push before creating PR",
+        "Output mentions subscribing to PR activity events (subscribe_pr_activity)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "open a pr. i fixed the bug where the sidebar was overlapping the main content on mobile screens",
+      "expected_output": "A PR is created with a fix: prefix title, body includes Summary and Test plan, and the PR URL is returned.",
+      "files": [],
+      "expectations": [
+        "PR title starts with 'fix:' since this is a bug fix",
+        "PR title is under 70 characters",
+        "PR title uses lowercase description with no trailing period",
+        "PR body contains a '## Summary' section with bullet points",
+        "PR body contains a '## Test plan' section with checkbox items",
+        "Commands include 'git push -u origin' to push before creating PR",
+        "Output mentions subscribing to PR activity events (subscribe_pr_activity)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Submit a PR for the dependency updates I just did — bumped react from 18 to 19 and updated the lockfile",
+      "expected_output": "A PR is created with a chore: prefix title about dependency updates, body includes Summary and Test plan, and the PR URL is returned.",
+      "files": [],
+      "expectations": [
+        "PR title starts with 'chore:' since this is a dependency update",
+        "PR title is under 70 characters",
+        "PR title uses lowercase description with no trailing period",
+        "PR body contains a '## Summary' section with bullet points",
+        "PR body contains a '## Test plan' section with checkbox items",
+        "Commands include 'git push -u origin' to push before creating PR",
+        "Output mentions subscribing to PR activity events (subscribe_pr_activity)"
+      ]
+    }
+  ]
+}
