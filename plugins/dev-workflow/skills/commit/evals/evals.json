@@ -1,0 +1,398 @@
+{
+  "skill_name": "commit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "commit this",
+      "expected_output": "Stages changes, composes conventional commit, creates commit. No explanatory text.",
+      "files": [],
+      "expectations": [
+        "Runs git status and git diff to understand current changes",
+        "Stages relevant files with git add",
+        "Commit message starts with a valid conventional commit type (feat, fix, chore, etc.)",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "ok looks good, commit it",
+      "expected_output": "Uses conversation context instead of redundant git commands. Creates commit with correct type.",
+      "files": [],
+      "context": "The assistant just finished adding a new search bar component with debounce filtering to the dashboard page.",
+      "expectations": [
+        "Skips git diff and git log since the assistant already knows what changed from conversation context",
+        "May run git status to confirm staging, but skips full diff analysis",
+        "Commit message starts with 'feat:' since a new feature was added",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I fixed the race condition in the websocket handler where messages could arrive before the connection was fully initialized",
+      "expected_output": "Commit with fix: prefix and concise description.",
+      "files": [],
+      "expectations": [
+        "Commit message starts with 'fix:' since this is a bug fix",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Description captures the essence of the fix concisely — does not repeat the entire user prompt",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "commit — I updated the README with the new API endpoints and added a troubleshooting section",
+      "expected_output": "Commit with docs: prefix.",
+      "files": [],
+      "expectations": [
+        "Commit message starts with 'docs:' since this is a documentation change",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "please commit, I just bumped axios from 1.4.0 to 1.6.0 and regenerated the lockfile",
+      "expected_output": "Commit with chore(deps): prefix.",
+      "files": [],
+      "expectations": [
+        "Commit message starts with 'chore(deps):' or 'chore:' since this is a dependency update",
+        "Scope 'deps' is used if a scope is included",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "commit these changes. I moved all the validation logic from the controllers into a shared middleware layer. No behavior changes.",
+      "expected_output": "Commit with refactor: prefix.",
+      "files": [],
+      "expectations": [
+        "Commit message starts with 'refactor:' since this is code restructuring with no behavior change",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not use 'feat:' even though new files may have been created — user explicitly said no behavior changes",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "commit. this removes the deprecated /api/v1 endpoints — it's a breaking change",
+      "expected_output": "Commit with ! breaking change indicator and/or BREAKING CHANGE footer.",
+      "files": [],
+      "expectations": [
+        "Commit message includes '!' after type/scope (e.g., 'feat(api)!:') and/or includes a 'BREAKING CHANGE:' footer",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "/commit",
+      "expected_output": "Handles bare invocation by gathering git context and committing with correct type.",
+      "files": [],
+      "expectations": [
+        "Runs git status and git diff since no description was provided",
+        "Determines the correct conventional commit type from the actual changes",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "commit — I added unit tests for the auth middleware and fixed a flaky integration test",
+      "expected_output": "Commit with test: prefix since the changes are purely test-related.",
+      "files": [],
+      "expectations": [
+        "Commit message uses the 'test' type (with or without scope, e.g., 'test:' or 'test(auth):') since all changes are test-related",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "go ahead and commit, I added a caching layer to the database queries which should speed things up significantly",
+      "expected_output": "Commit with perf: prefix since the change is a performance improvement.",
+      "files": [],
+      "expectations": [
+        "Commit message starts with 'perf:' since this is a performance improvement, not a new feature",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "commit pls, I just added a new /api/users/:id/preferences endpoint that returns and updates user notification settings",
+      "expected_output": "Commit with feat: prefix for new API endpoint.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'feat' type since this is a new API endpoint",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "yep ship it",
+      "expected_output": "Uses conversation context. Correct type based on prior work.",
+      "files": [],
+      "context": "The assistant just fixed a null pointer exception in the payment processing module where orders with no shipping address would crash.",
+      "expectations": [
+        "Skips git diff and git log since the assistant already knows what changed",
+        "Commit message starts with 'fix:' since a bug was fixed",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "commit — I ran prettier across the whole codebase to fix inconsistent formatting",
+      "expected_output": "Commit with style: prefix for formatting-only changes.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'style' type since this is formatting only with no logic change",
+        "Does not use 'chore:' or 'refactor:' — 'style' is the correct type for formatting",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "commit this. I switched the build from webpack to vite and updated all the config files",
+      "expected_output": "Commit with build: prefix for build system changes.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'build' type since this is a build system change",
+        "Does not use 'chore:' or 'refactor:' — 'build' is the correct type for build tooling",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "please commit, I reverted the OAuth changes from last week because they broke SSO for enterprise customers",
+      "expected_output": "Commit with revert: prefix.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'revert' type since this is reverting previous changes",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "commit — I added end-to-end tests for the full checkout flow including payment and order confirmation",
+      "expected_output": "Commit with test: prefix for e2e test additions.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'test' type since these are test additions",
+        "Does not use 'feat:' — adding tests is not a feature",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 17,
+      "prompt": "commit, I replaced the hand-rolled CSV parser with the papaparse library. Same behavior, cleaner code",
+      "expected_output": "Commit with refactor: prefix — same behavior, different implementation.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'refactor' type since behavior is unchanged",
+        "Does not use 'feat:' even though a new library was added — user said same behavior",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 18,
+      "prompt": "commit — I consolidated the three separate GitHub Actions workflows into one and pinned all action versions",
+      "expected_output": "Commit with ci: prefix for CI configuration changes.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'ci' type since these are CI configuration changes",
+        "Does not use 'chore:' — 'ci' is the more specific and correct type",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 19,
+      "prompt": "go ahead and commit, I added lazy loading for all route-level components — the initial bundle was getting too big",
+      "expected_output": "Commit with perf: prefix — optimizing load time, not adding features.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'perf' type since this is a performance optimization (smaller bundle)",
+        "Does not use 'feat:' or 'refactor:' — the intent is making the app faster",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 20,
+      "prompt": "commit these — I upgraded typescript from 5.3 to 5.5 and fixed the new type errors that came up",
+      "expected_output": "Commit with chore(deps): prefix for TypeScript upgrade.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'chore' type since this is a dependency upgrade",
+        "Does not use 'fix:' — the type errors were caused by the upgrade, not a pre-existing bug",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 21,
+      "prompt": "commit. I changed the return type of getUserProfile from Promise<User | null> to Promise<User> and made it throw NotFoundError instead. This is a breaking change for callers.",
+      "expected_output": "Commit with breaking change indicator for API contract change.",
+      "files": [],
+      "expectations": [
+        "Commit message includes '!' after type/scope and/or a 'BREAKING CHANGE:' footer",
+        "Commit message uses 'feat' or 'refactor' type — either is defensible",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 22,
+      "prompt": "lgtm, commit and let's move on",
+      "expected_output": "Uses conversation context for a docs change.",
+      "files": [],
+      "context": "The assistant just wrote a CONTRIBUTING.md file with sections on setup, testing, and pull request guidelines.",
+      "expectations": [
+        "Skips git diff and git log since the assistant already knows what changed",
+        "Commit message uses 'docs' type since the change is documentation only",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 23,
+      "prompt": "commit — the login page was showing a blank screen on Safari because of a CSS grid issue, I patched it",
+      "expected_output": "Commit with fix: prefix for browser-specific CSS bug.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'fix' type since this is a bug fix",
+        "Does not use 'style:' — this is a bug fix, not a formatting change",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 24,
+      "prompt": "commit this please. I added a new dark mode toggle to the settings page with system preference detection",
+      "expected_output": "Commit with feat: prefix for new UI feature.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'feat' type since this is a new user-facing feature",
+        "Does not use 'style:' — this is a feature, not a formatting change",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 25,
+      "prompt": "commit — I switched all the database queries to use prepared statements instead of string concatenation. No functional changes, just security hardening.",
+      "expected_output": "Commit with refactor: prefix — restructuring without behavior change.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'refactor' type since behavior is unchanged (security hardening is restructuring)",
+        "Does not use 'fix:' — there was no specific bug, just a pattern improvement",
+        "Does not use 'feat:' — no new functionality was added",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 26,
+      "prompt": "commit plz, I removed the old jQuery dependency and the associated compatibility shims — we don't need them anymore",
+      "expected_output": "Commit with chore: prefix for cleanup.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'chore' type since this is maintenance/cleanup",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 27,
+      "prompt": "commit — I added connection pooling to the Redis client and switched from single queries to pipelines for bulk operations. The dashboard loads 3x faster now",
+      "expected_output": "Commit with perf: prefix — performance improvement even though new abstractions were added.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'perf' type since the primary intent is performance",
+        "Does not use 'feat:' — no new user-facing feature, just faster existing behavior",
+        "Does not use 'refactor:' — the intent is speed, not code organization",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 28,
+      "prompt": "commit. I added inline JSDoc comments to all the exported functions in the utils package",
+      "expected_output": "Commit with docs: prefix for code documentation.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'docs' type since JSDoc comments are documentation",
+        "Does not use 'style:' or 'chore:' — inline docs are documentation, not formatting",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 29,
+      "prompt": "that works, commit it",
+      "expected_output": "Uses conversation context for a CI change.",
+      "files": [],
+      "context": "The assistant just added a new deploy-staging job to the GitHub Actions workflow that runs on pushes to the develop branch.",
+      "expectations": [
+        "Skips git diff and git log since the assistant already knows what changed",
+        "Commit message uses 'ci' type since the change is a CI workflow addition",
+        "Does not use 'feat:' — CI config is not a user-facing feature",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    },
+    {
+      "id": 30,
+      "prompt": "commit, I extracted the email templates from the notification service into separate .hbs files and added a template compilation step to the build. The emails look exactly the same.",
+      "expected_output": "Commit with refactor: — restructuring with build change, but no behavior change.",
+      "files": [],
+      "expectations": [
+        "Commit message uses 'refactor' type since the user said behavior is unchanged",
+        "Does not use 'feat:' even though new template files and a build step were added",
+        "Does not use 'build:' as the primary type — the core change is code restructuring",
+        "Commit description is lowercase, imperative mood, no trailing period",
+        "Does not include a session link in the commit message",
+        "Only emits tool calls — no explanatory text or commentary"
+      ]
+    }
+  ]
+}
