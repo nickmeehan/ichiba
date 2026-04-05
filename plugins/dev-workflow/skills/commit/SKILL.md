@@ -18,22 +18,22 @@ description: >
 
 ## Token Efficiency
 
-Skip `git diff` and `git log` when you already know what changed from the current conversation (you wrote or reviewed the code). Only gather context when you genuinely lack knowledge of the changes.
+Skip `git diff` and `git log` when you already know what changed (you wrote or reviewed the code in this conversation). Only run these commands when you genuinely lack knowledge of the changes.
 
 ## Process
 
-1. **Gather context** (skip when you already know what changed):
+1. **Gather context** (skip if you already know what changed):
    ```bash
    git status
    git diff HEAD
    git log --oneline -5
    ```
 
-2. **Stage** relevant files with `git add` — name files explicitly, never use `git add .` or `git add -A`.
+2. **Stage files** — run `git add` with explicit file names. Never use `git add .` or `git add -A`.
 
-3. **Compose message** — conventional commit format, then create with `git commit -m "..."`.
+3. **Compose and commit** — build a conventional commit message and run `git commit -m "..."`.
 
-Only emit tool calls — no explanatory text.
+Emit only tool calls. Do not output explanatory text.
 
 ## Conventional Commit Format
 
@@ -47,7 +47,7 @@ Only emit tool calls — no explanatory text.
 
 ### Types
 
-Choose the type that matches the **intent** of the change, not just the shape of the diff. If new files or abstractions are introduced solely to make existing behavior faster, that's `perf`, not `feat`. If code is restructured without changing behavior, that's `refactor`, not `feat`.
+Match the type to the **intent** of the change, not the shape of the diff. Use `perf` when new code exists solely to make existing behavior faster. Use `refactor` when code is restructured without changing behavior. Do not default to `feat` just because new files appear.
 
 | Type | Use for |
 |------|---------|
@@ -125,7 +125,7 @@ revert: revert "feat(auth): add OAuth2 login support"
 
 ### Breaking Changes
 
-Signal breaking changes with `!` after type/scope and/or a `BREAKING CHANGE:` footer:
+Mark breaking changes with `!` after type/scope and/or a `BREAKING CHANGE:` footer:
 ```
 feat(api)!: drop support for API v1 endpoints
 
@@ -134,9 +134,9 @@ BREAKING CHANGE: /api/v1/* routes return 410 Gone.
 
 ### Rules
 
-- Use lowercase type from the table, followed by colon and space: `feat: `
-- Add optional scope in parentheses: `feat(auth): `
-- Write description in lowercase imperative mood, no trailing period
-- Separate optional body from description with one blank line — explain *what* and *why*
-- Separate optional footers from body with one blank line — use `-` in tokens instead of spaces (except `BREAKING CHANGE`)
-- Never append a session link to the commit message
+- Pick a lowercase type from the table. Follow it with a colon and space: `feat: `
+- Optionally add a scope in parentheses: `feat(auth): `
+- Write the description in lowercase imperative mood. Do not end with a period.
+- Separate the body from the description with one blank line. Explain *what* and *why*.
+- Separate footers from the body with one blank line. Use `-` in footer tokens instead of spaces (except `BREAKING CHANGE`).
+- Do not append a session link to the commit message.
