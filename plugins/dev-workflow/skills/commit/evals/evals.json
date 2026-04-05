@@ -112,7 +112,7 @@
       "expected_output": "Commit with test: prefix since the changes are purely test-related.",
       "files": [],
       "expectations": [
-        "Commit message starts with 'test:' since all changes are test-related",
+        "Commit message uses the 'test' type (with or without scope, e.g., 'test:' or 'test(auth):') since all changes are test-related",
         "Commit description is lowercase, imperative mood, no trailing period",
         "Does not include a session link in the commit message",
         "Only emits tool calls — no explanatory text or commentary"

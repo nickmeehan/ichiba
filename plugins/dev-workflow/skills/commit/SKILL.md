@@ -29,7 +29,7 @@ Skip `git diff` and `git log` when you already know what changed from the curren
    git log --oneline -5
    ```
 
-2. **Stage** relevant files with `git add`.
+2. **Stage** relevant files with `git add` — name files explicitly, never use `git add .` or `git add -A`.
 
 3. **Compose message** — conventional commit format, then create with `git commit -m "..."`.
 
@@ -47,19 +47,44 @@ Only emit tool calls — no explanatory text.
 
 ### Types
 
+Choose the type that matches the **intent** of the change, not just the shape of the diff. If new files or abstractions are introduced solely to make existing behavior faster, that's `perf`, not `feat`. If code is restructured without changing behavior, that's `refactor`, not `feat`.
+
 | Type | Use for |
 |------|---------|
-| `feat` | New feature |
+| `feat` | New user-facing feature |
 | `fix` | Bug fix |
 | `docs` | Documentation only |
 | `style` | Formatting, whitespace — no logic change |
 | `refactor` | Restructuring — no feature or fix |
-| `perf` | Performance improvement |
+| `perf` | Making existing behavior faster |
 | `test` | Adding or correcting tests |
-| `build` | Build system or dependency changes |
+| `build` | Build system changes (webpack, tsconfig, Makefile) |
 | `ci` | CI configuration |
-| `chore` | Other maintenance |
+| `chore` | Other maintenance, dependency bumps |
 | `revert` | Revert a previous commit |
+
+### Examples
+
+These steer common ambiguous cases:
+
+```
+feat(auth): add OAuth2 login support
+fix(parser): handle null values in nested objects
+chore(deps): bump axios from 1.4.0 to 1.6.0
+perf(db): add query caching layer
+refactor(store): replace Redux with Zustand
+test(auth): add unit tests for middleware
+docs(readme): add API reference and troubleshooting
+```
+
+### Breaking Changes
+
+Signal breaking changes with `!` after type/scope and/or a `BREAKING CHANGE:` footer:
+```
+feat(api)!: drop support for API v1 endpoints
+
+BREAKING CHANGE: /api/v1/* routes return 410 Gone.
+```
 
 ### Rules
 
@@ -68,5 +93,4 @@ Only emit tool calls — no explanatory text.
 - Write description in lowercase imperative mood, no trailing period
 - Separate optional body from description with one blank line — explain *what* and *why*
 - Separate optional footers from body with one blank line — use `-` in tokens instead of spaces (except `BREAKING CHANGE`)
-- Signal breaking changes with `!` after type/scope (`feat(api)!:`) and/or a `BREAKING CHANGE:` footer
 - Never append a session link to the commit message
