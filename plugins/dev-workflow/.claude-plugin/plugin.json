@@ -1,13 +1,9 @@
 {
   "name": "dev-workflow",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A plugin for developer workflow automation including conventional commits and git operations",
-  "author": "nickmeehan",
-  "components": {
-    "commands": [],
-    "agents": [],
-    "skills": ["commit", "create-pr"],
-    "hooks": false,
-    "mcp": false
-  }
+  "author": {
+    "name": "nickmeehan"
+  },
+  "skills": ["commit", "create-pr"]
 }
