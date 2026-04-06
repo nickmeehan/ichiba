@@ -25,13 +25,6 @@ claude plugin validate .
 claude plugin validate plugins/<plugin-name>
 ```
 
-Key schema rules:
-- `skills`, `agents`, `commands` must be **directory/file paths** (e.g. `"./skills/"`, `"./agents/doc-traversal.md"`), never arrays of names
-- `author` must be an **object** (`{"name": "..."}`), never a plain string
-- `hooks` and `mcpServers` must be **path strings or objects**, never booleans
-- Marketplace `owner` must be an object, not a string; `version`/`description` go under `metadata`
-- Plugin `source` in marketplace entries must start with `./`
-
 A pre-commit hook runs `claude plugin validate` and `bin/validate-plugin.sh` automatically when manifest files are staged.
 
 ## Updating in Consuming Projects
