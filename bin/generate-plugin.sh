@@ -39,19 +39,37 @@ generate_plugin_json() {
     local description=$2
     local author=$3
 
+    # Build component arrays based on selected components
+    local json_parts=""
+
+    if has_component "commands"; then
+        json_parts="$json_parts\"commands\": [],"
+    fi
+    if has_component "agents"; then
+        json_parts="$json_parts\"agents\": [],"
+    fi
+    if has_component "skills"; then
+        json_parts="$json_parts\"skills\": [],"
+    fi
+    if has_component "hooks"; then
+        json_parts="$json_parts\"hooks\": \"./hooks/hooks.json\","
+    fi
+    if has_component "mcp"; then
+        json_parts="$json_parts\"mcpServers\": \"./.mcp.json\","
+    fi
+
+    # Remove trailing comma
+    json_parts="${json_parts%,}"
+
     cat > "$PLUGIN_DIR/.claude-plugin/plugin.json" << EOF
 {
   "name": "$name",
   "version": "1.0.0",
   "description": "$description",
-  "author": "$author",
-  "components": {
-    "commands": [],
-    "agents": [],
-    "skills": [],
-    "hooks": false,
-    "mcp": false
-  }
+  "author": {
+    "name": "$author"
+  },
+  $json_parts
 }
 EOF
 }
@@ -324,7 +342,7 @@ update_marketplace_json() {
          "name": $name,
          "version": "1.0.0",
          "description": $desc,
-         "path": $path
+         "source": ("./"+$path)
        }]' "$marketplace_file" > "$marketplace_file.tmp" && \
     mv "$marketplace_file.tmp" "$marketplace_file"
 }

@@ -50,7 +50,7 @@ mv ~/.config/claude/plugins/your-plugin-name /path/to/ichiba/plugins/
       "name": "your-plugin-name",
       "version": "1.0.0",
       "description": "Clear description of what your plugin does",
-      "path": "plugins/your-plugin-name"
+      "source": "./plugins/your-plugin-name"
     }
   ]
 }
@@ -108,14 +108,13 @@ Your `plugins/your-plugin-name/.claude-plugin/plugin.json` should look like:
   "name": "your-plugin-name",
   "version": "1.0.0",
   "description": "A clear, specific description of what your plugin does (at least 20 characters)",
-  "author": "Your Name",
-  "components": {
-    "commands": ["command-name"],
-    "agents": ["agent-name"],
-    "skills": ["skill-name"],
-    "hooks": true,
-    "mcp": true
-  }
+  "author": {
+    "name": "Your Name"
+  },
+  "skills": ["skill-name"],
+  "agents": ["agent-name"],
+  "hooks": "./hooks/hooks.json",
+  "mcpServers": "./.mcp.json"
 }
 ```
 

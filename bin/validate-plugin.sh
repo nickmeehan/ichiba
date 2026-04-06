@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # validate-plugin.sh
-# Checks a plugin directory for leftover scaffold/placeholder files
-# that should be removed before committing.
+# Checks for leftover scaffold files and version mismatches.
+# Schema validation is handled by `claude plugin validate`.
 #
 # Usage:
 #   bin/validate-plugin.sh plugins/my-plugin   # check one plugin
@@ -10,7 +10,6 @@
 
 set -e
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -20,7 +19,6 @@ print_success() { echo -e "${GREEN}✓${NC} $1"; }
 print_error()   { echo -e "${RED}✗${NC} $1"; }
 print_info()    { echo -e "${YELLOW}→${NC} $1"; }
 
-# Known scaffold files that should be replaced or removed
 SCAFFOLD_FILES=(
     "commands/example.md"
     "agents/example.md"
@@ -30,9 +28,7 @@ SCAFFOLD_FILES=(
     "MCP_README.md"
 )
 
-# Check a single plugin directory for scaffold files
-# Returns 0 if clean, 1 if scaffold files found
-check_plugin() {
+check_scaffold_files() {
     local plugin_dir="$1"
     local plugin_name
     plugin_name="$(basename "$plugin_dir")"
@@ -45,8 +41,6 @@ check_plugin() {
         fi
     done
 
-    # Special check for hooks/hooks.json — only flag if it contains
-    # the scaffold placeholder content, not a real config
     if [ -f "$plugin_dir/hooks/hooks.json" ] && \
        grep -q "echo 'File modified" "$plugin_dir/hooks/hooks.json" 2>/dev/null; then
         print_error "$plugin_name: scaffold file found — hooks/hooks.json (contains placeholder content)"
@@ -56,22 +50,43 @@ check_plugin() {
     return $found
 }
 
+check_version_sync() {
+    local plugin_dir="$1"
+    local marketplace_file="$2"
+    local plugin_name
+    plugin_name="$(basename "$plugin_dir")"
+    local manifest="$plugin_dir/.claude-plugin/plugin.json"
+
+    if [ ! -f "$manifest" ]; then
+        return 0
+    fi
+
+    local plugin_version marketplace_version
+    plugin_version=$(jq -r '.version // empty' "$manifest" 2>/dev/null)
+    marketplace_version=$(jq -r --arg name "$plugin_name" '.plugins[] | select(.name == $name) | .version // empty' "$marketplace_file" 2>/dev/null)
+
+    if [ -n "$plugin_version" ] && [ -n "$marketplace_version" ] && [ "$plugin_version" != "$marketplace_version" ]; then
+        print_error "$plugin_name: version mismatch — plugin.json has '$plugin_version' but marketplace.json has '$marketplace_version'"
+        return 1
+    fi
+
+    return 0
+}
+
 main() {
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
     local dirs=()
     if [ -n "$1" ]; then
-        # Resolve relative to repo root if not absolute
         if [[ "$1" = /* ]]; then
             dirs+=("$1")
         else
             dirs+=("$REPO_ROOT/$1")
         fi
     else
-        # Scan all plugin directories
         for d in "$REPO_ROOT"/plugins/*/; do
-            [ -d "$d" ] && dirs+=("$d")
+            [ -d "$d/.claude-plugin" ] && dirs+=("$d")
         done
     fi
 
@@ -81,23 +96,33 @@ main() {
     fi
 
     local any_failed=0
+    local marketplace_file="$REPO_ROOT/.claude-plugin/marketplace.json"
+
     for dir in "${dirs[@]}"; do
         if [ ! -d "$dir" ]; then
             print_error "Directory not found: $dir"
             any_failed=1
             continue
         fi
-        if ! check_plugin "$dir"; then
+
+        local pname
+        pname="$(basename "$dir")"
+        print_info "Checking $pname..."
+
+        if ! check_scaffold_files "$dir"; then
+            any_failed=1
+        fi
+        if ! check_version_sync "$dir" "$marketplace_file"; then
             any_failed=1
         fi
     done
 
     echo
     if [ $any_failed -ne 0 ]; then
-        print_error "Scaffold files detected. Replace them with real content or delete them before committing."
+        print_error "Validation failed. Fix the errors above before committing."
         exit 1
     else
-        print_success "All plugins are clean — no scaffold files found."
+        print_success "All checks passed."
         exit 0
     fi
 }

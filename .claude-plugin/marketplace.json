@@ -1,21 +1,25 @@
 {
   "name": "ichiba",
-  "description": "Public Claude Code plugin marketplace for sharing useful development plugins and demonstrating best practices",
-  "version": "1.4.0",
-  "author": "nickmeehan",
-  "repository": "nickmeehan/ichiba",
+  "owner": {
+    "name": "nickmeehan"
+  },
+  "metadata": {
+    "description": "Public Claude Code plugin marketplace for sharing useful development plugins and demonstrating best practices",
+    "version": "1.4.1",
+    "pluginRoot": "plugins"
+  },
   "plugins": [
     {
       "name": "dev-workflow",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "description": "A plugin for developer workflow automation including conventional commits and git operations",
-      "path": "plugins/dev-workflow"
+      "source": "./plugins/dev-workflow"
     },
     {
       "name": "docs-kb",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "description": "Progressive disclosure documentation system. Gives any project a docs/ directory that Claude navigates automatically based on task relevance.",
-      "path": "plugins/docs-kb"
+      "source": "./plugins/docs-kb"
     }
   ]
 }
