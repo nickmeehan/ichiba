@@ -111,8 +111,8 @@ Your `plugins/your-plugin-name/.claude-plugin/plugin.json` should look like:
   "author": {
     "name": "Your Name"
   },
-  "skills": ["skill-name"],
-  "agents": ["agent-name"],
+  "skills": "./skills/",
+  "agents": "./agents/",
   "hooks": "./hooks/hooks.json",
   "mcpServers": "./.mcp.json"
 }

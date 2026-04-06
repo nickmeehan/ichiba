@@ -1,11 +1,11 @@
 {
   "name": "docs-kb",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Progressive disclosure documentation system. Gives any project a docs/ directory that Claude navigates automatically based on task relevance.",
   "author": {
     "name": "nickmeehan"
   },
-  "agents": ["doc-traversal"],
-  "skills": ["docs-bootstrap", "docs-add"],
+  "agents": "./agents/doc-traversal.md",
+  "skills": "./skills/",
   "hooks": "./hooks/hooks.json"
 }
