@@ -17,6 +17,16 @@ Use semantic versioning (`MAJOR.MINOR.PATCH`):
 - Minor bump (`1.0.0` → `1.1.0`): new skills, commands, or agents added; new plugin added to marketplace
 - Major bump (`1.0.0` → `2.0.0`): breaking changes or complete rewrites
 
+## Schema Validation
+
+**After editing any `plugin.json` or `marketplace.json`**, run:
+```bash
+claude plugin validate .
+claude plugin validate plugins/<plugin-name>
+```
+
+A pre-commit hook runs `claude plugin validate` and `bin/validate-plugin.sh` automatically when manifest files are staged.
+
 ## Updating in Consuming Projects
 
 After pushing a version bump, users in consuming projects must run:

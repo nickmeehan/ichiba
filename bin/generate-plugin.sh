@@ -43,13 +43,13 @@ generate_plugin_json() {
     local json_parts=""
 
     if has_component "commands"; then
-        json_parts="$json_parts\"commands\": [],"
+        json_parts="$json_parts\"commands\": \"./commands/\","
     fi
     if has_component "agents"; then
-        json_parts="$json_parts\"agents\": [],"
+        json_parts="$json_parts\"agents\": \"./agents/\","
     fi
     if has_component "skills"; then
-        json_parts="$json_parts\"skills\": [],"
+        json_parts="$json_parts\"skills\": \"./skills/\","
     fi
     if has_component "hooks"; then
         json_parts="$json_parts\"hooks\": \"./hooks/hooks.json\","
