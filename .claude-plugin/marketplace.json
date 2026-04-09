@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Public Claude Code plugin marketplace for sharing useful development plugins and demonstrating best practices",
-    "version": "1.4.2",
+    "version": "1.5.0",
     "pluginRoot": "plugins"
   },
   "plugins": [
@@ -20,6 +20,12 @@
       "version": "1.0.4",
       "description": "Progressive disclosure documentation system. Gives any project a docs/ directory that Claude navigates automatically based on task relevance.",
       "source": "./plugins/docs-kb"
+    },
+    {
+      "name": "impeccable",
+      "version": "2.0.7",
+      "description": "Design vocabulary and skills for frontend development. Includes 21 commands (/polish, /distill, /audit, /typeset, /overdrive, etc.) and an enhanced impeccable skill with curated anti-patterns.",
+      "source": "./plugins/impeccable"
     }
   ]
 }
