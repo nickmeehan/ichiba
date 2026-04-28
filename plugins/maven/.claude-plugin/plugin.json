@@ -1,0 +1,9 @@
+{
+  "name": "maven",
+  "version": "1.0.0",
+  "description": "Tools for hosts publishing Lightning Lessons on Maven. Audits a lesson signup page against Maven's published criteria for being made discoverable and featured.",
+  "author": {
+    "name": "nickmeehan"
+  },
+  "skills": "./skills/"
+}
