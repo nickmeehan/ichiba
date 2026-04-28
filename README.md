@@ -38,7 +38,14 @@ See what's available:
 
 ## Available Plugins
 
-Currently, this marketplace is in its early stages. Check back soon for plugins!
+| Plugin | What it does |
+|---|---|
+| [`dev-workflow`](./plugins/dev-workflow) | Conventional Commits + PR creation skills. |
+| [`docs-kb`](./plugins/docs-kb) | Progressive-disclosure docs system that Claude navigates automatically based on task relevance. |
+| [`maven`](./plugins/maven) | Audits Maven Lightning Lesson signup pages against Maven's published listing criteria. |
+
+Install any of them with `/plugin install <plugin-name>@ichiba` after
+running `/plugin marketplace add nickmeehan/ichiba`.
 
 ## Contributing
 
