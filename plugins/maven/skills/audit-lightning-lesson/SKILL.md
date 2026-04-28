@@ -60,6 +60,15 @@ audit works even when the help URL is unreachable.
    notes like "shorten this" are not acceptable — propose the exact
    rewrite.
 
+   Distinguish **rule violations** (the page breaks a stated Maven rule —
+   must fix to be featureable) from **optional polish** (stylistic
+   preferences that don't violate any rule). If a field satisfies every
+   stated rule, write it up as passing — even if you would phrase it
+   differently. Put any rewrites you'd suggest anyway under "Optional
+   polish", not under "Issues". The user should be able to tell at a
+   glance which fixes are required to publish vs. which are just your
+   taste.
+
 4. **Report.** Use the output format at the bottom of this file. Cover
    every section even if it passes — the user should be able to scan the
    report and know each criterion was checked.
@@ -172,12 +181,16 @@ Write the report as Markdown with this structure:
 
 ## Learning Objectives
 - **Count:** N (target 3–4)
-- **Per-objective issues:** ...
-- **Suggested rewrites:** ...
+- **Per-objective issues:** ... (rule violations only)
+- **Suggested rewrites:** ... (only for objectives that violated a rule)
+- **Optional polish:** ... (any stylistic suggestions for objectives that
+  technically pass — clearly labelled as optional)
 
 ## Description
-- **Issues:** ...
+- **Issues:** ... (rule violations only)
 - **Suggested edits:** ...
+- **Optional polish:** ... (anything you'd tighten that isn't a rule
+  violation — labelled as optional)
 
 ## Audience Fit
 One line: is the topic compelling to mid-career professionals in tech &
