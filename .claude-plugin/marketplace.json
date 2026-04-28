@@ -24,7 +24,7 @@
     {
       "name": "maven",
       "version": "1.0.5",
-      "description": "Tools for hosts publishing Lightning Lessons on Maven. Audits a lesson signup page against Maven's published criteria for being made discoverable and featured.",
+      "description": "A toolkit for instructors on Maven. Currently includes a skill that audits Lightning Lesson signup pages against Maven's listing criteria for discoverability and featuring; more skills will be added as instructor needs surface.",
       "source": "./plugins/maven"
     }
   ]
