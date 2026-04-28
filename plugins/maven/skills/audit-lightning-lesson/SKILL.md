@@ -7,6 +7,10 @@ description: >
   audit, critique, or "is this featureable?" check. Reports specific,
   rewrite-level changes for the title, name, bio, learning objectives, and
   description.
+allowed-tools:
+  - WebFetch
+  - Read
+  - Bash(curl:*)
 ---
 
 # audit-lightning-lesson
@@ -24,12 +28,6 @@ audit works even when the help URL is unreachable.
 - "review my Maven lesson page"
 - "is my lightning lesson featureable?"
 - Any time the user pastes a `maven.com/p/...` URL and asks for feedback.
-
-## Allowed Tools
-
-- WebFetch
-- `Bash(curl:*)`
-- Read
 
 ## Process
 
