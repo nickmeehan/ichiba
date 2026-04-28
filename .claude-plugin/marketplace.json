@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Public Claude Code plugin marketplace for sharing useful development plugins and demonstrating best practices",
-    "version": "1.7.0",
+    "version": "1.7.1",
     "pluginRoot": "plugins"
   },
   "plugins": [
@@ -23,7 +23,7 @@
     },
     {
       "name": "maven",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Tools for hosts publishing Lightning Lessons on Maven. Audits a lesson signup page against Maven's published criteria for being made discoverable and featured.",
       "source": "./plugins/maven"
     }
