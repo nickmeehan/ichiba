@@ -137,8 +137,22 @@ Examples (from Maven):
 ### 3. Learning Objectives & Description
 
 - ✅ Maximum 3–4 learning objectives.
-- ✅ Each objective is an actionable step ("How to ...") and names a
-  specific takeaway.
+- ✅ Each objective is an **actionable step** with a **specific takeaway**.
+  "How to ..." is one common pattern, but it's an *example*, not a
+  required form — Maven's own copy says "actionable steps (e.g., 'How
+  to ...')". Other framings (a verb-led promise, a named artifact a
+  learner walks away with, a specific decision they'll be able to make)
+  are equally valid as long as the takeaway is concrete.
+- ✅ **Headline + subtitle is a legitimate format.** Many published
+  Maven lessons use a thematic/catchy headline with a subtitle that
+  carries the specifics (named tools, a walkthrough, an artifact). When
+  an objective has both, judge them together — a thematic headline like
+  "How your codebase is safer than you think" is rule-compliant if the
+  subtitle delivers the actionable specifics ("CI, staging, feature
+  flags, rollbacks. You'll learn what catches you and when."). Don't
+  flag a thematic headline as a rule violation just because it isn't in
+  literal "How to ..." form. If the headlines feel inconsistent across
+  objectives, file that under "Optional polish", not "Issues".
 - ✅ Description is concise, compelling, and free of spelling errors.
 - 🚫 No infomercial / overclaim language: "Master Everything in One
   Hour", "Become an Expert Instantly", "Unlock Hidden Secrets",
