@@ -11,12 +11,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
 
       - name: Install Claude Code CLI
-        run: npm install -g @anthropic-ai/claude-code
+        run: pnpm add -g @anthropic-ai/claude-code
 
       - name: Validate marketplace
         run: claude plugin validate .
@@ -26,6 +30,10 @@ jobs:
           set -e
           shopt -s nullglob
           for dir in plugins/*/; do
+            if [ ! -f "${dir}.claude-plugin/plugin.json" ]; then
+              echo "Skipping $dir (no .claude-plugin/plugin.json)"
+              continue
+            fi
             echo "::group::Validating $dir"
             claude plugin validate "$dir"
             echo "::endgroup::"
