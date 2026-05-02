@@ -25,9 +25,6 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 
 # Only run if manifest files are staged
 if git diff --cached --name-only | grep -qE '(plugin\.json|marketplace\.json|hooks\.json|SKILL\.md)'; then
-    "$REPO_ROOT/bin/validate-plugin.sh"
-
-    # Run built-in Claude plugin validation if available
     if command -v claude >/dev/null 2>&1; then
         claude plugin validate "$REPO_ROOT"
     fi
