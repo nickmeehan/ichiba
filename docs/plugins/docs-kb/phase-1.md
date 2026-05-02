@@ -72,7 +72,7 @@ Convention-enforced doc creation:
 
 ## Verification
 
-1. `./bin/validate-plugin.sh "plugins/docs-kb"` passes
+1. `claude plugin validate plugins/docs-kb` passes
 2. All JSON files parse correctly
 3. Shell scripts are executable and pass `bash -n` syntax check
 4. Version `1.0.0` in both `plugin.json` and `marketplace.json`
