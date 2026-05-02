@@ -46,18 +46,17 @@ Use this skill automatically when the user:
 
    **IMPORTANT**: Always provide all four arguments to avoid interactive prompts and to prevent unnecessary scaffold files.
 
-4. **Validate the new plugin** to confirm no stale scaffold files were created:
+4. **Validate the new plugin** schema:
    ```bash
-   ./bin/validate-plugin.sh "plugins/<plugin-name>"
+   claude plugin validate "plugins/<plugin-name>"
    ```
 
-   If validation fails (exit code 1), review the output — scaffold files will only exist for the components the user selected, which is expected for a brand-new plugin. The user should replace them with real content before committing.
+   If validation fails, review the output and fix the manifest before continuing.
 
 5. **Inform the user** of:
    - The plugin location
    - Which components were scaffolded (and which were skipped)
    - That scaffold/example files need to be replaced with real content before committing
-   - How to run `bin/validate-plugin.sh` themselves to check for leftover placeholders
 
 ## Plugin Structure
 
@@ -82,7 +81,7 @@ Directories for unselected components (agents, hooks, mcp in this example) are *
 - The plugin.json will be initialized with empty component arrays
 - The marketplace.json will be automatically updated with the new plugin entry
 - Only selected component directories are created with example templates
-- Scaffold files (example.md, etc.) are meant to be replaced — run `bin/validate-plugin.sh` before committing to catch any leftovers
+- Scaffold files (example.md, etc.) are meant to be replaced with real content before committing
 
 ## After Creation
 
@@ -90,7 +89,7 @@ The user can then:
 1. Replace scaffold files with real content for each selected component
 2. Update `plugin.json` to list the components
 3. Add more component directories later if needed (manually or re-run)
-4. Run `bin/validate-plugin.sh plugins/<plugin-name>` before committing
+4. Run `claude plugin validate plugins/<plugin-name>` before committing
 5. Test the plugin locally
 
 ## Examples
@@ -104,7 +103,7 @@ Actions:
 2. Ask for plugin name and author
 3. Ask which components: user selects "commands" and "skills"
 4. Run: ./bin/generate-plugin.sh "db-migrations" "A plugin for managing database migrations" "nickmeehan" "commands,skills"
-5. Run: ./bin/validate-plugin.sh "plugins/db-migrations"
+5. Run: claude plugin validate "plugins/db-migrations"
 ```
 
 ### With Explicit Name
@@ -116,5 +115,5 @@ Actions:
 2. Ask for author (default: nickmeehan)
 3. Ask which components: user selects "commands" and "hooks"
 4. Run: ./bin/generate-plugin.sh "awesome-linter" "A plugin for linting code" "nickmeehan" "commands,hooks"
-5. Run: ./bin/validate-plugin.sh "plugins/awesome-linter"
+5. Run: claude plugin validate "plugins/awesome-linter"
 ```

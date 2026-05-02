@@ -25,7 +25,7 @@ claude plugin validate .
 claude plugin validate plugins/<plugin-name>
 ```
 
-A pre-commit hook runs `claude plugin validate` and `bin/validate-plugin.sh` automatically when manifest files are staged.
+A pre-commit hook runs `claude plugin validate` automatically when manifest files are staged. The same validation runs in CI via `.github/workflows/validate.yml`.
 
 ## Updating in Consuming Projects
 

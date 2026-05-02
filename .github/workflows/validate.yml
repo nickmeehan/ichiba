@@ -1,0 +1,34 @@
+name: Validate plugins
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Claude Code
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Validate marketplace
+        run: claude plugin validate .
+
+      - name: Validate each plugin
+        run: |
+          set -e
+          shopt -s nullglob
+          for dir in plugins/*/; do
+            if [ ! -f "${dir}.claude-plugin/plugin.json" ]; then
+              echo "Skipping $dir (no .claude-plugin/plugin.json)"
+              continue
+            fi
+            echo "::group::Validating $dir"
+            claude plugin validate "$dir"
+            echo "::endgroup::"
+          done
