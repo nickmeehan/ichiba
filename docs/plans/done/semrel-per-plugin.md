@@ -1,6 +1,6 @@
 # Plan — Per-plugin semantic-release ("bump everything")
 
-Status: in progress
+Status: done
 
 ## Goal
 

@@ -6,7 +6,7 @@ This repo is a Claude Code plugin marketplace distributed via `extraKnownMarketp
 
 Plugin versions are bumped automatically by CI from scoped Conventional
 Commits — **do not edit `version` fields by hand**. See
-[`docs/plans/in-progress/semrel-per-plugin.md`](docs/plans/in-progress/semrel-per-plugin.md)
+[`docs/plans/done/semrel-per-plugin.md`](docs/plans/done/semrel-per-plugin.md)
 for the full design.
 
 ### Commit messages
