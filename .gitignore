@@ -2,3 +2,4 @@
 .claude/rules/
 commit-workspace/
 audit-lightning-lesson-workspace/
+node_modules/
