@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      plugins: ${{ steps.list.outputs.plugins }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: list
+        run: |
+          plugins=$(ls -d plugins/*/ | sed 's|plugins/||;s|/||' | jq -R . | jq -s -c .)
+          echo "plugins=$plugins" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: discover
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    strategy:
+      max-parallel: 1
+      matrix:
+        plugin: ${{ fromJson(needs.discover.outputs.plugins) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
+          persist-credentials: true
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Pull latest main
+        run: git pull --rebase origin main
+
+      - name: Release ${{ matrix.plugin }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          PLUGIN: ${{ matrix.plugin }}
+          GIT_AUTHOR_NAME: ichiba-release-bot
+          GIT_AUTHOR_EMAIL: ichiba-release-bot@users.noreply.github.com
+          GIT_COMMITTER_NAME: ichiba-release-bot
+          GIT_COMMITTER_EMAIL: ichiba-release-bot@users.noreply.github.com
+        run: pnpm exec semantic-release

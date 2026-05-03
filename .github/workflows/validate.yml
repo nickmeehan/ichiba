@@ -32,3 +32,26 @@ jobs:
             claude plugin validate "$dir"
             echo "::endgroup::"
           done
+
+  commits:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint commit messages
+        run: pnpm exec commitlint --from=origin/${{ github.base_ref }} --to=HEAD --verbose
+
+      - name: Reject cross-plugin commits
+        run: bash bin/check-plugin-scope.sh origin/${{ github.base_ref }} HEAD
