@@ -46,14 +46,19 @@ Skip `git diff`, `git log`, and `git status` when you already know what changed 
    | `docs:` | Documentation |
    | `refactor:` | Restructuring |
 
-5. **Compose PR body** — exactly two sections, nothing else:
-   ```
-   ## Summary
-   - <what changed and why>
+5. **Compose PR body** — exactly two sections, in this order: `## Summary` and `## Testing`. Both sections appear on every PR. The items inside each are conditional — include them only when they help the reviewer.
 
-   ## Test plan
-   - [ ] <verification step>
-   ```
+   **`## Summary`** — cover, in this order, only the items that apply:
+
+   1. **State what changed.** Describe the user-visible or behavior-level change. Do not list files.
+   2. **Explain why.** Fold in the ticket / conversation / issue link that prompted the work. Do not add a separate `## Context` heading.
+   3. **Add a mermaid diagram when it helps.** Include a fenced `mermaid` code block when a flow, sequence, or state change reads more clearly as a picture (new request flow, reordered pipeline, state machine). Skip for trivial diffs.
+   4. **Call out risks only when applicable.** Flag risks or things to watch when the change touches auth, migrations, shared infra, or perf-sensitive paths. Omit on trivial PRs.
+
+   **`## Testing`** — cover both items below:
+
+   1. **Write step-by-step verification.** Give concrete steps a reviewer can run to confirm the change works. Use checkbox bullets (`- [ ]`) so the reviewer can tick them off.
+   2. **Embed screenshots and recordings inline.** Keep images and video links together inside Testing — do not split them into a separate section. Use them whenever richer media shows the thing actually works (UI, CLI output, an API response, a job running, a flow completing). Apply this bar: *would a reviewer understand faster from seeing it than from reading steps?* Skip only when there is genuinely nothing visual worth showing (pure refactor, doc-only change).
 
 6. **Create the PR**:
 
