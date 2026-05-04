@@ -11,7 +11,9 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 HOOK_TARGET="$REPO_ROOT/.git/hooks/pre-commit"
 
 # Skip if already installed and up to date
-if [ -f "$HOOK_TARGET" ] && grep -q "claude plugin validate" "$HOOK_TARGET" 2>/dev/null; then
+if [ -f "$HOOK_TARGET" ] \
+    && grep -q "claude plugin validate" "$HOOK_TARGET" 2>/dev/null \
+    && ! grep -q "validate-plugin\.sh" "$HOOK_TARGET" 2>/dev/null; then
     exit 0
 fi
 
