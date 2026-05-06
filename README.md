@@ -16,9 +16,15 @@ This marketplace shows how organizations can build internal plugin ecosystems wh
 
 ### Install the Marketplace
 
-Add this marketplace to your Claude Code:
+From your terminal:
 
 ```bash
+claude plugin marketplace add nickmeehan/ichiba
+```
+
+Or from inside Claude Code:
+
+```
 /plugin marketplace add nickmeehan/ichiba
 ```
 
