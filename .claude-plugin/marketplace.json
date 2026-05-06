@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Public Claude Code plugin marketplace for sharing useful development plugins and demonstrating best practices",
-    "version": "1.7.7",
+    "version": "1.7.8",
     "pluginRoot": "plugins"
   },
   "plugins": [
@@ -23,7 +23,7 @@
     },
     {
       "name": "maven",
-      "version": "1.0.5",
+      "version": "1.1.0",
       "description": "A toolkit for instructors on Maven. Currently includes a skill that audits Lightning Lesson signup pages against Maven's listing criteria for discoverability and featuring; more skills will be added as instructor needs surface.",
       "source": "./plugins/maven"
     }

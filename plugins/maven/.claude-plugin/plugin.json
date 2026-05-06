@@ -1,6 +1,6 @@
 {
   "name": "maven",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "Tools for Maven instructors. Includes a skill that audits Lightning Lesson signup pages.",
   "author": {
     "name": "nickmeehan"
