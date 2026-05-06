@@ -1,7 +1,7 @@
 {
   "name": "maven",
   "version": "1.0.5",
-  "description": "A toolkit for instructors on Maven. Currently includes a skill that audits Lightning Lesson signup pages against Maven's listing criteria for discoverability and featuring; more skills will be added as instructor needs surface.",
+  "description": "Tools for Maven instructors. Includes a skill that audits Lightning Lesson signup pages.",
   "author": {
     "name": "nickmeehan"
   },
