@@ -58,6 +58,49 @@ A SessionStart hook reinstalls anything that the auto-sync skipped:
 The hook is dynamic — adding a plugin to `enabledPlugins` is enough; no
 change to the script is required.
 
+## Open question — does the workaround itself race? (verify on next fresh container)
+
+**Unverified assumption:** `bin/install-enabled-plugins.sh` is wired as a
+SessionStart hook. The workaround only works if SessionStart hooks fire
+*after* the `extraKnownMarketplaces` clones finish. If they don't, the hook
+will race the same way `vDA` does — `claude plugin install` will fail
+because the marketplaces aren't on disk yet.
+
+We could not prove ordering from `/tmp/claude-code.log` because the CLI does
+not log SessionStart hook execution timestamps. The workaround was tested
+manually post-boot (marketplaces already cached), which doesn't exercise the
+race.
+
+**Instructions for the next agent running in this repo:**
+
+1. After session start, read `~/.claude/plugin-race-workaround.log` and
+   `/tmp/claude-code.log`. Compare:
+   - First line of the workaround log for *this* container — note the
+     `installed=` and `failed=` counts.
+   - In `/tmp/claude-code.log`, find the timestamps of:
+     - `vDA` / `Creating installed_plugins.json from settings.json files`
+     - the SessionStart hook entry (if logged) or the first `Looking up
+       plugin … in marketplace` from the workaround's `claude plugin
+       install` calls
+     - `lastUpdated` in `~/.claude/plugins/known_marketplaces.json`
+2. Decide which scenario fits:
+   - **Workaround works (`installed=N, failed=0` with N == enabled count):**
+     no action; record the verification in the Session log below.
+   - **Workaround races too (`failed>0`, especially "Plugin not found in
+     any marketplace, skipping"):** patch
+     `bin/install-enabled-plugins.sh` to retry with backoff before each
+     `claude plugin install`. Suggested logic: try → sleep 1s → sleep 2s
+     → sleep 4s (cap at ~10s total). Only proceed past the wait once
+     `~/.claude/plugins/marketplaces/<marketplace>/` exists *and*
+     `known_marketplaces.json` has a `lastUpdated` newer than session
+     start. Commit on the same branch and update the Session log row to
+     reflect the patch.
+   - **Inconclusive (mixed results, container was warm):** add a row noting
+     it was a warm container and revisit on the next genuinely fresh one.
+
+3. If the workaround works reliably across fresh containers, the retry loop
+   is not needed and the assumption section above can be marked verified.
+
 ## Testing whether the upstream fix has landed
 
 The `additionalContext` emitted by the workaround tells you, every session,
