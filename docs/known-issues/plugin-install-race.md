@@ -58,48 +58,70 @@ A SessionStart hook reinstalls anything that the auto-sync skipped:
 The hook is dynamic — adding a plugin to `enabledPlugins` is enough; no
 change to the script is required.
 
-## Open question — does the workaround itself race? (verify on next fresh container)
+## Workaround backoff (verified racing on 2026-05-23, patched)
 
-**Unverified assumption:** `bin/install-enabled-plugins.sh` is wired as a
-SessionStart hook. The workaround only works if SessionStart hooks fire
-*after* the `extraKnownMarketplaces` clones finish. If they don't, the hook
-will race the same way `vDA` does — `claude plugin install` will fail
-because the marketplaces aren't on disk yet.
+The SessionStart hook *does* race the `extraKnownMarketplaces` fetch on
+fresh containers. Verified evidence: on container
+`container_019QnAXkDBpBEebNTnWghf4w--claude_code_remote--ee4383`, the hook
+ran at 20:56:53.6Z but `known_marketplaces.json` `lastUpdated` was
+20:56:54.4Z / 54.7Z. All four `claude plugin install` calls fired before
+the marketplace JSON existed on disk and failed silently.
 
-We could not prove ordering from `/tmp/claude-code.log` because the CLI does
-not log SessionStart hook execution timestamps. The workaround was tested
-manually post-boot (marketplaces already cached), which doesn't exercise the
-race.
+`bin/install-enabled-plugins.sh` now wraps each install in a wait loop:
 
-**Instructions for the next agent running in this repo:**
+- Extract `<marketplace>` from each `<plugin>@<marketplace>` string.
+- Poll `~/.claude/plugins/marketplaces/<marketplace>/.claude-plugin/marketplace.json`
+  with backoff `0s → 1s → 2s → 4s` (≤7s total, ~10s budget).
+- Attempt `claude plugin install`; if it still fails after the wait, do
+  one final retry pass for whatever's still in `failed=`.
 
-1. After session start, read `~/.claude/plugin-race-workaround.log` and
-   `/tmp/claude-code.log`. Compare:
-   - First line of the workaround log for *this* container — note the
-     `installed=` and `failed=` counts.
-   - In `/tmp/claude-code.log`, find the timestamps of:
-     - `vDA` / `Creating installed_plugins.json from settings.json files`
-     - the SessionStart hook entry (if logged) or the first `Looking up
-       plugin … in marketplace` from the workaround's `claude plugin
-       install` calls
-     - `lastUpdated` in `~/.claude/plugins/known_marketplaces.json`
-2. Decide which scenario fits:
-   - **Workaround works (`installed=N, failed=0` with N == enabled count):**
-     no action; record the verification in the Session log below.
-   - **Workaround races too (`failed>0`, especially "Plugin not found in
-     any marketplace, skipping"):** patch
-     `bin/install-enabled-plugins.sh` to retry with backoff before each
-     `claude plugin install`. Suggested logic: try → sleep 1s → sleep 2s
-     → sleep 4s (cap at ~10s total). Only proceed past the wait once
-     `~/.claude/plugins/marketplaces/<marketplace>/` exists *and*
-     `known_marketplaces.json` has a `lastUpdated` newer than session
-     start. Commit on the same branch and update the Session log row to
-     reflect the patch.
-   - **Inconclusive (mixed results, container was warm):** add a row noting
-     it was a warm container and revisit on the next genuinely fresh one.
+Do not remove this backoff unless the upstream race is fixed (see the
+removal procedure below). The script is safe on warm containers — the file
+exists immediately, no waiting happens.
 
-3. If the workaround works reliably across fresh containers, the retry loop
-   is not needed and the assumption section above can be marked verified.
+### Reading the workaround log line
+
+Each session appends one line to `~/.claude/plugin-race-workaround.log`:
+
+```
+2026-05-23T20:58:48Z  enabled=4 already=0 installed=4 failed=0 race_fired=yes
+```
+
+| Field | Meaning |
+|---|---|
+| `enabled=` | Plugins in `.claude/settings.json` → `enabledPlugins` set to `true`. |
+| `already=` | Already in `installed_plugins.json` when the hook started (vDA succeeded, or this is a warm container). |
+| `installed=` | Newly installed by the hook this session. |
+| `failed=` | Hook attempted install but `claude plugin install` returned non-zero. **A non-zero value here means the hook's backoff was insufficient — escalate.** |
+| `race_fired=` | **Misleading flag — reads as `yes` iff `installed>0`, not iff the upstream race fired.** True meaning of "race fired" is `already < enabled`. If `installed=0 failed=N`, the race fired *and* the workaround failed; the flag still reads `no`. |
+
+**Expected shape on a fresh container with the patch working:**
+
+- Either `already=0 installed=N failed=0 race_fired=yes` (race fired, backoff covered it), or
+- `already=N installed=0 failed=0 race_fired=no` (upstream race didn't fire — note in the log).
+
+Anything with `failed>0` means the backoff in the hook needs widening.
+
+### Instructions for the next agent
+
+1. Confirm this is a **fresh** container — the first line of
+   `~/.claude/plugin-race-workaround.log` should have a timestamp within
+   ~1 minute of the current session start. If the log already has older
+   lines from previous sessions, the container is warm and the test is
+   inconclusive; record that in the Session log and stop.
+2. Read the first line of the log for this session and the full
+   `installed_plugins.json`. The success criterion is `failed=0` *and*
+   `installed_plugins.json` contains every enabled plugin.
+3. In `/tmp/claude-code.log`, also note the vDA sync timestamp (`Syncing
+   installed_plugins.json with enabledPlugins`) and the
+   `known_marketplaces.json` `lastUpdated` values — if the marketplace
+   timestamps are now *before* the SessionStart hook entry, Claude Code
+   upstream has changed its ordering and the workaround may no longer be
+   needed (see "Testing whether the upstream fix has landed" below).
+4. If `failed>0`, widen the backoff in `wait_for_marketplace()` in
+   `bin/install-enabled-plugins.sh` (e.g., add an `8s` step) and re-test.
+5. Append a row to the Session log with date, Claude Code version,
+   container ID, the literal `race_fired=` value, and a note.
 
 ## Testing whether the upstream fix has landed
 
