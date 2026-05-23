@@ -51,6 +51,21 @@ is_installed() {
     [ -f "$INSTALLED" ] && jq -e --arg p "$1" '(.plugins[$p] // []) | length > 0' "$INSTALLED" >/dev/null 2>&1
 }
 
+# The hook itself can race the marketplace fetch (observed on fresh containers:
+# SessionStart fires ~1s before the extraKnownMarketplaces clone lands on disk).
+# Block until <plugin>@<marketplace>'s marketplace.json is present, with backoff
+# capped at ~7s. Returns 0 if the file appears, 1 if the wait gave up.
+wait_for_marketplace() {
+    local marketplace="$1"
+    local mp_json="$HOME/.claude/plugins/marketplaces/$marketplace/.claude-plugin/marketplace.json"
+    local delay
+    for delay in 0 1 2 4; do
+        [ "$delay" -gt 0 ] && sleep "$delay"
+        [ -f "$mp_json" ] && return 0
+    done
+    return 1
+}
+
 missing=()
 already=()
 for plugin in $enabled; do
@@ -61,15 +76,36 @@ for plugin in $enabled; do
     fi
 done
 
+try_install() {
+    local plugin="$1"
+    local marketplace="${plugin##*@}"
+    wait_for_marketplace "$marketplace" || true
+    claude plugin install "$plugin" >/dev/null 2>&1
+}
+
 installed_now=()
 failed=()
 for plugin in "${missing[@]+"${missing[@]}"}"; do
-    if claude plugin install "$plugin" >/dev/null 2>&1; then
+    if try_install "$plugin"; then
         installed_now+=("$plugin")
     else
         failed+=("$plugin")
     fi
 done
+
+# Second pass: anything that failed the first attempt gets one more shot, in
+# case the marketplace fetch was still in flight when the wait gave up.
+if [ ${#failed[@]} -gt 0 ]; then
+    retry=("${failed[@]}")
+    failed=()
+    for plugin in "${retry[@]}"; do
+        if claude plugin install "$plugin" >/dev/null 2>&1; then
+            installed_now+=("$plugin")
+        else
+            failed+=("$plugin")
+        fi
+    done
+fi
 
 join() { local IFS=", "; echo "$*"; }
 
