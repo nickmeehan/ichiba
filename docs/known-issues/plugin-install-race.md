@@ -135,6 +135,7 @@ Append a row whenever you (or a future agent) verify the workaround status.
 | Date (UTC) | Claude Code version | Container | Race fired? | Notes |
 |---|---|---|---|---|
 | 2026-05-23 | 2.1.150 | `container_01XUwnAuw84Q8ao2oxVXtPLs--claude_code_remote--45d2be` | yes | Initial investigation; 4 plugins skipped at boot, manual install of `dev-workflow@ichiba` succeeded |
+| 2026-05-23 | 2.1.150 | `container_019QnAXkDBpBEebNTnWghf4w--claude_code_remote--ee4383` | no (per log; misleading) | Workaround itself raced — hook ran at 20:56:53Z but `known_marketplaces.json` lastUpdated 20:56:54.4Z/54.7Z, so all 4 installs failed (`failed=4`, empty `installed_plugins.json`). Patched `bin/install-enabled-plugins.sh` with a `wait_for_marketplace` backoff (0/1/2/4s) plus a one-shot retry of failed installs; manual rerun then yielded `installed=4 failed=0 race_fired=yes`. |
 
 ## References
 
