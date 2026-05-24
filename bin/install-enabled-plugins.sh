@@ -14,12 +14,12 @@
 # wait or install inside this hook just delays the parent by the same
 # amount and `claude plugin install` keeps failing.
 #
-# The post-hook headless reconcile populates skills/agents/commands for
-# the current session even when `installed_plugins.json` is left empty,
-# so the workaround can safely do nothing. This hook now only logs a
-# status line per session and surfaces an informational SessionStart
-# `additionalContext` — useful for telling future agents when the
-# upstream race can finally be considered fixed.
+# Note: on a TRULY fresh container the first session does NOT get
+# plugin-namespaced skills regardless of this hook — installPluginsForHeadless
+# only caches the marketplaces in session 1, and the next session's vDA
+# populates installed_plugins.json. This hook is intentionally a no-op
+# install-wise; it just logs session status so we can tell when the
+# upstream race can be considered fixed.
 
 set -eu
 
@@ -81,7 +81,8 @@ if [ $n_already -gt 0 ]; then
     report="$report"$'\n'"Already in installed_plugins.json: $(join "${already[@]+"${already[@]}"}")"
 fi
 if [ $n_missing -gt 0 ]; then
-    report="$report"$'\n'"Not yet in installed_plugins.json (Claude's post-hook reconcile will install on this session): $(join "${missing[@]+"${missing[@]}"}")"
+    report="$report"$'\n'"Not yet in installed_plugins.json (vDA's pre-hook sync missed them): $(join "${missing[@]+"${missing[@]}"}")"
+    report="$report"$'\n'"On the first session in a fresh container, plugin-namespaced skills (dev-workflow:*, docs-kb:*, plugin-dev:*, skill-creator:*) will NOT be available this session — installPluginsForHeadless only caches the marketplaces. Restart Claude in the same container to get the plugin skills."
 fi
 if [ $n_missing -eq 0 ]; then
     report="$report"$'\n'"Race did NOT fire this session. If this holds across 3+ consecutive fresh containers, see docs/known-issues/plugin-install-race.md § 'Removal procedure'."
