@@ -1,6 +1,50 @@
 # Known issue — `enabledPlugins` auto-sync races marketplace fetches
 
-Status: **active workaround** (Claude Code 2.1.150)
+Status: **upstream bug; cloud-session mitigation moved to env-level setup script** (Claude Code 2.1.150)
+
+> **Update (2026-05-24):** the in-repo SessionStart-hook workaround
+> (`bin/install-enabled-plugins.sh`) has been removed — it could never
+> win because Claude serializes `installPluginsForHeadless` to run
+> *after* SessionStart hooks return. The current mitigation for cloud
+> sessions is an env-level **setup script** that calls
+> [`bin/prefetch-marketplaces.sh`](../../bin/prefetch-marketplaces.sh)
+> before Claude launches. See *Current mitigation (env-level setup
+> script)* below.
+>
+> The full timeline, evidence, and proposed fixes are in
+> [`plugin-install-race-upstream-issue.md`](plugin-install-race-upstream-issue.md),
+> which is the body filed (or to be filed) at
+> <https://github.com/anthropics/claude-code/issues>. The rest of this
+> document is preserved as a historical record of the investigation and
+> the dead-end SessionStart-hook approach.
+
+## Current mitigation (env-level setup script)
+
+For Claude Code on the web sessions, configure your environment's
+**Setup script** (Settings dialog in claude.ai/code) to invoke
+`bin/prefetch-marketplaces.sh` before Claude launches:
+
+```bash
+#!/bin/bash
+set -e
+"$CLAUDE_PROJECT_DIR"/bin/prefetch-marketplaces.sh
+```
+
+(If `$CLAUDE_PROJECT_DIR` isn't set at setup-script time, hard-code the
+container's repo path, e.g. `/home/user/<repo>/bin/prefetch-marketplaces.sh`.)
+
+The setup script's filesystem snapshot is cached across sessions in the
+same environment, so the clone happens once. Subsequent sessions start
+with the marketplaces already on disk and `vDA`'s sync succeeds in
+session 1.
+
+**Private marketplaces:** set `GH_TOKEN` (fine-grained PAT, Contents:Read
+on the marketplace repos) in the same environment-variables block.
+`prefetch-marketplaces.sh` picks it up automatically.
+See *Why the setup-script approach is needed for private marketplaces*
+in [`plugin-install-race-upstream-issue.md`](plugin-install-race-upstream-issue.md).
+
+---
 
 ## Symptom
 

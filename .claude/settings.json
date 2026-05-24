@@ -7,10 +7,6 @@
           {
             "type": "command",
             "command": "./bin/install-hooks.sh"
-          },
-          {
-            "type": "command",
-            "command": "./bin/install-enabled-plugins.sh"
           }
         ]
       }
