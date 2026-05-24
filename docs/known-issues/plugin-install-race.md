@@ -41,66 +41,91 @@ Manually invoking `claude plugin install <plugin>` *after* startup works
 instantly because the marketplaces are by then cached. So the race is purely
 in the auto-sync's ordering relative to the fetch.
 
-## Workaround in this repo
+## Workaround in this repo (monitoring-only as of 2026-05-24)
 
-A SessionStart hook reinstalls anything that the auto-sync skipped:
+A SessionStart hook records per-session race status:
 
 - **Script:** `bin/install-enabled-plugins.sh`
 - **Wired in:** `.claude/settings.json` → `hooks.SessionStart[].hooks[]`
-- **Behavior:** reads `enabledPlugins` from `.claude/settings.json`, compares
-  to `~/.claude/plugins/installed_plugins.json`, runs `claude plugin install`
-  for anything missing, and emits a `SessionStart` `additionalContext`
-  message reporting which plugins were installed this session vs. already
-  present.
-- **Side effect:** appends one line per session to
-  `~/.claude/plugin-race-workaround.log`.
+- **Behavior:** reads `enabledPlugins` from `.claude/settings.json`,
+  compares to `~/.claude/plugins/installed_plugins.json`, logs one line
+  per session to `~/.claude/plugin-race-workaround.log`, and emits a
+  `SessionStart` `additionalContext` message describing whether the
+  upstream race fired this session.
+- **Does NOT install anything.** The post-hook
+  `installPluginsForHeadless` reconcile (which the parent runs strictly
+  AFTER the SessionStart hook returns — see *Why the hook no longer
+  installs* below) is what actually populates the session's
+  skills/agents/commands. Earlier versions of this hook tried to install
+  missing plugins themselves; this serialized them behind the parent's
+  own clone and could not win.
 
 The hook is dynamic — adding a plugin to `enabledPlugins` is enough; no
 change to the script is required.
 
-## Workaround backoff (verified racing on 2026-05-23, patched)
+## Why the hook no longer installs
 
-The SessionStart hook *does* race the `extraKnownMarketplaces` fetch on
-fresh containers. Verified evidence: on container
-`container_019QnAXkDBpBEebNTnWghf4w--claude_code_remote--ee4383`, the hook
-ran at 20:56:53.6Z but `known_marketplaces.json` `lastUpdated` was
-20:56:54.4Z / 54.7Z. All four `claude plugin install` calls fired before
-the marketplace JSON existed on disk and failed silently.
+Earlier iterations of this workaround wrapped each `claude plugin install`
+in a wait loop (`wait_for_marketplace`, backoff
+`0s → 1s → 2s → 4s → 8s` plus a `known_marketplaces.json` secondary
+check). On a fresh container the wait never observed the marketplace
+files because the parent had not yet cloned them.
 
-`bin/install-enabled-plugins.sh` now wraps each install in a wait loop:
+The 2026-05-24 fresh-container session
+(`container_01G6VD6emFjz7Ke48ETpDdoE--claude_code_remote--a719bd`,
+Claude Code 2.1.150) made the ordering unambiguous:
 
-- Extract `<marketplace>` from each `<plugin>@<marketplace>` string.
-- Poll `~/.claude/plugins/marketplaces/<marketplace>/.claude-plugin/marketplace.json`
-  with backoff `0s → 1s → 2s → 4s` (≤7s total, ~10s budget).
-- Attempt `claude plugin install`; if it still fails after the wait, do
-  one final retry pass for whatever's still in `failed=`.
+| Time (UTC) | Event |
+|---|---|
+| 05:42:53.078Z | `Syncing installed_plugins.json with enabledPlugins` (vDA) — fires *very* early, before marketplaces exist |
+| 05:42:53.225–.287Z | All 4 enabled plugins "not found in any marketplace, skipping" |
+| 05:43:58.712Z | `Hook SessionStart …install-enabled-plugins.sh success` (our hook returned) |
+| 05:43:58.726Z | `installPluginsForHeadless: starting` — **12ms after the hook returned** |
+| 05:43:59.395Z | `claude-plugins-official/.claude-plugin/marketplace.json` written |
+| 05:43:59.672Z | `installPluginsForHeadless: installed marketplace claude-plugins-official` |
+| 05:44:00.028Z | `nickmeehan-ichiba/.claude-plugin/marketplace.json` written |
+| 05:44:00.031Z | `installPluginsForHeadless: installed marketplace ichiba` |
+| 05:44:00.088Z+ | Plugin `hooks.json` files read (docs-kb etc.) — skills available this session |
 
-Do not remove this backoff unless the upstream race is fixed (see the
-removal procedure below). The script is safe on warm containers — the file
-exists immediately, no waiting happens.
+The parent's `installPluginsForHeadless` runs strictly after
+`SessionStart` hooks complete. Anything the hook waits for, the parent
+will not start until the hook returns. So `claude plugin install` inside
+the hook cannot succeed on a fresh container.
+
+The good news: the post-hook reconcile *does* populate the session's
+plugins for the very same session — skills, agents, commands, and the
+plugins' own hooks all loaded successfully this session even though
+`installed_plugins.json` was left empty. The workaround was effectively
+unnecessary as soon as `installPluginsForHeadless` existed.
 
 ### Reading the workaround log line
 
 Each session appends one line to `~/.claude/plugin-race-workaround.log`:
 
 ```
-2026-05-23T20:58:48Z  enabled=4 already=0 installed=4 failed=0 race_fired=yes
+2026-05-24T05:44:01Z  enabled=4 already=0 missing=4 race_fired=yes
 ```
 
 | Field | Meaning |
 |---|---|
 | `enabled=` | Plugins in `.claude/settings.json` → `enabledPlugins` set to `true`. |
-| `already=` | Already in `installed_plugins.json` when the hook started (vDA succeeded, or this is a warm container). |
-| `installed=` | Newly installed by the hook this session. |
-| `failed=` | Hook attempted install but `claude plugin install` returned non-zero. **A non-zero value here means the hook's backoff was insufficient — escalate.** |
-| `race_fired=` | **Misleading flag — reads as `yes` iff `installed>0`, not iff the upstream race fired.** True meaning of "race fired" is `already < enabled`. If `installed=0 failed=N`, the race fired *and* the workaround failed; the flag still reads `no`. |
+| `already=` | Already in `installed_plugins.json` when the hook ran. |
+| `missing=` | Not in `installed_plugins.json` when the hook ran. These will be installed by the parent's post-hook `installPluginsForHeadless` reconcile. |
+| `race_fired=` | `yes` iff `missing>0` — i.e. vDA's pre-hook sync missed at least one enabled plugin. |
 
-**Expected shape on a fresh container with the patch working:**
+**Expected shapes:**
 
-- Either `already=0 installed=N failed=0 race_fired=yes` (race fired, backoff covered it), or
-- `already=N installed=0 failed=0 race_fired=no` (upstream race didn't fire — note in the log).
+- `already=0 missing=N race_fired=yes` — fresh container, race fired
+  (the common case on 2.1.150). The parent's reconcile will populate
+  the session immediately after the hook returns; the next session in
+  the same container should see `already=N missing=0 race_fired=no`.
+- `already=N missing=0 race_fired=no` — either a warm container (the
+  previous session left `installed_plugins.json` populated) or upstream
+  has been fixed and vDA now runs after the marketplaces land.
 
-Anything with `failed>0` means the backoff in the hook needs widening.
+Historical log rows used `installed=N failed=N` instead of `missing=N`
+(when the hook still tried to install plugins itself). Those fields are
+no longer emitted.
 
 ### Instructions for the next agent
 
@@ -109,37 +134,44 @@ Anything with `failed>0` means the backoff in the hook needs widening.
    ~1 minute of the current session start. If the log already has older
    lines from previous sessions, the container is warm and the test is
    inconclusive; record that in the Session log and stop.
-2. Read the first line of the log for this session and the full
-   `installed_plugins.json`. The success criterion is `failed=0` *and*
-   `installed_plugins.json` contains every enabled plugin.
-3. In `/tmp/claude-code.log`, also note the vDA sync timestamp (`Syncing
-   installed_plugins.json with enabledPlugins`) and the
-   `known_marketplaces.json` `lastUpdated` values — if the marketplace
-   timestamps are now *before* the SessionStart hook entry, Claude Code
-   upstream has changed its ordering and the workaround may no longer be
-   needed (see "Testing whether the upstream fix has landed" below).
-4. If `failed>0`, widen the backoff in `wait_for_marketplace()` in
-   `bin/install-enabled-plugins.sh` (e.g., add an `8s` step) and re-test.
+2. Read the first line of the log for this session. On a fresh container
+   the expected shape is `already=0 missing=N race_fired=yes`. If you
+   instead see `already=N missing=0 race_fired=no` on a fresh container,
+   the upstream race may have been fixed — see *Testing whether the
+   upstream fix has landed* below.
+3. In `/tmp/claude-code.log`, confirm the parent's
+   `installPluginsForHeadless: starting` line appears AFTER the
+   `"Hook SessionStart … install-enabled-plugins.sh" success` line
+   (post-hook serialization). Confirm the marketplace `lastUpdated`
+   values in `~/.claude/plugins/known_marketplaces.json` are AFTER the
+   hook returned. If either is no longer true, the parent's ordering has
+   changed — record it in the Session log.
+4. Confirm the session itself actually has the plugins' skills/agents
+   available (look at the `available-skills` list in the system reminder
+   for skills like `verify`, `code-review`, etc. that come from the
+   plugins). If they're loading, the post-hook reconcile is doing its
+   job and no action is needed.
 5. Append a row to the Session log with date, Claude Code version,
    container ID, the literal `race_fired=` value, and a note.
 
 ## Testing whether the upstream fix has landed
 
-The `additionalContext` emitted by the workaround tells you, every session,
-whether the race fired:
+The `additionalContext` emitted by the hook tells you whether vDA's
+pre-hook sync missed plugins this session:
 
-- **"Installed this session (race fired): …"** — the upstream bug is still
-  present.
-- **"Race did NOT fire this session."** — either (a) the upstream bug is
-  fixed, or (b) you resumed an existing container where the plugins were
-  already installed by an earlier session.
+- **"Not yet in installed_plugins.json …"** — the upstream race fired.
+- **"Race did NOT fire this session."** — either (a) the upstream bug
+  is fixed, or (b) you resumed an existing container where a previous
+  session's post-hook reconcile already populated
+  `installed_plugins.json`.
 
-To distinguish (a) from (b), look at the **fresh-container** sessions only.
-The `~/.claude/plugin-race-workaround.log` records every session; lines with
-`race_fired=no` from sessions starting in fresh containers are the signal.
+To distinguish (a) from (b), look at the **fresh-container** sessions
+only. The `~/.claude/plugin-race-workaround.log` records every session;
+lines with `race_fired=no` from sessions starting in fresh containers
+are the signal.
 
-If `race_fired=no` for 3+ consecutive fresh containers after a Claude Code
-upgrade, run the removal procedure below.
+If `race_fired=no` for 3+ consecutive fresh containers after a Claude
+Code upgrade, run the removal procedure below.
 
 ## Removal procedure (when upstream is fixed)
 
@@ -159,6 +191,7 @@ Append a row whenever you (or a future agent) verify the workaround status.
 | 2026-05-23 | 2.1.150 | `container_01XUwnAuw84Q8ao2oxVXtPLs--claude_code_remote--45d2be` | yes | Initial investigation; 4 plugins skipped at boot, manual install of `dev-workflow@ichiba` succeeded |
 | 2026-05-23 | 2.1.150 | `container_019QnAXkDBpBEebNTnWghf4w--claude_code_remote--ee4383` | no (per log; misleading) | Workaround itself raced — hook ran at 20:56:53Z but `known_marketplaces.json` lastUpdated 20:56:54.4Z/54.7Z, so all 4 installs failed (`failed=4`, empty `installed_plugins.json`). Patched `bin/install-enabled-plugins.sh` with a `wait_for_marketplace` backoff (0/1/2/4s) plus a one-shot retry of failed installs; manual rerun then yielded `installed=4 failed=0 race_fired=yes`. |
 | 2026-05-23 | 2.1.150 | `container_01WCmjySw9GbtgfGMtjWxjxg--claude_code_remote--c28ed3` | yes (literal `race_fired=no`, but `failed=4` so the race fired and the backoff lost it again) | Fresh container — first log line `2026-05-23T21:09:58Z enabled=4 already=0 installed=0 failed=4`. **New finding:** the parent process now serializes the marketplace clone *after* the SessionStart hooks complete (`installPluginsForHeadless: starting` at 21:09:58.701Z, 8ms after our hook exited; marketplaces lastUpdated 21:09:59.4Z / 21:09:59.8Z). vDA `Syncing installed_plugins.json with enabledPlugins` fired at 21:09:24.741Z, ~35s before marketplaces landed. Plugin skills still loaded *this* session via the post-hook headless reconcile, but `installed_plugins.json` stayed empty until a manual rerun. Widened `wait_for_marketplace` cadence from `0 1 2 4` (7s) to `0 1 2 4 8` (15s) and added a `marketplace_fetched_since_session_start` secondary check (one extra 4s grace period if `known_marketplaces.json[m].lastUpdated >= session_start`). Manual rerun yields `installed=4 failed=0`. **Caveat:** if the parent really does block marketplace fetch on SessionStart hook completion, more waiting in the hook just delays the parent's clone by the same amount; the next fresh-container observation should tell us whether the wider wait actually helps. |
+| 2026-05-24 | 2.1.150 | `container_01G6VD6emFjz7Ke48ETpDdoE--claude_code_remote--a719bd` | yes (literal `race_fired=no`, `failed=4`) | Fresh container — first log line `2026-05-24T05:43:58Z enabled=4 already=0 installed=0 failed=4 race_fired=no`. Widened `0 1 2 4 8` backoff + `known_marketplaces.json` secondary check from prior row did **not** help. `/tmp/claude-code.log` confirms post-hook serialization: hook returned at 05:43:58.714Z, `installPluginsForHeadless: starting` at 05:43:58.726Z (12ms later), marketplaces written at 05:43:59.395Z / 05:44:00.028Z. vDA `Syncing installed_plugins.json with enabledPlugins` ran at 05:42:53.078Z, ~65s before marketplaces landed. **Critically, plugin skills (`verify`, `code-review`, `claude-api`, `update-config`, `loop`, etc.) still loaded this session** via the post-hook reconcile even though `installed_plugins.json` stayed `{"version":2,"plugins":{}}`. **Strategy change:** reduced `bin/install-enabled-plugins.sh` to monitoring-only — no waits, no `claude plugin install`. The hook now just logs `enabled/already/missing/race_fired` and emits an informational `additionalContext`. The parent's `installPluginsForHeadless` handles the actual install on the same session. Watch for `race_fired=no` on 3+ consecutive fresh containers to trigger full removal. |
 
 ## References
 
