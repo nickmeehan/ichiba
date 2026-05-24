@@ -108,9 +108,17 @@ In rough order of how invasive they are:
 The full investigation and per-session log lives at:
 
 - <https://github.com/nickmeehan/ichiba/blob/main/docs/known-issues/plugin-install-race.md>
-- <https://github.com/nickmeehan/ichiba/blob/main/bin/install-enabled-plugins.sh>
+- <https://github.com/nickmeehan/ichiba/blob/main/bin/prefetch-marketplaces.sh> (the env-level setup-script mitigation)
 
-The repo's SessionStart hook has been reduced to monitoring-only (it just logs `enabled/already/missing/race_fired` per session) because no in-hook install strategy can succeed against the post-hook serialization.
+The repo previously shipped a `bin/install-enabled-plugins.sh` SessionStart hook with a backoff loop and a one-shot retry; that approach has been removed because no in-hook install strategy can succeed against the post-hook serialization described above.
+
+## Related issues
+
+- **#61866** *(open)* — "[BUG] Project-scoped plugins not automatically enabled in git worktrees despite being configured in `.claude/settings.json`". Same surface symptom ("Plugin is enabled in project settings but isn't installed here"), different mechanism (cache lock contention between parallel sessions sharing a cache dir, not a startup race against the marketplace clone). Worth cross-linking so triage doesn't dedupe.
+- **#61222** *(open)* — `extraKnownMarketplaces` local entry regenerated without `source` discriminator on session start. Different defect, but adjacent area of the codebase.
+- **#61854** *(open)* — `autoUpdate: true` on `extraKnownMarketplaces` doesn't re-install plugins. Different lifecycle stage, same subsystem.
+
+A search of the issue tracker on `installPluginsForHeadless`, `installed_plugins.json`, `enabledPlugins`, "not found in marketplace, skipping", "fresh container", and "first session" returned no existing report of this specific startup race.
 
 ## What we would consider "fixed"
 
