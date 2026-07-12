@@ -22,7 +22,10 @@ const pluginScopes = fs
   .map((entry) => entry.name)
   .filter((name) => !vendoredScopes.includes(name));
 
-const allowedNonPluginScopes = ['deps', 'release'];
+// 'vendor' is the sync workflows' content-adoption commit scope
+// (chore(vendor): <plugin> <version>); 'release' is reserved for release
+// commits (semantic-release and finalize-vendored-releases.sh).
+const allowedNonPluginScopes = ['deps', 'release', 'vendor'];
 
 module.exports = {
   extends: ['@commitlint/config-conventional'],

@@ -20,8 +20,34 @@ jobs:
           plugins=$(bash bin/list-releasable-plugins.sh | jq -R . | jq -s -c .)
           echo "plugins=$plugins" >> "$GITHUB_OUTPUT"
 
+  # Vendored plugins never enter the semantic-release matrix; their version
+  # is adopted from upstream by the sync workflow's chore(vendor) commit.
+  # This job cuts the release for any vendored entry whose version has no
+  # <plugin>-v<version> tag yet: marketplace bump, chore(release) commit,
+  # tag, GitHub Release. State-based, so a failed run retries on the next
+  # push to main. Runs before the semantic-release matrix (see needs) to
+  # serialize pushes to main within this workflow run.
+  finalize-vendored:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
+          persist-credentials: true
+
+      - name: Finalize pending vendored releases
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          git config user.name ichiba-release-bot
+          git config user.email ichiba-release-bot@users.noreply.github.com
+          bash bin/finalize-vendored-releases.sh
+
   release:
-    needs: discover
+    needs: [discover, finalize-vendored]
     runs-on: ubuntu-latest
     permissions:
       contents: write

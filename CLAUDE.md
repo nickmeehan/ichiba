@@ -53,16 +53,22 @@ by semantic-release:
   `.github/workflows/sync-fabro.yml`.
 
 The upstream repo owns the version: the sync workflow vendors the latest
-upstream release tag, adopts its version into `marketplace.json`, and bumps
-the top-level marketplace version via the same `bin/release-bump.sh`
-(patch; minor on first release), then commits straight to `main`, tags
-`<plugin>-v<version>`, and creates a GitHub Release.
+upstream release tag, adopts its version into the `marketplace.json`
+entry, and pushes a plain `chore(vendor): <plugin> <version>` commit to
+`main` — content only, no tag or marketplace bump. That push triggers
+`release.yml`, whose `finalize-vendored` job spots vendored entries whose
+version has no `<plugin>-v<version>` tag yet
+(`bin/finalize-vendored-releases.sh`) and cuts the release the same way
+semantic-release does for native plugins: top-level marketplace bump via
+the shared `bin/marketplace-bump.sh` (patch; minor on first release), a
+`chore(release): … [skip ci]` commit, the `<plugin>-v<version>` tag, and
+a GitHub Release.
 
 **Never edit vendored plugin files in this repo** — the next sync
 overwrites them; changes belong upstream. Scoped commits (e.g.
 `feat(fabro): …`) are rejected by commitlint, and vendored plugins are
 excluded from the release matrix (`bin/list-releasable-plugins.sh`) so
-semantic-release never re-bumps a version the sync job set. See
+semantic-release never recomputes a version the sync set. See
 [`docs/plans/done/vendored-plugin-sync.md`](docs/plans/done/vendored-plugin-sync.md).
 
 ## Schema Validation

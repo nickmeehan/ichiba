@@ -7,10 +7,14 @@ set -euo pipefail
 #
 # Vendored plugins (.github/vendored-plugins) are versioned by their
 # upstream repo, not by this marketplace's semantic-release. This script
-# adopts the newest upstream `vX.Y.Z` tag as-is and reuses
-# bin/release-bump.sh for the marketplace bookkeeping (plugin entry version
-# plus the top-level marketplace version bump). It only mutates the working
-# tree; committing, tagging, and pushing are the calling workflow's job.
+# adopts the newest upstream `vX.Y.Z` tag as-is: it mirrors the release
+# into plugins/<name>/ and sets the marketplace entry's version to the
+# upstream version. It deliberately does NOT touch the top-level
+# marketplace version, tag, or GitHub Release — the calling workflow
+# pushes a plain `chore(vendor)` commit to main, and release.yml
+# finalizes the release (bin/finalize-vendored-releases.sh). This script
+# only mutates the working tree; committing and pushing are the calling
+# workflow's job.
 #
 # Upstream states without a release tag never sync: if the newest tag
 # already matches the marketplace entry, this is a no-op even when upstream
@@ -116,16 +120,14 @@ write_json() {
 
 description="$(jq -r '.description // ""' "$src_manifest")"
 if [[ -z "$current" ]]; then
-  jq --arg name "$plugin" --arg desc "$description" --arg source "./plugins/${plugin}" \
-    '.plugins += [{ name: $name, version: "0.0.0", description: $desc, source: $source }] | .plugins |= sort_by(.name)' \
+  jq --arg name "$plugin" --arg v "$version" --arg desc "$description" --arg source "./plugins/${plugin}" \
+    '.plugins += [{ name: $name, version: $v, description: $desc, source: $source }] | .plugins |= sort_by(.name)' \
     "$marketplace_json" | write_json "$marketplace_json"
 else
-  jq --arg name "$plugin" --arg desc "$description" \
-    '(.plugins[] | select(.name == $name) | .description) = $desc' \
+  jq --arg name "$plugin" --arg v "$version" --arg desc "$description" \
+    '(.plugins[] | select(.name == $name)) |= (.version = $v | .description = $desc)' \
     "$marketplace_json" | write_json "$marketplace_json"
 fi
-
-bash "${repo_root}/bin/release-bump.sh" "$plugin" "$version"
 
 emit "synced=true"
 emit "version=${version}"

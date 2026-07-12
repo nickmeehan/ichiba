@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 # Share the release concurrency group so a sync never races a
-# semantic-release run — both push version bumps to main.
+# semantic-release or finalize run — all of them push to main.
 concurrency:
   group: release
   cancel-in-progress: false
@@ -39,7 +39,10 @@ jobs:
           claude plugin validate .
           claude plugin validate plugins/fabro
 
-      - name: Commit, tag, and push
+      # Content only — no tag, no marketplace bump, no GitHub Release, and
+      # deliberately no [skip ci]: the push (made with RELEASE_TOKEN)
+      # triggers release.yml, whose finalize-vendored job cuts the release.
+      - name: Commit and push
         if: steps.sync.outputs.synced == 'true'
         env:
           VERSION: ${{ steps.sync.outputs.version }}
@@ -50,18 +53,6 @@ jobs:
           git config user.email ichiba-release-bot@users.noreply.github.com
           git add plugins/fabro .claude-plugin/marketplace.json
           git commit \
-            -m "chore(release): fabro ${VERSION} [skip ci]" \
+            -m "chore(vendor): fabro ${VERSION}" \
             -m "Synced from nickmeehan/dark-factory ${UPSTREAM_TAG} (${UPSTREAM_SHA})."
-          git tag "fabro-v${VERSION}"
-          git push origin HEAD:main "refs/tags/fabro-v${VERSION}"
-
-      - name: Create GitHub release
-        if: steps.sync.outputs.synced == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          VERSION: ${{ steps.sync.outputs.version }}
-          UPSTREAM_TAG: ${{ steps.sync.outputs.upstream_tag }}
-        run: |
-          gh release create "fabro-v${VERSION}" \
-            --title "fabro-v${VERSION}" \
-            --notes "Vendored from [nickmeehan/dark-factory ${UPSTREAM_TAG}](https://github.com/nickmeehan/dark-factory/releases/tag/${UPSTREAM_TAG})."
+          git push origin HEAD:main
