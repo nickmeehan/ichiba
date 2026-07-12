@@ -72,8 +72,10 @@ bumps the top-level marketplace version via the shared
 release — the same script `bin/release-bump.sh` calls for native
 plugins), commits `chore(release): fabro <version> [skip ci]`, tags
 `fabro-v<version>`, pushes, and creates a GitHub Release — the same shape
-semantic-release produces for native plugins. The semantic-release matrix
-`needs` the finalize job, so pushes to `main` within a run are serialized.
+semantic-release produces for native plugins. The finalize job runs after
+the semantic-release matrix (`needs: release`) so pushes to `main` within
+a run are serialized, but with `if: !cancelled()` so a native release
+failure never blocks a vendored release, or vice versa.
 
 Finalize detection is state-based (entry version vs tags), not
 commit-based: a finalize run that fails halfway self-heals on the next
