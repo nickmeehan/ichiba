@@ -1,0 +1,48 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Troubleshooting
+
+> Diagnosing and resolving common issues with Fabro
+
+## `fabro doctor`
+
+The `fabro doctor` command validates your installation:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro doctor            # Local config checks + live server diagnostics
+fabro doctor --verbose  # Show detailed output for each check
+fabro doctor --server https://fabro.example.com/api/v1
+```
+
+It checks:
+
+* Local user config and storage directory health
+* Server-reported LLM provider connectivity, with configured providers probed concurrently
+* GitHub App, sandbox, and Brave Search credentials
+* Server authentication and crypto configuration
+
+LLM provider probe failures are reported as errors. Use `--verbose` to see the underlying provider error chain when a key, network route, or model endpoint fails.
+
+## Common issues
+
+**Install wizard didn't open in my browser** — `fabro server start` prints the install URL to stderr before attempting to open it. Copy that URL into your browser manually. Auto-open fails on headless Linux hosts, inside most containers, and over SSH sessions without a display.
+
+**Server exited after I finished the install wizard** — Expected. The server writes `~/.fabro/settings.toml` and exits cleanly at the end of the wizard. Start it again with `fabro server start` to boot in configured mode, or run it under a supervisor with a restart policy (for example docker-compose `restart: unless-stopped`, systemd, or Railway's restart-on-exit) so the second start happens automatically.
+
+**"No API key configured"** — For server-backed runs, set at least one provider key in the server vault with `fabro provider login` or `fabro secret set`. Standalone local CLI/library runs can use env-backed credential sources explicitly. Run `fabro doctor` to verify server connectivity.
+
+**Stall watchdog timeouts** — If runs are cancelled unexpectedly, the agent may be stuck or the LLM provider may be slow. Check `FABRO_LOG=debug` output for `Agent.LlmRetry` events. Increase `stall_timeout` in the graph if needed, or add [fallback providers](/core-concepts/models) to handle outages.
+
+**Sandbox creation failures** — For Docker: ensure the Docker daemon is running and the configured image exists. For Daytona: verify `DAYTONA_API_KEY` is stored in the server vault, includes `write:snapshots`, `delete:snapshots`, `write:sandboxes`, and `delete:sandboxes`, and that GitHub access is configured. For Exe: verify your SSH keys are configured for `exe.dev` and that `ssh exe.dev` connects successfully.
+
+**Port already in use** — Change the port with `fabro server start --port 3001` or stop the conflicting process.
+
+**SSE streams disconnecting** — If using a reverse proxy, ensure buffering is disabled and the connection timeout is long enough for workflow runs.
+
+**Run config validation errors** — Use `fabro preflight` to validate without executing:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro preflight run.toml
+```

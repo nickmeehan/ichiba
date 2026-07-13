@@ -1,0 +1,177 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Transitions
+
+> How Fabro decides which node to execute next
+
+After each node finishes, Fabro must decide which edge to follow to the next node. This decision is deterministic by default — given the same outcome and context, Fabro always picks the same edge. Nodes can opt into [random selection](#random-selection) for weighted-random tiebreaking instead. Understanding the transition logic helps you design workflows that route reliably.
+
+## How transitions work
+
+When a node completes, it produces an **outcome** with a [stage outcome](/execution/outcomes) (`succeeded`, `failed`, `partially_succeeded`, or `skipped`) and optional signals like a preferred label or suggested next node. Fabro evaluates the outgoing edges in a fixed priority order:
+
+1. **Condition match** — Edges with a `condition` attribute are evaluated first. If one or more conditions match, the edge with the highest `weight` wins (lexical tiebreak on target node ID).
+2. **Preferred label** — If the node's outcome includes a preferred label (e.g. from a human gate selection), the edge whose `label` matches is chosen.
+3. **Suggested next** — If the node suggests a specific next node ID, the edge pointing to that node is chosen.
+4. **Unconditional fallback** — Edges without conditions are considered last, again using `weight` then lexical tiebreak.
+
+If no edge matches at all, the workflow halts with an error.
+
+## Edge attributes
+
+| Attribute   | Description                                                             |
+| ----------- | ----------------------------------------------------------------------- |
+| `label`     | Display text on the edge; also used for human gate option matching      |
+| `condition` | Boolean expression that must evaluate to true for this edge (see below) |
+| `weight`    | Numeric priority for tiebreaking (higher wins, default: 0)              |
+
+## Conditions
+
+Edge conditions are boolean expressions evaluated against the stage outcome and run context. Conditions go in the `condition` attribute on an edge:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+gate -> exit      [label="Pass", condition="outcome=succeeded"]
+gate -> implement [label="Fix", condition="outcome=failed"]
+```
+
+### Available keys
+
+| Key               | Resolves to                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `outcome`         | The stage outcome: `succeeded`, `failed`, `partially_succeeded`, or `skipped`. See [Node Outcomes](/execution/outcomes). |
+| `preferred_label` | The label selected by a human gate                                                                                       |
+| `context.KEY`     | A value from the run context (e.g. `context.tests_passed`)                                                               |
+| `KEY`             | Shorthand for context lookup (without the `context.` prefix)                                                             |
+
+### Operators
+
+| Operator   | Example                          | Description                          |
+| ---------- | -------------------------------- | ------------------------------------ |
+| `=`        | `outcome=succeeded`              | Equality                             |
+| `!=`       | `outcome!=failed`                | Inequality                           |
+| `>`        | `context.score > 80`             | Greater than (numeric)               |
+| `<`        | `context.count < 5`              | Less than (numeric)                  |
+| `>=`       | `context.score >= 80`            | Greater than or equal (numeric)      |
+| `<=`       | `context.count <= 10`            | Less than or equal (numeric)         |
+| `contains` | `context.message contains error` | Substring match, or array membership |
+| `matches`  | `context.version matches ^v\d+`  | Regular expression match             |
+
+A bare key with no operator is a **truthiness check** — it passes if the value is non-empty, not `"false"`, and not `"0"`:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+gate -> next [condition="my_flag"]
+```
+
+### Combining conditions
+
+Use `&&` (AND), `||` (OR), and `!` (NOT) to build compound expressions. `&&` binds tighter than `||`:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+// Both must be true
+gate -> deploy [condition="outcome=succeeded && context.tests_passed=true"]
+
+// Either can be true
+gate -> proceed [condition="outcome=succeeded || outcome=partially_succeeded"]
+
+// Negation
+gate -> retry [condition="!outcome=succeeded"]
+
+// Mixed precedence: (a AND b) OR c
+gate -> next [condition="outcome=succeeded && context.ready=true || context.override"]
+```
+
+## Agent transitions
+
+Agent and prompt nodes can influence which edge is taken by including a JSON object in their response with routing directives. Fabro scans the LLM output for the last JSON object containing any of these fields:
+
+```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+{
+  "preferred_next_label": "fix",
+  "suggested_next_ids": ["implement", "review"],
+  "context_updates": { "tests_passed": true }
+}
+```
+
+| Field                  | Effect                                                                |
+| ---------------------- | --------------------------------------------------------------------- |
+| `preferred_next_label` | Matched against edge labels (same as human gate selection)            |
+| `suggested_next_ids`   | Ordered list of preferred target node IDs                             |
+| `context_updates`      | Key-value pairs merged into the run context for downstream conditions |
+
+Fabro automatically scans LLM output for these JSON objects — no special configuration is needed. However, you do need to instruct the LLM to emit the JSON in your prompt. For example:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+review [
+    label="Review",
+    shape=tab,
+    prompt="Review the implementation for correctness and \
+        code quality. If changes are needed, respond with: \
+        {\"preferred_next_label\": \"fix\"}. If everything \
+        looks good, respond with: \
+        {\"preferred_next_label\": \"approve\"}."
+]
+
+review -> fix     [label="Fix"]
+review -> approve [label="Approve"]
+```
+
+The LLM's natural language response can contain other text — Fabro finds the last JSON object with a recognized routing field and extracts the directives from it.
+
+## Human gate transitions
+
+Human gates use edge labels to present options to the user. The selected label becomes the `preferred_label` in the outcome, and Fabro matches it to the corresponding edge:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+approve [shape=hexagon, label="Approve Plan"]
+
+approve -> implement [label="[A] Approve"]
+approve -> plan      [label="[R] Revise"]
+approve -> skip      [label="[S] Skip"]
+```
+
+The `[A]`, `[R]`, `[S]` prefixes are keyboard accelerators — Fabro strips them when matching, so the user can type just the letter.
+
+## Unconditional edges
+
+An edge without a `condition` attribute always matches. When a node has a single outgoing edge, it doesn't need a condition:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+start -> plan -> implement -> exit
+```
+
+When mixing conditional and unconditional edges, conditional matches take priority. An unconditional edge acts as the default fallback:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+gate -> fast_path [condition="outcome=succeeded"]
+gate -> slow_path
+```
+
+## Weight tiebreaking
+
+When multiple edges match (e.g. two unconditional edges), `weight` determines the winner. Higher weight wins:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+node -> preferred [weight=10]
+node -> fallback  [weight=1]
+```
+
+If weights are equal, the edge with the lexicographically first target node ID is chosen. This makes the behavior fully deterministic.
+
+## Random selection
+
+By default, tiebreaking between candidate edges is deterministic (highest weight, then lexical node ID). Setting `selection="random"` on a node switches to weighted-random tiebreaking for its outgoing edges:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+picker [label="Pick path", selection="random"]
+
+picker -> path_a [weight=3]
+picker -> path_b [weight=1]
+```
+
+In this example, `path_a` is chosen \~75% of the time and `path_b` \~25%. Edges with weight ≤ 0 are treated as weight 1. The cascade priority (conditions → preferred label → suggested next → unconditional) is unchanged — randomness only affects the pick-one-from-candidates step within each tier.
+
+<Note>
+  `selection="random"` cannot be combined with conditional edges on the same node. Validation rejects this combination because condition evaluation order would conflict with random selection. Use unconditional edges with weights instead.
+</Note>

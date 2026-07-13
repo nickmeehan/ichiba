@@ -1,0 +1,70 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# VPN Connections
+
+> Connect sandbox environments to private networks via VPN
+
+<Warning>
+  VPN connections are **coming soon** and not yet available. This page describes the planned feature.
+</Warning>
+
+VPN connections enable sandboxes to connect to private networks, giving agents access to internal services, databases, and APIs that aren't reachable over the public internet.
+
+## Use cases
+
+* **Access private services** — connect to internal APIs, databases, or staging environments behind a corporate firewall
+* **Test against production-like infrastructure** — reach services on a private network without exposing them publicly
+* **Team collaboration** — share a VPN network so sandboxes and developer machines can communicate directly
+
+## Supported providers
+
+| Provider      | Authentication            | Best for                                        |
+| ------------- | ------------------------- | ----------------------------------------------- |
+| **Tailscale** | Browser login or auth key | Mesh networking, zero-config connectivity       |
+| **OpenVPN**   | Client configuration file | Corporate VPNs, existing OpenVPN infrastructure |
+
+## How it works
+
+When VPN is enabled, Fabro installs the VPN client inside the sandbox, connects to the specified network, and verifies connectivity before the workflow begins. Once connected, the sandbox receives a VPN IP address and can reach all resources on the private network.
+
+### Tailscale
+
+Tailscale provides two authentication methods:
+
+* **Auth key** — non-interactive authentication suitable for automated runs and CI/CD pipelines. You provide a Tailscale auth key and the sandbox connects without manual intervention.
+* **Browser login** — interactive authentication where Fabro generates a login URL. You visit the URL in your browser to authorize the sandbox device on your Tailscale network.
+
+### OpenVPN
+
+OpenVPN uses a client configuration file (`.ovpn`) containing connection parameters, certificates, and encryption settings. The sandbox installs the OpenVPN client, uploads the configuration, and connects in the background.
+
+## Example workflow
+
+With a VPN connection configured, agents can reach internal services like a private database. This workflow investigates a performance issue by querying the staging database directly:
+
+<Frame>
+  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/vpn-connections-workflow.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=6674ce3faac063602cbc42036a23f711" alt="VPN workflow: Start → Analyze Slow Queries → Fix Query → Review Changes → Exit, with a Revise loop back to Fix Query" width="911" height="59" data-path="images/vpn-connections-workflow.svg" />
+</Frame>
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph InvestigateSlowQuery {
+    graph [goal="Identify and fix the slow query causing timeouts on the orders page"]
+
+    start [shape=Mdiamond, label="Start"]
+    exit  [shape=Msquare, label="Exit"]
+
+    analyze [label="Analyze Slow Queries", prompt="Connect to the staging database at staging-db.internal:5432 and run EXPLAIN ANALYZE on the queries used by the orders page. Identify the slowest query."]
+    fix     [label="Fix Query", prompt="Add or modify indexes and rewrite the slow query to resolve the performance issue. Verify the fix with EXPLAIN ANALYZE."]
+    review  [shape=hexagon, label="Review Changes"]
+
+    start -> analyze -> fix -> review
+    review -> exit [label="[A] Approve"]
+    review -> fix  [label="[R] Revise"]
+}
+```
+
+## Verification
+
+After connecting, Fabro verifies the VPN connection by checking that the sandbox has a VPN interface and can reach the private network. If the connection fails, the run reports the error before workflow execution begins.

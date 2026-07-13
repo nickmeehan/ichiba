@@ -1,0 +1,271 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Models
+
+> How Fabro routes tasks to LLM models and providers
+
+No single model is best at everything. Fabro lets you assign the right model to each workflow step — cheap, fast models for boilerplate, frontier models for hard reasoning, and a different provider for cross-critique so the reviewer brings fresh eyes. When a provider goes down, Fabro can fail over automatically.
+
+<Frame>
+  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/ensemble-workflow.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=fdcf8705f3d395ee0790c279779d6962" alt="Ensemble workflow: fan out to Opus and Gemini Pro, merge, then synthesize" width="783" height="131" data-path="images/ensemble-workflow.svg" />
+</Frame>
+
+## Model catalog
+
+| Model                                | Provider  | Aliases                                              | Context | Cost (in/out per Mtok) | Speed      |
+| ------------------------------------ | --------- | ---------------------------------------------------- | ------- | ---------------------- | ---------- |
+| `claude-fable-5`                     | anthropic | `fable`, `claude-fable`                              | 1M      | $10.00 / $50.00        | n/a        |
+| `claude-opus-4-8`                    | anthropic | `opus`, `claude-opus`                                | 1M      | $5.00 / $25.00         | 25 tok/s   |
+| `claude-opus-4-7`                    | anthropic |                                                      | 1M      | $5.00 / $25.00         | 25 tok/s   |
+| `claude-opus-4-6`                    | anthropic |                                                      | 1M      | $5.00 / $25.00         | 25 tok/s   |
+| `claude-sonnet-4-6`                  | anthropic | `sonnet`, `claude-sonnet`                            | 200K    | $3.00 / $15.00         | 50 tok/s   |
+| `claude-sonnet-4-5`                  | anthropic |                                                      | 200K    | $3.00 / $15.00         | 50 tok/s   |
+| `claude-haiku-4-5`                   | anthropic | `haiku`, `claude-haiku`                              | 200K    | $0.80 / $4.00          | 100 tok/s  |
+| `gpt-5.4`                            | openai    | `gpt54`, `gpt5`, `codex`                             | 272K    | $2.50 / $15.00         | 70 tok/s   |
+| `gpt-5.5`                            | openai    | `gpt55`                                              | 272K    | $5.00 / $30.00         | 70 tok/s   |
+| `gpt-5.5-pro`                        | openai    | `gpt55-pro`                                          | 1M      | $30.00 / $180.00       | 20 tok/s   |
+| `gpt-5.4-mini`                       | openai    | `gpt54-mini`, `codex-spark`                          | 272K    | $0.75 / $4.50          | 140 tok/s  |
+| `gpt-5.4-pro`                        | openai    | `gpt54-pro`                                          | 1M      | $30.00 / $180.00       | 20 tok/s   |
+| `gemini-3.1-pro-preview`             | gemini    | `gemini-pro`                                         | 1M      | $2.00 / $12.00         | 85 tok/s   |
+| `gemini-3.1-pro-preview-customtools` | gemini    | `gemini-customtools`                                 | 1M      | $2.00 / $12.00         | 85 tok/s   |
+| `gemini-3.5-flash`                   | gemini    | `gemini-35-flash`                                    | 1M      | $1.50 / $9.00          | 150 tok/s  |
+| `gemini-3-flash-preview`             | gemini    | `gemini-flash`                                       | 1M      | $0.50 / $3.00          | 150 tok/s  |
+| `gemini-3.1-flash-lite`              | gemini    | `gemini-flash-lite`, `gemini-3.1-flash-lite-preview` | 1M      | $0.25 / $1.50          | 200 tok/s  |
+| `kimi-k2.5`                          | kimi      | `kimi`                                               | 262K    | $0.60 / $3.00          | 50 tok/s   |
+| `glm-4.7`                            | zai       | `glm`, `glm4`                                        | 203K    | $0.60 / $2.20          | 100 tok/s  |
+| `minimax-m2.5`                       | minimax   | `minimax`                                            | 197K    | $0.30 / $1.20          | 45 tok/s   |
+| `mercury-2`                          | inception | `mercury`                                            | 131K    | $0.25 / $0.75          | 1000 tok/s |
+
+Each provider requires its own API key. Server-backed workflows read provider credentials from the server vault (for example `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `GEMINI_API_KEY` set with `fabro secret set` or `fabro provider login`). Standalone SDK/CLI flows can opt into env-backed credential sources explicitly. See the [Quick Start](/getting-started/quick-start) for setup.
+
+Claude Fable 5 is available as an explicit model but is not the default Anthropic model. If Fable refuses a request, Fabro reports the refusal as a content-filter LLM error and applies the configured `run.model.fallbacks` chain when one is present.
+
+## Configuring providers and models
+
+Fabro's catalog starts with the built-in providers and models, then merges any `[llm]` entries from settings. Provider and model IDs are strings, so a server or project can add an OpenAI-compatible provider without a Fabro release.
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[llm.providers.proxy]
+display_name = "Acme Gateway"
+adapter = "openai_compatible"
+base_url = "https://llm-gateway.example.com/v1"
+aliases = ["gateway"]
+
+[llm.providers.proxy.auth]
+credentials = ["env:ACME_GATEWAY_API_KEY", "vault:ACME_GATEWAY_API_KEY"]
+
+[llm.providers.proxy.extra_headers]
+x-portkey-api-key = { env = "PORTKEY_API_KEY" }
+x-portkey-config = { literal = "@bedrock-prod" }
+
+[llm.models."team-code-large"]
+provider = "proxy"
+api_id = "provider-wire-model-name"
+agent_profile = "anthropic"
+display_name = "Team Code Large"
+family = "team-code"
+default = true
+small_default = true
+aliases = ["team-code"]
+estimated_output_tps = 80
+
+[llm.models."team-code-large".limits]
+context_window = 200000
+max_output = 32000
+
+[llm.models."team-code-large".features]
+tools = true
+reasoning = true
+reasoning_effort = "levels"
+prompt_cache = true
+effort = true
+
+[llm.models."team-code-large".controls]
+reasoning_effort = ["low", "medium", "high"]
+speed = ["fast"]
+
+[llm.models."team-code-large".costs]
+input_cost_per_mtok = 1.50
+output_cost_per_mtok = 8.00
+cache_input_cost_per_mtok = 0.30
+
+[llm.models."team-code-large".costs.speed.fast]
+input_cost_per_mtok = 3.00
+output_cost_per_mtok = 16.00
+cache_input_cost_per_mtok = 0.60
+```
+
+For [LiteLLM](/integrations/litellm), Fabro ships a disabled provider entry. Enable it in settings and declare the models your proxy exposes:
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[llm.providers.litellm]
+enabled = true
+base_url = "http://localhost:4000/v1"
+
+[llm.models."litellm-gpt-5"]
+provider = "litellm"
+api_id = "gpt-5"
+display_name = "LiteLLM GPT-5"
+family = "litellm"
+default = true
+
+[llm.models."litellm-gpt-5".limits]
+context_window = 128000
+max_output = 8192
+
+[llm.models."litellm-gpt-5".features]
+tools = true
+vision = false
+reasoning = false
+```
+
+`api_id` is the model name sent to the provider API. Omit it when the Fabro model ID and provider model ID are the same.
+
+Model roles are separate: `default = true` controls normal model selection for workflow execution, while `small_default = true` marks the provider's small/cheap utility model for metadata tasks such as generated run titles. If a provider has no small default, Fabro falls back to that provider's normal default.
+
+Provider auth is declared in `[llm.providers.<id>.auth]` with ordered `env:<NAME>` or `vault:<NAME>` refs. The primary auth header defaults to `bearer`; override with `header = { custom = "Header-Name" }` for providers like Anthropic that use `x-api-key`. Omit the `[llm.providers.<id>.auth]` block entirely for providers that need no API key (e.g. Ollama). Custom headers for any provider — including providers that need only typed headers and no API-key auth — go in `extra_headers` as `{ env = "NAME" }`, `{ vault = "NAME" }`, or `{ literal = "value" }`.
+
+Provider `agent_profile` defaults from `adapter` and controls profile-specific behavior such as project-memory filenames, CLI/ACP command selection, and native session routing. Valid values are `anthropic`, `openai`, and `gemini`; model-level values override provider-level values.
+
+Provider `billing_policy` defaults from `adapter` and controls usage-cost estimation. Use `openai`, `anthropic`, `gemini`, or `none`. Model rows may override it for models whose billing family differs from their provider's — for example, Claude models served through OpenRouter set `billing_policy = "anthropic"` so cache reads and writes price correctly.
+
+<Note>
+  Provider fields in configuration, APIs, and model routing are provider ID strings. Built-in names like `anthropic`, `openai`, and `gemini` still work, but custom IDs like `proxy` work anywhere a provider ID is accepted.
+</Note>
+
+### OpenRouter
+
+Fabro ships an [OpenRouter](/integrations/openrouter) provider definition with a curated model catalog, disabled by default. Enable it in settings and store an API key with `fabro provider login --provider openrouter`:
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[llm.providers.openrouter]
+enabled = true
+```
+
+### Amazon Bedrock
+
+Fabro ships an [Amazon Bedrock](/integrations/bedrock) provider definition with a curated multi-vendor catalog over Bedrock's Converse API, disabled by default. Enable it and authenticate with a Bedrock API key or AWS SigV4 credentials:
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[llm.providers.bedrock]
+enabled = true
+base_url = "https://bedrock-runtime.us-east-1.amazonaws.com"
+```
+
+### Ollama
+
+Fabro ships an Ollama provider definition that is disabled by default. Enable it in settings when you want Fabro to route through a local Ollama server:
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[llm.providers.ollama]
+enabled = true
+```
+
+Enabling the provider alone does not expose any models — until #267 adds auto-discovery, add explicit `[llm.models.<id>]` blocks for each Ollama model you have pulled locally. Ollama's OpenAI-compatible endpoint accepts any bearer token, so local users can set `OLLAMA_API_KEY=ollama`.
+
+## Default models
+
+When no model or provider is specified, Fabro checks configured provider credentials and chooses the first configured provider by catalog priority. If no provider credentials are configured, it uses the catalog's global default model. Each provider has a default model:
+
+| Provider    | Default model       |
+| ----------- | ------------------- |
+| `anthropic` | `claude-sonnet-4-6` |
+| `openai`    | `gpt-5.5`           |
+| `gemini`    | `gemini-3.5-flash`  |
+| `kimi`      | `kimi-k2.5`         |
+| `zai`       | `glm-4.7`           |
+| `minimax`   | `minimax-m2.5`      |
+| `inception` | `mercury`           |
+
+## Using models in workflows
+
+Assign models to workflow nodes using [model stylesheets](/workflows/stylesheets), which use a CSS-like syntax:
+
+```dot title="example.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph Example {
+    graph [
+        model_stylesheet="
+            *        { model: claude-haiku-4-5; }
+            .coding  { model: claude-sonnet-4-5; reasoning_effort: high; }
+            #review  { model: gemini-3.1-pro-preview; }
+        "
+    ]
+
+    spec     [label="Write Spec"]
+    implement [label="Implement", class="coding"]
+    review   [label="Review"]
+}
+```
+
+This routes the spec node to Haiku (the default), implementation to Sonnet, and review to Gemini Pro.
+
+## Overriding the default model
+
+Model stylesheets set per-node models inside the workflow graph, but you can also override the default model for an entire run. This is useful for quick experimentation or when you want to swap models without editing the Graphviz file.
+
+### CLI flags
+
+Pass `--model` and optionally `--provider` to `fabro run`:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro run docs/internal/demo/01-hello.fabro --model claude-opus-4-6
+fabro run docs/internal/demo/04-pipeline.fabro --model gemini-3.1-pro-preview
+```
+
+These flags set the default model for all nodes that don't have an explicit model assigned via a stylesheet. The provider is automatically inferred from the model catalog — you only need `--provider` for models not in the catalog or to force a specific provider.
+
+### Run config TOML
+
+For repeatable runs, set the model in a run config file:
+
+```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+_version = 1
+
+[workflow]
+graph = "implement.fabro"
+
+[run]
+goal = "Implement the feature"
+
+[run.model]
+name = "claude-sonnet-4-5"
+fallbacks = ["gemini", "openai"]
+```
+
+Then launch with:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro run run.toml
+```
+
+The `fallbacks` array is optional. Each entry may be a bare provider token (like `"gemini"`), a bare model alias (like `"gpt-5.4"`), or a qualified `"provider/model"` reference. Fabro tries them in order when the primary provider is unavailable.
+
+<Note>
+  The precedence order is: node-level stylesheet > run config TOML > CLI flags > server defaults. More specific settings always win.
+</Note>
+
+## CLI commands
+
+### List models
+
+View all available models, or filter by provider:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro model list
+fabro model list --provider anthropic
+fabro model list --query codex
+```
+
+### Test models
+
+Verify that your API keys are working by sending a test prompt to each configured provider:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro model test
+fabro model test --model claude-sonnet-4-5
+fabro model test --provider openai
+```
+
+This is useful for confirming connectivity after setup or when adding a new provider key.

@@ -1,0 +1,293 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Tools
+
+> Built-in tools for file I/O, shell commands, search, and web access
+
+Every agent in Fabro has access to a set of built-in tools for interacting with the codebase and environment. Tools execute inside the agent's [sandbox](/execution/environments) — whether that's the local machine, a Docker container, or a Daytona VM — so the same tool calls work identically regardless of provider.
+
+<Note>
+  The tools described on this page apply to the **API backend** (the default). When using the [ACP backend](/core-concepts/agents#acp-backend), the external agent process provides its own tools — Fabro's built-in tools are not used.
+</Note>
+
+## Core tools
+
+These tools are registered for every provider profile:
+
+| Tool         | Category | Description                                       |
+| ------------ | -------- | ------------------------------------------------- |
+| `shell`      | shell    | Run shell commands via `/bin/bash -c`             |
+| `read_file`  | read     | Read file contents with optional offset and limit |
+| `write_file` | write    | Create or overwrite a file                        |
+| `grep`       | read     | Search file contents with regex patterns          |
+| `glob`       | read     | Find files by name pattern                        |
+| `web_search` | shell    | Search the web via Brave Search                   |
+| `web_fetch`  | shell    | Fetch and optionally summarize a URL              |
+
+## Provider-specific tools
+
+Some tools are only available with certain LLM providers:
+
+| Tool                                              | Providers         | Description                                            |
+| ------------------------------------------------- | ----------------- | ------------------------------------------------------ |
+| `edit_file`                                       | Anthropic, Gemini | Replace a string in a file (find-and-replace)          |
+| `apply_patch`                                     | OpenAI            | Apply a v4a-format patch to modify files               |
+| `update_plan`                                     | OpenAI            | Maintain a multi-step plan for the current task        |
+| `TaskCreate`, `TaskUpdate`, `TaskGet`, `TaskList` | Anthropic         | Maintain a shared task list for the root agent session |
+| `read_many_files`                                 | Gemini            | Read multiple files in a single call                   |
+| `list_dir`                                        | Gemini            | List directory contents with depth control             |
+
+## Tool reference
+
+### shell
+
+Executes a shell command via `/bin/bash -c` in the sandbox's working directory.
+
+| Parameter     | Type    | Required | Description                          |
+| ------------- | ------- | -------- | ------------------------------------ |
+| `command`     | string  | yes      | The shell command to execute         |
+| `timeout_ms`  | integer | no       | Timeout in milliseconds              |
+| `description` | string  | no       | Description of what the command does |
+
+The timeout defaults to the provider's configured value (10s for most providers, 120s for Anthropic) and is capped at the maximum (600s / 10 minutes). If the command exceeds the timeout, Fabro kills the process and returns a "Command timed out" message along with any output captured so far.
+
+The output includes the exit code, stdout, and stderr.
+
+### read\_file
+
+Reads a file and returns its contents with line numbers.
+
+| Parameter   | Type    | Required | Description                               |
+| ----------- | ------- | -------- | ----------------------------------------- |
+| `file_path` | string  | yes      | Absolute path to the file                 |
+| `offset`    | integer | no       | 1-based line number to start reading from |
+| `limit`     | integer | no       | Number of lines to read (default: 2000)   |
+
+Output is formatted with line numbers (e.g. `  1 | fn main() {`), making it easy for agents to reference specific lines when editing.
+
+### write\_file
+
+Creates or overwrites a file.
+
+| Parameter   | Type   | Required | Description               |
+| ----------- | ------ | -------- | ------------------------- |
+| `file_path` | string | yes      | Absolute path to the file |
+| `content`   | string | yes      | Content to write          |
+
+<Note>
+  The [read-before-write guardrail](#read-before-write-guardrail) prevents writing to existing files that haven't been read first. Writing to new files is always allowed.
+</Note>
+
+### edit\_file
+
+Replaces a string in an existing file. Available for Anthropic and Gemini providers.
+
+| Parameter     | Type    | Required | Description                              |
+| ------------- | ------- | -------- | ---------------------------------------- |
+| `file_path`   | string  | yes      | Absolute path to the file                |
+| `old_string`  | string  | yes      | The string to find                       |
+| `new_string`  | string  | yes      | The replacement string                   |
+| `replace_all` | boolean | no       | Replace all occurrences (default: false) |
+
+If `old_string` is not found, the tool returns an error. If multiple occurrences exist and `replace_all` is false, the tool returns an error asking for more context or to set `replace_all`.
+
+The tool reads the file internally before writing, so it satisfies the read-before-write guardrail automatically.
+
+### grep
+
+Searches file contents with a regex pattern, powered by ripgrep in the sandbox.
+
+| Parameter          | Type    | Required | Description                                     |
+| ------------------ | ------- | -------- | ----------------------------------------------- |
+| `pattern`          | string  | yes      | Regex pattern to search for                     |
+| `path`             | string  | no       | Path to search in (default: `.`)                |
+| `glob_filter`      | string  | no       | Glob pattern to filter which files are searched |
+| `case_insensitive` | boolean | no       | Case-insensitive search (default: false)        |
+| `max_results`      | integer | no       | Maximum number of results                       |
+
+Results are returned as `file:line:content` lines. Files that appear in grep results are marked as "read" for the [read-before-write guardrail](#read-before-write-guardrail).
+
+### glob
+
+Finds files matching a glob pattern.
+
+| Parameter | Type   | Required | Description                                         |
+| --------- | ------ | -------- | --------------------------------------------------- |
+| `pattern` | string | yes      | Glob pattern to match files (e.g. `**/*.rs`)        |
+| `path`    | string | no       | Directory to search in (default: working directory) |
+
+Returns matching file paths, one per line.
+
+<Note>
+  Unlike `grep`, `glob` does **not** mark files as read for the read-before-write guardrail. To modify a file found via glob, the agent must read it first.
+</Note>
+
+### web\_search
+
+Searches the web using the Brave Search API.
+
+| Parameter     | Type    | Required | Description                           |
+| ------------- | ------- | -------- | ------------------------------------- |
+| `query`       | string  | yes      | Search query                          |
+| `max_results` | integer | no       | Maximum results (default: 5, max: 20) |
+
+Requires `BRAVE_SEARCH_API_KEY` to be configured for the current runtime. Server-backed sessions read it from the server vault (`fabro secret set BRAVE_SEARCH_API_KEY <key>`); standalone local agent runs can pass it from the invoking shell. Returns numbered results with title, URL, and description.
+
+### web\_fetch
+
+Fetches content from a URL and optionally summarizes it with an LLM.
+
+| Parameter    | Type    | Required | Description                                                                          |
+| ------------ | ------- | -------- | ------------------------------------------------------------------------------------ |
+| `url`        | string  | yes      | URL to fetch (must be `http://` or `https://`)                                       |
+| `prompt`     | string  | no       | A question about the page content; returns a concise answer instead of the full page |
+| `timeout_ms` | integer | no       | Timeout in milliseconds (default: 30000, max: 60000)                                 |
+
+HTML content is automatically converted to Markdown (with script and style tags stripped). Output is capped at 100KB. When a `prompt` is provided and a summarizer model is configured, the fetched content is passed to a lightweight LLM call that returns a concise answer.
+
+### apply\_patch
+
+Applies a v4a-format patch to create, update, or delete files. Available for OpenAI providers.
+
+| Parameter | Type   | Required | Description                 |
+| --------- | ------ | -------- | --------------------------- |
+| `patch`   | string | yes      | Patch content in v4a format |
+
+The v4a format uses `*** Begin Patch` / `*** End Patch` delimiters with `*** Add File:`, `*** Delete File:`, and `*** Update File:` operations.
+
+### read\_many\_files
+
+Reads multiple files in a single tool call. Available for Gemini.
+
+| Parameter | Type      | Required | Description                  |
+| --------- | --------- | -------- | ---------------------------- |
+| `paths`   | string\[] | yes      | Array of absolute file paths |
+
+Returns each file's contents prefixed with `=== path ===`.
+
+### list\_dir
+
+Lists directory contents with optional depth control. Available for Gemini.
+
+| Parameter | Type    | Required | Description                   |
+| --------- | ------- | -------- | ----------------------------- |
+| `path`    | string  | yes      | Directory path to list        |
+| `depth`   | integer | no       | Depth of listing (default: 1) |
+
+Directories are suffixed with `/` in the output.
+
+### update\_plan
+
+Maintains the current task plan. Available for OpenAI providers.
+
+| Parameter       | Type      | Required | Description                                         |
+| --------------- | --------- | -------- | --------------------------------------------------- |
+| `plan`          | object\[] | yes      | Full ordered list of plan steps                     |
+| `plan[].step`   | string    | yes      | Step text; step text must be unique within the plan |
+| `plan[].status` | string    | yes      | `pending`, `in_progress`, or `completed`            |
+| `explanation`   | string    | no       | Short note explaining why the plan changed          |
+
+The submitted list replaces the current plan for that OpenAI session. Fabro reconciles steps by exact step text, emits `todo.created`, `todo.updated`, and `todo.deleted` events for changes, and projects the current list into run state.
+
+### TaskCreate, TaskUpdate, TaskGet, and TaskList
+
+Maintains a shared task list for Anthropic providers. The list is scoped to the root agent session, so sub-agents share the same task projection.
+
+`TaskCreate` creates a task with `subject`, `description`, optional `activeForm`, and optional metadata. `TaskUpdate` changes an existing task by `taskId`; setting `status` to `deleted` removes it from the projection. `TaskGet` returns full details for one task, while `TaskList` returns the current shared task list.
+
+Like `update_plan`, task changes are persisted as `todo.created`, `todo.updated`, and `todo.deleted` events and replay into run state.
+
+When an Anthropic session has not used `TaskCreate` or `TaskUpdate` for ten assistant turns, Fabro may inject a system reminder asking the agent to keep task state current. The reminder is only added when both tools are available and resets after the agent uses either tool.
+
+## Read-before-write guardrail
+
+Fabro wraps every sandbox in a `ReadBeforeWriteSandbox` decorator that tracks which files the agent has seen. The rules are:
+
+1. **Writing to a new file** (one that doesn't exist yet) is always allowed
+2. **Writing to an existing file** requires that the agent has previously read it via `read_file` or seen it in `grep` results
+3. **Deleting an existing file** follows the same rule as writing
+
+If an agent attempts to write to an existing file it hasn't read, the tool returns an error:
+
+```
+Cannot write to 'src/main.rs': file exists but has not been read.
+Use read_file to read the file before writing to it.
+```
+
+This prevents agents from blindly overwriting files they haven't inspected. The guardrail normalizes paths so that reading `src/main.rs` (relative) and `/workspace/src/main.rs` (absolute) both satisfy the check.
+
+## Tool execution
+
+### Parallel execution
+
+When an LLM returns multiple tool calls in a single response, Fabro can execute them in parallel. Independent tool calls run concurrently, while the results are collected in order. If the agent session is cancelled, pending tool calls return a "Cancelled" error.
+
+### Argument validation
+
+Before executing a tool, Fabro validates the arguments against the tool's JSON Schema. Invalid arguments are rejected with a descriptive error before the tool executor runs.
+
+### Output truncation
+
+Tool output is truncated before being stored in conversation history to prevent context window bloat. Each tool has default limits:
+
+| Tool          | Character limit  | Truncation mode |
+| ------------- | ---------------- | --------------- |
+| `grep`        | 30,000           | Tail (keep end) |
+| `glob`        | 20,000           | Tail            |
+| `edit_file`   | 10,000           | Tail            |
+| `apply_patch` | 10,000           | Tail            |
+| `write_file`  | 1,000            | Tail            |
+| Other tools   | No default limit | Head + tail     |
+
+Limits can be overridden per-tool via `SessionConfig.tool_output_limits`.
+
+### Error handling
+
+When a tool call fails, the error is returned to the agent as a tool result with an error flag — the agent loop continues. Tool errors do **not** fail the stage. The LLM sees the error message and decides how to respond: retry the call, try an alternative approach, or move on.
+
+Common error cases:
+
+| Error                       | Cause                                                                                             |
+| --------------------------- | ------------------------------------------------------------------------------------------------- |
+| Unknown tool                | The agent called a tool that doesn't exist                                                        |
+| Argument validation failure | Arguments don't match the tool's JSON Schema                                                      |
+| File not found              | The target file doesn't exist                                                                     |
+| Command timeout             | A shell command exceeded its timeout                                                              |
+| Read-before-write           | The agent tried to write to a file it hasn't read (see [guardrail](#read-before-write-guardrail)) |
+
+### Timeouts
+
+Shell commands have two timeout settings:
+
+| Setting                      | Default                        | Description                                    |
+| ---------------------------- | ------------------------------ | ---------------------------------------------- |
+| `default_command_timeout_ms` | 10,000 (120,000 for Anthropic) | Timeout when the agent doesn't specify one     |
+| `max_command_timeout_ms`     | 600,000 (10 minutes)           | Hard cap regardless of what the agent requests |
+
+The agent can request a specific timeout via the `timeout_ms` parameter, but it's always capped at the maximum.
+
+## Extending with MCP
+
+Additional tools can be added via [MCP servers](/agents/mcp). MCP tools appear alongside built-in tools in the agent's tool set and follow the same permission and execution model.
+
+## Further reading
+
+<Columns cols={2}>
+  <Card title="Permissions" icon="lock" href="/agents/permissions">
+    How permissions control which tools are available.
+  </Card>
+
+  <Card title="Environments" icon="server" href="/execution/environments">
+    Sandbox providers where tools execute.
+  </Card>
+
+  <Card title="MCP" icon="plug" href="/agents/mcp">
+    Extend agents with Model Context Protocol servers.
+  </Card>
+
+  <Card title="Sub-agents" icon="users" href="/agents/subagents">
+    Sub-agents inherit tools from their parent session.
+  </Card>
+</Columns>

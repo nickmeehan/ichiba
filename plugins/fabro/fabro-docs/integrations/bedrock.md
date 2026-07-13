@@ -1,0 +1,166 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Amazon Bedrock
+
+> Route Fabro models through Amazon Bedrock with SigV4 or API-key auth
+
+[Amazon Bedrock](https://aws.amazon.com/bedrock/) hosts Anthropic, Amazon, Meta, Mistral, DeepSeek, Qwen, Moonshot, Z.AI, MiniMax, NVIDIA, and OpenAI open-weight models behind one AWS endpoint. Fabro ships a disabled `bedrock` provider entry with a curated model catalog over Bedrock's unified Converse API, so you can opt in from `settings.toml` without changing Fabro code.
+
+## Prerequisites
+
+* An AWS account with [Bedrock model access](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access.html) granted for the models you want (see [Model access and approvals](#model-access-and-approvals))
+* Either a [Bedrock API key](https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html) or working AWS credentials (environment keys, profile, IMDS, IRSA, SSO)
+
+## Model access and approvals
+
+Access is granted per Region and varies by model family — enabling the provider in Fabro is necessary but not sufficient.
+
+* **IAM.** Converse and ConverseStream have no dedicated IAM actions; they're authorized by `bedrock:InvokeModel` and `bedrock:InvokeModelWithResponseStream`. A Bedrock API key additionally needs `bedrock:CallWithBearerToken`.
+* **Anthropic (Claude) models** require a one-time use-case submission in the Bedrock console (**Model access**) before first use, and the grant is **per Region** — approval in `us-east-1` does not cover `us-east-2`. An un-approved Region returns `AccessDeniedException`.
+* **Third-party models** (OpenAI gpt-oss, DeepSeek, Qwen, Moonshot, Z.AI, MiniMax, NVIDIA) auto-enable on first call, which needs `aws-marketplace:Subscribe` and `aws-marketplace:ViewSubscriptions` on the calling principal. The first call may take a moment while the subscription activates.
+* **Claude Fable 5 / Mythos-class** models additionally require opting into data sharing via the [Data Retention API](https://docs.aws.amazon.com/bedrock/latest/userguide/data-retention.html) (`provider_data_share`, 30-day retention) **before** they can be invoked. With the account/project on the `default` retention mode, Converse rejects the request with *"data retention mode 'default' is not available for this model."*
+
+## Enable the provider
+
+Add the provider override to `~/.fabro/settings.toml`:
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+_version = 1
+
+[llm.providers.bedrock]
+enabled = true
+base_url = "https://bedrock-runtime.us-east-1.amazonaws.com"
+```
+
+The SigV4 signing region is derived from `base_url` — change it to your Region's endpoint (`https://bedrock-runtime.<region>.amazonaws.com`, FIPS and China endpoints included).
+
+## Configure credentials
+
+Two auth modes, tried in order:
+
+**Bedrock API key** (simplest): store the key and Fabro sends it as a bearer token. The key is read from either `AWS_BEARER_TOKEN_BEDROCK` (AWS's canonical name, also honored by the AWS SDKs and CLI) or `BEDROCK_API_KEY` (Fabro's `<PROVIDER>_API_KEY` convention) — use whichever you prefer.
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro secret set AWS_BEARER_TOKEN_BEDROCK bedrock-api-key-...
+# or, equivalently
+fabro secret set BEDROCK_API_KEY bedrock-api-key-...
+# or for standalone local runs
+export AWS_BEARER_TOKEN_BEDROCK=bedrock-api-key-...
+```
+
+**AWS SigV4** (IAM-scoped): with no API key configured, Fabro signs each request using the AWS default credential chain — environment keys, shared profile, EC2/ECS instance roles, IRSA/web identity, SSO. Expiring session credentials refresh automatically. The catalog declares this as the `aws_sigv4` credential source:
+
+```toml theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[llm.providers.bedrock.auth]
+credentials = ["env:AWS_BEARER_TOKEN_BEDROCK", "env:BEDROCK_API_KEY", "vault:AWS_BEARER_TOKEN_BEDROCK", "vault:BEDROCK_API_KEY", "aws_sigv4"]
+```
+
+The key resolves from the process environment first (either name), then the server vault (`fabro secret set`), then falls back to SigV4 — so on a server, prefer `secret set`. To select a non-default AWS profile for SigV4, set `AWS_PROFILE` (it, and the rest of the AWS credential-chain variables, are passed through to workflow workers).
+
+<Warning>
+  **Bearer-vs-SigV4 precedence.** Because the bearer key is tried before SigV4, setting `AWS_BEARER_TOKEN_BEDROCK` makes the `bedrock` (Converse) provider authenticate with that key too — not just the `bedrock-openai` mantle provider below. If your key is valid only for mantle (it lacks `bedrock:InvokeModel*` on the runtime), every Converse model then fails with *"Authentication failed."* To run Converse models on SigV4 while using a mantle-only bearer key for GPT-5.x, pin the Converse provider to SigV4 explicitly:
+
+  ```toml theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+  [llm.providers.bedrock.auth]
+  credentials = ["aws_sigv4"]
+  ```
+</Warning>
+
+## Included models
+
+The built-in catalog curates Converse-capable models, using cross-region inference profile ids (`us.`/`global.` prefixes) where on-demand access requires them:
+
+| Fabro model ID                                    | Notes                                                                                                                                                                                                                 |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `us.anthropic.claude-sonnet-4-6`                  | Provider default; Anthropic cache billing                                                                                                                                                                             |
+| `us.anthropic.claude-opus-4-8`                    | Anthropic cache billing                                                                                                                                                                                               |
+| `us.anthropic.claude-haiku-4-5`                   | Provider small default                                                                                                                                                                                                |
+| `us.anthropic.claude-fable-5`                     | Frontier; sampling params pinned by Bedrock (Fabro drops `temperature`/`top_p` automatically); requires the account-level `provider_data_share` data-sharing opt-in (see [Model access](#model-access-and-approvals)) |
+| `openai.gpt-oss-120b`, `openai.gpt-oss-20b`       | OpenAI open-weights                                                                                                                                                                                                   |
+| `amazon.nova-2-lite`                              | Vision                                                                                                                                                                                                                |
+| `meta.llama4-maverick`                            | Vision                                                                                                                                                                                                                |
+| `mistral.mistral-large-3`, `mistral.devstral-2`   |                                                                                                                                                                                                                       |
+| `deepseek.v3-2`                                   |                                                                                                                                                                                                                       |
+| `moonshotai.kimi-k2.5`, `zai.glm-5`               |                                                                                                                                                                                                                       |
+| `minimax.minimax-m2.5`, `nvidia.nemotron-3-super` |                                                                                                                                                                                                                       |
+
+Any other Converse-capable Bedrock model can be added as a settings model entry with `provider = "bedrock"` and the Bedrock model or inference-profile id as `api_id`.
+
+Not included on this provider: Claude Mythos 5 (Anthropic-Messages-only on `bedrock-mantle`, limited preview). OpenAI's frontier models live on the companion `bedrock-openai` provider below.
+
+## OpenAI frontier models (GPT-5.5 / GPT-5.4)
+
+GPT-5.5 and GPT-5.4 on Bedrock are served only by the `bedrock-mantle` endpoint's OpenAI Responses API — a different surface than Converse. Fabro ships a companion `bedrock-openai` provider for them: the same AWS account and `AWS_BEARER_TOKEN_BEDROCK` key, pointed at the mantle endpoint over the OpenAI dialect.
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[llm.providers.bedrock-openai]
+enabled = true
+# regional: change to https://bedrock-mantle.<region>.api.aws/openai/v1
+```
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro model test --model openai.gpt-5.5
+```
+
+Auth on this provider is Bedrock-API-key only (mantle SigV4 uses a different signing name than the runtime endpoint). Fabro always sends `store: false`, so nothing is retained under mantle's default 30-day response storage.
+
+## Use Bedrock models
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro model list --provider bedrock
+fabro model test --model us.anthropic.claude-sonnet-4-6
+fabro run workflow.fabro --model deepseek.v3-2
+```
+
+## Prompt caching
+
+Claude models cache automatically when the catalog row declares `prompt_cache`: Fabro places Converse `cachePoint` blocks after the system prompt, the tool definitions, and the conversation prefix — the same placement as the direct Anthropic provider. Cache reads and writes price Anthropic-style via the per-model `billing_policy`.
+
+## Converse extensions
+
+Bedrock-specific request fields pass through verbatim via `provider_options.bedrock` on API/SDK requests — the keys merge into the top level of the Converse envelope:
+
+```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+{
+  "model": "us.anthropic.claude-sonnet-4-6",
+  "provider_options": {
+    "bedrock": {
+      "additionalModelRequestFields": { "top_k": 200 },
+      "guardrailConfig": { "guardrailIdentifier": "gr-abc", "guardrailVersion": "1" },
+      "serviceTier": { "type": "flex" }
+    }
+  }
+}
+```
+
+## Troubleshooting
+
+**"no AWS credentials provider found"** — Neither an API key nor any AWS chain source resolved. Set `AWS_BEARER_TOKEN_BEDROCK` (or `BEDROCK_API_KEY`), or configure standard AWS credentials.
+
+**`AccessDeniedException` / 403** — The IAM principal lacks `bedrock:InvokeModel*` for the model, or model access has not been granted in the Bedrock console for your Region (Claude needs the per-Region use-case approval; third-party models need `aws-marketplace:Subscribe`).
+
+**"Authentication failed: Please make sure your API Key is valid."** — A Bedrock API key was sent but rejected by the runtime. Common cause: a mantle-scoped key used against Converse — see the bearer-vs-SigV4 [warning above](#configure-credentials). Verify the key is valid for `bedrock-runtime` in this Region, or pin Converse to `aws_sigv4`.
+
+**"data retention mode 'default' is not available for this model"** — Fable 5 / Mythos-class models require opting into data sharing first; see [Model access and approvals](#model-access-and-approvals).
+
+**"The provided model identifier is invalid"** — The wire id sent to Bedrock isn't a recognized model or inference-profile id. Set an explicit `api_id` (from `aws bedrock list-inference-profiles`) on the model entry.
+
+**`ValidationException` mentioning on-demand throughput** — The model requires an inference-profile id; use the `us.`/`global.`-prefixed id from the catalog rather than the bare model id.
+
+**`ValidationException` mentioning maximum tokens** — The requested `max_tokens` exceeds the model's per-request output cap; lower the model's `max_output` to the documented limit.
+
+**`ThrottlingException`** — Account-level Bedrock quota; consider cross-region inference profiles or a quota increase.
+
+## Further reading
+
+<Columns cols={2}>
+  <Card title="Models" icon="microchip" href="/core-concepts/models">
+    How Fabro routes model IDs, providers, and fallbacks.
+  </Card>
+
+  <Card title="Settings Configuration" icon="gear" href="/reference/user-configuration">
+    Full reference for `[llm.providers.<id>]` and `[llm.models.<id>]`.
+  </Card>
+</Columns>

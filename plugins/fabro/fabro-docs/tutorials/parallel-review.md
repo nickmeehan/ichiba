@@ -1,0 +1,107 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Parallel Review
+
+> Fan-out, fan-in, join policies, and merge nodes
+
+This tutorial runs three code review perspectives in parallel — security, architecture, and quality — then merges the results into a single report.
+
+## The workflow
+
+<Frame>
+  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-parallel-review.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=157d945602fa398cfff2fd87144eeb6f" alt="Parallel Review workflow: Start → Fan Out → Security Audit, Architecture Review, Code Quality → Merge → Final Report → Exit" width="855" height="203" data-path="images/tutorial-parallel-review.svg" />
+</Frame>
+
+```dot title="parallel.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph Parallel {
+    graph [goal="Perform a multi-perspective code review"]
+    rankdir=LR
+
+    start [shape=Mdiamond, label="Start"]
+    exit  [shape=Msquare, label="Exit"]
+
+    fork [label="Fork Analysis", shape=component, join_policy="wait_all"]
+
+    security     [label="Security Audit", prompt="Examine the codebase for security concerns: hardcoded secrets, injection risks, unsafe dependencies. List findings as bullet points.", shape=tab, reasoning_effort="low"]
+    architecture [label="Architecture Review", prompt="Assess the codebase architecture: separation of concerns, dependency structure, modularity. List findings as bullet points.", shape=tab, reasoning_effort="low"]
+    quality      [label="Code Quality", prompt="Check code quality: naming conventions, dead code, test coverage gaps, error handling. List findings as bullet points.", shape=tab, reasoning_effort="low"]
+
+    merge  [label="Merge Findings", shape=tripleoctagon]
+    report [label="Final Report", prompt="Synthesize the security, architecture, and code quality findings into a prioritized summary report with top 5 action items.", shape=tab]
+
+    start -> fork
+    fork -> security
+    fork -> architecture
+    fork -> quality
+    security -> merge
+    architecture -> merge
+    quality -> merge
+    merge -> report -> exit
+}
+```
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro run docs/internal/demo/06-parallel.fabro
+```
+
+## Fan-out with the fork node
+
+The `fork` node has `shape=component`, making it a **parallel fan-out node**. Every outgoing edge becomes a concurrent branch:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fork [label="Fork Analysis", shape=component, join_policy="wait_all"]
+
+fork -> security
+fork -> architecture
+fork -> quality
+```
+
+All three branches start at the same time. Each gets an isolated copy of the run context, so branches can't interfere with each other.
+
+### Join policies
+
+The `join_policy` controls when execution can proceed past the merge:
+
+| Policy          | Behavior                                  |
+| --------------- | ----------------------------------------- |
+| `wait_all`      | Wait for every branch to finish (default) |
+| `first_success` | Proceed as soon as one branch succeeds    |
+
+## Fan-in with the merge node
+
+The `merge` node has `shape=tripleoctagon`, making it a **merge (fan-in) node**. It collects results from all branches into a single context:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+merge [label="Merge Findings", shape=tripleoctagon]
+
+security     -> merge
+architecture -> merge
+quality      -> merge
+```
+
+The merged branch results are available to downstream nodes. The `report` node receives all three perspectives in its preamble and synthesizes them.
+
+## Concurrency control
+
+By default, Fabro runs up to 4 parallel branches simultaneously. Control this with `max_parallel`:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fork [shape=component, max_parallel=2]
+```
+
+This is useful when branches are resource-intensive (e.g., each running a full agent session with tool calls) and you want to limit concurrency.
+
+## What you've learned
+
+* **Fan-out nodes** (`shape=component`) spawn concurrent branches
+* **Merge nodes** (`shape=tripleoctagon`) collect branch results
+* **Join policies** control when execution can proceed past the merge
+* Each branch gets an isolated copy of the context
+
+## Next
+
+<Card title="Multi-Model Routing" icon="arrow-right" href="/tutorials/multi-model">
+  Assign different models to different workflow nodes using stylesheets.
+</Card>

@@ -1,0 +1,65 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Dark Factory
+
+> How Fabro helps small teams incrementally adopt a dark factory approach to software development
+
+The term "dark factory" comes from manufacturing. Since 2001, FANUC has operated a factory near Mt. Fuji where robots build other robots — running unsupervised for up to 30 days at a time. The factory is "dark" because no humans are present and robots don't need light.
+
+In software, the dark factory concept is different. It doesn't mean zero human involvement — it means **minimal human interaction** with the code itself. Humans supervise the specs, guardrails, and outcomes, not each line of code. Engineers shift from writing and reviewing code to defining what should be built, how quality is measured, and when to intervene.
+
+This is an aspirational concept, and getting there is iterative.
+
+## From coding to orchestrating
+
+Most teams today have AI writing code while humans review it line by line. The hardest transition is moving beyond that — replacing ad-hoc human review with structured, repeatable verification that you actually trust. Dan Shapiro's [five-level framework](https://www.danshapiro.com/blog/2026/01/the-five-levels-from-spicy-autocomplete-to-the-software-factory/) describes this progression well.
+
+## What makes it work
+
+The dark factory isn't a single tool or practice. It's a set of capabilities that compound:
+
+**Declarative workflows over imperative prompts.** When the process is a version-controlled graph — not a chat transcript — you can review, iterate, and share it like any other source file. The workflow itself becomes the specification of how work gets done.
+
+**Deterministic verification over human review.** Test suites, linters, type checkers, and LLM-as-judge evaluations replace line-by-line code review. Failures route back to fix loops automatically. Humans define the criteria; the system enforces them.
+
+**Multi-model ensembles over single-model dependence.** Using different models for implementation and verification breaks the circularity problem — where the builder and inspector share the same blind spots. Cross-critique with fresh eyes catches what self-review misses.
+
+**Checkpointed execution over black-box runs.** Git commits after every stage create an audit trail. When something goes wrong, you can inspect, revert, or fork from any point — without having watched the run live.
+
+**Observability over black-box automation.** Durable event streams, checkpoints, conclusions, and stage outputs make each run inspectable after the fact. Workflows get better when teams can see what happened and adjust the graph.
+
+## The human role in a dark factory
+
+The dark factory doesn't eliminate engineering judgment. It redirects it:
+
+| Before                  | After                          |
+| ----------------------- | ------------------------------ |
+| Writing code            | Defining workflows and prompts |
+| Reviewing diffs         | Defining verification criteria |
+| Debugging test failures | Designing fix loops            |
+| Watching agent sessions | Inspecting run traces          |
+| Manual quality checks   | Tuning goal gates and evals    |
+
+The goal is to spend your time on the parts that require human judgment — what to build, how to verify it, and when something doesn't look right — while the factory handles the rest.
+
+## Further reading
+
+<Columns cols={2}>
+  <Card title="Workflows" icon="diagram-project" href="/core-concepts/workflows">
+    Learn how workflow graphs orchestrate agents, commands, and human gates.
+  </Card>
+
+  <Card title="Human-in-the-Loop" icon="hand" href="/workflows/human-in-the-loop">
+    Control where and how humans intervene in workflows.
+  </Card>
+
+  <Card title="Quality Verification" icon="shield-check">
+    Build verification into your workflows.
+  </Card>
+
+  <Card title="Observability" icon="magnifying-glass-chart" href="/execution/observability">
+    Inspect event streams, logs, and exported run state.
+  </Card>
+</Columns>

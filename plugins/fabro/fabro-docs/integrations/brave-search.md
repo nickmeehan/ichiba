@@ -1,0 +1,97 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Brave Search
+
+> Give Fabro agents web search capabilities via the Brave Search API
+
+Fabro's [`web_search`](/agents/tools#web_search) tool lets agents search the web during workflow execution. It uses the [Brave Search API](https://brave.com/search/api/) to return titles, URLs, and descriptions for any query. The tool is registered automatically for all provider profiles (Anthropic, OpenAI, Gemini) — no workflow configuration is needed beyond setting the API key.
+
+## Setup
+
+1. Get a Brave Search API key from the [Brave Search API dashboard](https://brave.com/search/api/)
+
+2. Store it on the Fabro server:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro secret set BRAVE_SEARCH_API_KEY BSA...
+```
+
+3. Verify the key is working:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro doctor
+```
+
+The doctor output should show **Brave Search** as "connected". If the key is missing, web search is reported as a warning — workflows still run, but `web_search` calls return an error.
+
+The Fabro server reads this key from the vault only. It does not read `BRAVE_SEARCH_API_KEY` from process env or `server.env`.
+
+## How it works
+
+Agents call the `web_search` tool with a query string. Fabro sends the query to the Brave Web Search API (`/res/v1/web/search`) and returns numbered results with title, URL, and description:
+
+```
+1. Rust Lang
+   https://rust-lang.org
+   A systems language
+
+2. Rust Book
+   https://doc.rust-lang.org/book
+   The Rust book
+```
+
+If `BRAVE_SEARCH_API_KEY` is not configured in the vault, the tool returns an error explaining that the key is required. The agent can then fall back to other approaches.
+
+See the [`web_search` tool reference](/agents/tools#web_search) for parameters and details.
+
+## Permissions
+
+`web_search` is classified as a `shell` category tool, requiring the `full` [permission level](/agents/permissions) for auto-approval. At lower permission levels:
+
+* **Interactive mode** — the user is prompted to approve each call
+* **Non-interactive mode** (`--auto-approve`) — calls are denied
+
+## Example workflow
+
+A workflow that researches a topic before writing about it:
+
+<Frame>
+  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/brave-search-research.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=0e94380a1e906eabb7118665d04eaec7" alt="Research workflow: Start → Research → Summarize → Exit" width="489" height="59" data-path="images/brave-search-research.svg" />
+</Frame>
+
+```dot title="research.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph Research {
+    graph [goal="Research and summarize a topic"]
+    rankdir=LR
+
+    start [shape=Mdiamond, label="Start"]
+    exit  [shape=Msquare, label="Exit"]
+
+    research  [label="Research", prompt="Use web_search to find recent information about {{ goal }}. Save your findings to research.md."]
+    summarize [label="Summarize", shape=tab, prompt="Read research.md and write a concise summary of the key findings."]
+
+    start -> research -> summarize -> exit
+}
+```
+
+## Troubleshooting
+
+**"BRAVE\_SEARCH\_API\_KEY is not configured"** — Add the key with `fabro secret set BRAVE_SEARCH_API_KEY <key>`. Run `fabro doctor` to verify.
+
+**"Brave Search API returned status 401"** — The API key is invalid or expired. Generate a new key from the [Brave Search API dashboard](https://brave.com/search/api/).
+
+**"Brave Search API returned status 429"** — Rate limit exceeded. The Brave Search free tier has usage limits. Upgrade your plan or reduce the frequency of `web_search` calls.
+
+## Further reading
+
+<Columns cols={2}>
+  <Card title="Tools" icon="wrench" href="/agents/tools#web_search">
+    Full `web_search` tool reference — parameters, output format, and error handling.
+  </Card>
+
+  <Card title="Permissions" icon="lock" href="/agents/permissions">
+    How tool permissions control web search access.
+  </Card>
+</Columns>

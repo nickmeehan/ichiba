@@ -1,0 +1,136 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Hello World
+
+> Your first workflow: prompt nodes, tool use, and sub-agents
+
+This tutorial walks through three minimal workflows that introduce the building blocks of Fabro: a one-shot prompt, an agent with tool access, and a sub-agent delegation pattern.
+
+## Prerequisites
+
+Complete the [Quick Start](/getting-started/quick-start) so you have a working `fabro` binary and at least one LLM API key configured.
+
+## 1. One-shot prompt
+
+The simplest possible workflow has one node that sends a prompt to an LLM and exits.
+
+<Frame>
+  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-hello.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=91a9609af2f733004f04dbadb118f712" alt="Hello World workflow: Start → Compose → Exit" width="340" height="59" data-path="images/tutorial-hello.svg" />
+</Frame>
+
+```dot title="hello.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph Hello {
+    graph [goal="Write a haiku about software workflows"]
+    rankdir=LR
+
+    start [shape=Mdiamond, label="Start"]
+    exit  [shape=Msquare, label="Exit"]
+
+    compose [label="Compose", prompt="Write a haiku (5-7-5 syllable) about software workflows. Output only the haiku, nothing else.", shape=tab, reasoning_effort="low"]
+
+    start -> compose -> exit
+}
+```
+
+Run it:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro run docs/internal/demo/01-hello.fabro
+```
+
+### What's happening
+
+* `shape=tab` makes this a **prompt node** — a single LLM call with no tool access. Good for generation, summarization, and classification.
+* `reasoning_effort="low"` tells the model to think less. This is a simple task that doesn't need deep reasoning.
+* `graph [goal="..."]` describes the workflow's purpose. Fabro uses it in preambles and agent context.
+
+Every workflow needs exactly one `start` node (`shape=Mdiamond`) and one `exit` node (`shape=Msquare`).
+
+## 2. Agent with tools
+
+An **agent node** (the default `box` shape) runs an LLM in a loop with access to tools — bash, file reading, file editing, grep, and glob. The agent calls tools autonomously until it decides the task is complete.
+
+<Frame>
+  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-tool-use.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=85cc5a9d6c6dff086e8732ed5565eba4" alt="Tool Use workflow: Start → Explore → Exit" width="343" height="59" data-path="images/tutorial-tool-use.svg" />
+</Frame>
+
+```dot title="tool-use.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph ToolUse {
+    graph [goal="Explore the current directory using shell tools"]
+    rankdir=LR
+
+    start [shape=Mdiamond, label="Start"]
+    exit  [shape=Msquare, label="Exit"]
+
+    explore [label="Explore", prompt="Use bash to list the files in the current directory, then read the first 5 lines of any README or CLAUDE.md file you find. Summarize what this project is about in 2-3 sentences."]
+
+    start -> explore -> exit
+}
+```
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro run docs/internal/demo/02-tool-use.fabro
+```
+
+### What's happening
+
+* No `shape` attribute means the default `box` — an **agent node**.
+* The agent has access to [built-in tools](/agents/tools): `shell`, `read_file`, `write_file`, `edit_file`, `grep`, `glob`, `web_search`, and `web_fetch`.
+* The agent decides which tools to call and when to stop. Fabro handles the tool loop automatically.
+
+### Prompt vs. agent nodes
+
+|             | Prompt node (`tab`)  | Agent node (`box`)                    |
+| ----------- | -------------------- | ------------------------------------- |
+| LLM calls   | Single call          | Multi-turn loop                       |
+| Tool access | None                 | Full toolset                          |
+| Use case    | Analysis, generation | Tasks requiring file I/O and commands |
+
+## 3. Sub-agents
+
+An agent can spawn **sub-agents** to delegate work. Sub-agents run in their own session and return results to the parent.
+
+<Frame>
+  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-subagent.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=e97c1fd95885b6cbc1751be1762f4704" alt="Sub-agent workflow: Start → Research → Exit" width="360" height="59" data-path="images/tutorial-subagent.svg" />
+</Frame>
+
+```dot title="sub-agent.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph SubAgent {
+    graph [goal="Research and summarize using a sub-agent"]
+    rankdir=LR
+
+    start [shape=Mdiamond, label="Start"]
+    exit  [shape=Msquare, label="Exit"]
+
+    research [label="Research", prompt="You have a sub-agent available via the spawn_agent tool. Spawn a sub-agent to list the files in the current directory and read the first 10 lines of any README or CLAUDE.md. Then, using the sub-agent's findings, write a 2-sentence summary of the project."]
+
+    start -> research -> exit
+}
+```
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro run docs/internal/demo/03-subagent.fabro
+```
+
+### What's happening
+
+* The parent agent uses `spawn_agent` to create a child session, then `wait` to collect the result.
+* Sub-agents have their own tool access and conversation history — they don't see the parent's context.
+* This pattern is useful for parallelizing research, isolating risky operations, or keeping the parent's context window lean.
+
+See [Sub-agents](/agents/subagents) for the full tool reference.
+
+## What you've learned
+
+* **Prompt nodes** (`shape=tab`) make a single LLM call — no tools
+* **Agent nodes** (default `box`) run a multi-turn tool loop
+* **Sub-agents** let an agent delegate to independent child sessions
+* Every workflow needs a `start` node, an `exit` node, and a `goal`
+
+## Next
+
+<Card title="Plan & Implement" icon="arrow-right" href="/tutorials/plan-implement">
+  Add human gates and revision loops to a multi-step workflow.
+</Card>

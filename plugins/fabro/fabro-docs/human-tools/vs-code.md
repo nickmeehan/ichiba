@@ -1,0 +1,56 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# VS Code
+
+> Open sandbox environments in VS Code for interactive editing and debugging
+
+When a Daytona sandbox has [SSH access](/human-tools/ssh-access) enabled, you can connect VS Code directly to the sandbox using the built-in [Remote - SSH](https://code.visualstudio.com/docs/remote/ssh) extension. This gives you a full IDE experience — editing, terminal, debugging, port forwarding — inside the same environment where your workflow agents are running.
+
+<Note>
+  VS Code remote access requires [SSH access](/human-tools/ssh-access), which is only available with the Daytona sandbox provider.
+</Note>
+
+## Prerequisites
+
+* [VS Code](https://code.visualstudio.com/) with the [Remote - SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh) extension installed
+* A running Daytona sandbox with SSH access enabled
+
+## Connecting to a sandbox
+
+1. Start a workflow with a preserved Daytona sandbox:
+
+   ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+   fabro run workflow.fabro --environment cloud --preserve-sandbox
+   ```
+
+2. Use `fabro sandbox ssh` to get the connection command:
+
+   ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+   fabro sandbox ssh <run-id> --print
+   ```
+
+3. In VS Code, open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`) and run **Remote-SSH: Connect to Host...**
+
+4. Paste the hostname from the SSH command (e.g. `daytona@fabro-20260307-143022-a3f2.ssh.daytona.io`)
+
+5. Once connected, open the workspace folder at `/home/daytona/workspace`
+
+VS Code installs its server component on the sandbox automatically. After the initial setup, you have full IDE access to the remote environment.
+
+## What you can do
+
+Once connected, VS Code operates as if the sandbox filesystem were local:
+
+* **Edit files** — Full IntelliSense, code navigation, and refactoring on the sandbox filesystem
+* **Terminal** — Open integrated terminals that run directly on the sandbox
+* **Debug** — Attach debuggers to processes running in the sandbox using standard launch configurations
+* **Port forwarding** — Access web servers and other services running in the sandbox from your local browser
+* **Extensions** — VS Code extensions install on the sandbox automatically, so linters, formatters, and language servers work as expected
+
+## Tips
+
+* **Use `--preserve-sandbox`** — Without it, the sandbox is destroyed when the workflow finishes and your VS Code session disconnects. Combine with `auto_stop_interval` in your [run config](/execution/run-configuration) to control idle timeout.
+* **Pair with human gates** — When a workflow pauses at a [human gate](/workflows/human-in-the-loop), connect via VS Code to review the agent's changes before approving.
+* **SSH credential lifetime** — Daytona SSH credentials expire after 60 minutes by default. If your VS Code session disconnects, run `fabro sandbox ssh <run-id>` again to get fresh credentials (use `--ttl` to set a custom expiry).

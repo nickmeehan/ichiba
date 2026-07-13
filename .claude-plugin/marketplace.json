@@ -22,6 +22,12 @@
       "source": "./plugins/docs-kb"
     },
     {
+      "name": "fabro",
+      "version": "1.0.0",
+      "description": "Fabro dark-factory fluency for Claude Code: a workflow-author skill, the full docs.fabro.sh mirror for offline deep reference, and dot2mermaid for rendering workflow graphs in PRs.",
+      "source": "./plugins/fabro"
+    },
+    {
       "name": "maven",
       "version": "1.1.0",
       "description": "A toolkit for instructors on Maven. Currently includes a skill that audits Lightning Lesson signup pages against Maven's listing criteria for discoverability and featuring; more skills will be added as instructor needs surface.",

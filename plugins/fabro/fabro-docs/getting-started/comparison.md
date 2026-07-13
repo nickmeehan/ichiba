@@ -1,0 +1,183 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Comparison
+
+> How Fabro compares to AI coding agents, software factories, and orchestration platforms.
+
+Fabro is a [dark software factory](/getting-started/dark-factory). It is not an IDE plugin. It is not a REPL, command line or otherwise. It is not a web application where you drag-and-drop workflows or update technical documents (we have Git for those).
+
+Almost every other tool in AI coding starts from the same place: a developer at a keyboard, typing prompts, reviewing responses and outputs. Fabro starts from a different premise — that the highest-leverage work for expert engineers is defining **what** gets built and **how quality is verified**, not supervising each line of code as it's written.
+
+This means Fabro intentionally does not include:
+
+* **An IDE integration** — no VS Code extension, no editor plugins
+* **A REPL CLI** — no interactive prompt-response loop
+* **Autocomplete** — no inline code suggestions
+
+Instead, Fabro provides workflow graphs, verification gates, multi-model orchestration, and observability — the infrastructure a small team needs to run coding agents with minimal human interaction.
+
+## Notable Comparisons
+
+### Automated Coding Workflows
+
+These are the closest alternatives to Fabro — platforms that structure and automate multi-step coding processes rather than offering a single interactive agent session. They are proprietary products which offer a more "light" software factory approach where humans are still watching and driving.
+
+* **Factory AI (Droids)** — Enterprise coding automation platform
+* **Ona (Gitpod)** — Agentic coding platform with cloud dev environments
+* **Devin** — Autonomous coding agent by Cognition
+
+### AI Coding REPLs
+
+AI coding REPLs like Claude Code, Codex CLI, and Cursor are interactive, prompt-driven agents designed for single-session tasks. They are powerful pair-programming tools but operate at a different level than Fabro — they lack declarative workflow definition, multi-stage orchestration, and Git-native checkpointing.
+
+REPLs and Fabro pair nicely. REPLs are ideal for exploring ideas interactively — prototyping an approach, testing assumptions, and iterating in real time. When you're ready to move from exploration to implementation, you can hand the work off to a Fabro workflow for the build out.
+
+## Other Comparisons
+
+**8090 Software Factory**
+
+8090.ai is an AI SDLC orchestration platform that structures upstream context — requirements, architecture, and planning — then delegates implementation to external coding agents via MCP. Because 8090 stops before code generation and does not perform coding activities itself, it operates in a different stage than Fabro and is not compared in the sections below.
+
+**OpenAI Symphony**
+
+[Symphony](https://github.com/openai/symphony) is a new multi-agent orchestration framework from OpenAI that dispatches Codex sessions from a Linear issue board. It is currently an engineering preview with a narrow, fixed workflow (poll → dispatch → resolve → land). Because it is early-stage and with a limited implementation, it is not compared in the sections below.
+
+## Comparison Dimensions
+
+<Note>
+  We strive to keep this information accurate, but the landscape changes rapidly. If you spot an inaccuracy, please [let us know](mailto:hello@fabro.sh).
+</Note>
+
+### Licensing
+
+Open source vs. proprietary — trust, auditability, extensibility.
+
+| Tool                | License                                       |
+| ------------------- | --------------------------------------------- |
+| **Fabro**           | Open source, MIT license. Fork and customize. |
+| **Factory AI**      | Proprietary, closed source                    |
+| **Devin**           | Proprietary, closed source                    |
+| **Ona**             | Proprietary, closed source                    |
+| **AI Coding REPLs** | Proprietary except Codex CLI (Apache 2.0)     |
+
+### Workflow Definition
+
+How coding tasks are structured, repeated, and version-controlled.
+
+| Tool                | Approach                                                                                                   |
+| ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Fabro**           | Declarative, deterministic workflow graphs with loops, branching, and gates. Version controlled.           |
+| **Factory AI**      | Non-deterministic Markdown skills (custom Droids) and black box Missions stored in a proprietary database. |
+| **Devin**           | One-off chat tasks or non-deterministic Markdown skills stored in a proprietary database.                  |
+| **Ona**             | One-off chat tasks or proprietary, web-based workflow builder.                                             |
+| **AI Coding REPLs** | Not applicable. Imperative prompts with Markdown skills.                                                   |
+
+### Model Access
+
+Access to models of various intelligence and costs across providers with per-step control.
+
+| Tool                | Models                                       |
+| ------------------- | -------------------------------------------- |
+| **Fabro**           | Multi-provider with ensembles.               |
+| **Factory AI**      | Multi-provider with ensembles for Missions.  |
+| **Devin**           | Proprietary, black box selection.            |
+| **Ona**             | Multi-provider. One user selection per task. |
+| **AI Coding REPLs** | Locked to REPL provider's ecosystem.         |
+
+### Human-in-the-Loop
+
+How and where humans intervene in the workflow.
+
+| Tool                | Approach                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------- |
+| **Fabro**           | Deterministically defined human gates in the workflow, plus ad-hoc injected steering. |
+| **Factory AI**      | Plan before implementation, then review pull requests.                                |
+| **Devin**           | IDE-based mid-task chat intervention plus pull request review.                        |
+| **Ona**             | Humans review at the pull request boundary.                                           |
+| **AI Coding REPLs** | REPL prompts plus permission prompt modes.                                            |
+
+### Multi-Agent Orchestration
+
+How multiple agents coordinate on complex work.
+
+| Tool                | Coordination                                                                                                           |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Fabro**           | Explicit graph of stages that fan out and converge. Deterministic composition of agents, prompts, commands, and gates. |
+| **Factory AI**      | Hierarchical subagents delegated from a parent Droid. Non-deterministic Missions for parallel feature workers.         |
+| **Devin**           | Opaque internal compound system. Multiple instances run in parallel but users cannot define the orchestration.         |
+| **Ona**             | Fleet of independent agents in isolated VMs. Horizontal scale but no agent-to-agent communication.                     |
+| **AI Coding REPLs** | Limited. Session-scoped sub-agents or parallel background agents with no shared workflow definition.                   |
+
+### Execution Environment
+
+Where code runs and who controls the sandbox.
+
+| Tool                | Environment                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------- |
+| **Fabro**           | Local or BYO provider (Daytona, Sprites, exe.dev) and SSH support.                                |
+| **Factory AI**      | Local plus cloud VM configured with cloud templates. Enterprise supports air-gapped environments. |
+| **Devin**           | Proprietary cloud VM managed by Devin ("Devbox") or self hosted.                                  |
+| **Ona**             | Proprietary cloud VMs managed by Ona (Gitpods) or self-hosted.                                    |
+| **AI Coding REPLs** | Local and proprietary cloud modes.                                                                |
+
+### Cloud Sandbox Access
+
+Human access to the running sandbox via preview URLs, SSH, and VNC.
+
+| Tool                | Access                                                                                  |
+| ------------------- | --------------------------------------------------------------------------------------- |
+| **Fabro**           | Live preview URLs, SSH, and VNC when using a supported sandbox provider (e.g. Daytona). |
+| **Factory AI**      | SSH access to cloud environments. No preview URLs or VNC.                               |
+| **Devin**           | Browser-based shell and VS Code in the Devbox. No direct SSH or VNC.                    |
+| **Ona**             | SSH access to cloud environments. No preview URLs or VNC.                               |
+| **AI Coding REPLs** | None.                                                                                   |
+
+### Git Checkpointing
+
+How state is managed during execution.
+
+| Tool                | Git behavior                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------- |
+| **Fabro**           | Commits after every stage with provenance captured. Inspect, revert, or fork from any checkpoint. |
+| **Factory AI**      | Standard git operations. No per-step checkpointing.                                               |
+| **Devin**           | Opens pull requests. No per-step git checkpointing.                                               |
+| **Ona**             | Disposable VMs with pull request output. No per-step checkpointing.                               |
+| **AI Coding REPLs** | None.                                                                                             |
+
+### Quality Verification
+
+How the system verifies that generated code meets requirements.
+
+| Tool                | Verification                                                                                                                 |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Fabro**           | First class quality verification system (criteria, controls, evals) combining agent reviews, CI checks, and human approvals. |
+| **Factory AI**      | Sub-agent code reviews. PR-based human review.                                                                               |
+| **Devin**           | Sub-agent code reviews. PR-based human review.                                                                               |
+| **Ona**             | Human review at PR boundary.                                                                                                 |
+| **AI Coding REPLs** | Manual. User reviews output in the REPL or at the PR boundary.                                                               |
+
+### Observability
+
+Can you trace what happened step-by-step? Audit and debug agent behavior.
+
+| Tool                | Visibility                                                                           |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| **Fabro**           | Full trace of every model call, tool invocation, and decision. Cross-run comparison. |
+| **Factory AI**      | OpenTelemetry-native with dual-export and structured metrics.                        |
+| **Devin**           | Session replay with timeline and milestones. Enterprise audit logging.               |
+| **Ona**             | Enterprise audit logging with real-time event streaming.                             |
+| **AI Coding REPLs** | Varies. Limited to session-level transcripts or enterprise audit logs.               |
+
+### Deployment Model
+
+SaaS dependency vs. self-hosted control.
+
+| Tool                | Deployment                                                   |
+| ------------------- | ------------------------------------------------------------ |
+| **Fabro**           | Self-hosted Rust single binary with no runtime dependencies. |
+| **Factory AI**      | SaaS with enterprise hybrid and air-gapped options.          |
+| **Devin**           | SaaS only. Enterprise can host execution in customer VPC.    |
+| **Ona**             | SaaS with enterprise self-hosted VPC option.                 |
+| **AI Coding REPLs** | Local CLI tools with optional proprietary cloud modes.       |

@@ -1,0 +1,20 @@
+{
+  "name": "fabro",
+  "version": "1.0.0",
+  "description": "Fabro dark-factory fluency for Claude Code: a workflow-author skill, the full docs.fabro.sh mirror for offline deep reference, and dot2mermaid for rendering workflow graphs in PRs.",
+  "author": {
+    "name": "Nick Meehan",
+    "email": "nick@meehan.tech"
+  },
+  "homepage": "https://github.com/nickmeehan/dark-factory",
+  "repository": "https://github.com/nickmeehan/dark-factory",
+  "license": "MIT",
+  "keywords": [
+    "fabro",
+    "workflows",
+    "dark-factory",
+    "agents",
+    "dot",
+    "graphviz"
+  ]
+}

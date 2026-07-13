@@ -1,0 +1,61 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Security
+
+> Security model and best practices
+
+<Warning>
+  Fabro is currently a research preview. It has not yet been subject to third-party penetration testing. There may be vulnerabilities. We strongly recommend only deploying Fabro on private, self-hosted resources within a controlled networking environment.
+</Warning>
+
+## Security controls not in Fabro
+
+Fabro is single-tenant software designed for small, trusted teams. The following controls are **not implemented** — plan your deployment accordingly.
+
+| Control                            | Status                                                                                                                                                                                                                                              |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Multi-tenancy**                  | Not supported. Fabro is single-tenant only — there is no organization or tenant isolation.                                                                                                                                                          |
+| **Roles or ACLs**                  | Not supported. All authenticated users have identical, full access to every run, workflow, and API endpoint.                                                                                                                                        |
+| **Inbound source-IP allowlisting** | Not implemented in Fabro. Restrict source networks with a reverse proxy, firewall, VPN, Tailscale, platform ingress policy, or another deployment-layer control.                                                                                    |
+| **Rate limiting**                  | Not implemented. The API server does not throttle requests.                                                                                                                                                                                         |
+| **Custom security header policy**  | Not configurable. Fabro emits default security headers, including enforced `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, and `Strict-Transport-Security` when HTTPS is detected. |
+
+## Security recommendations
+
+### Network
+
+* **Deploy the web app on a private network.** Use a Tailscale tailnet, VPN, or internal network to keep the web UI off the public internet.
+* **Deploy the API on a private network.** Only allow access from expected hosts (the web app, CI runners, developer machines). The API binds to `127.0.0.1` by default — do not expose it with `--host 0.0.0.0` unless it is behind a firewall or private network.
+* **Enforce source-IP restrictions upstream.** Fabro does not provide inbound source-IP allowlisting. Use your reverse proxy, firewall, VPN, Tailscale ACLs, cloud load balancer, Kubernetes ingress, or platform policy to limit who can connect.
+* **Use Daytona sandboxes with network controls.** When running untrusted or generated code, use the Daytona sandbox provider with `network = "block"` or a CIDR-based allow list to restrict agent egress.
+
+### Authentication
+
+* **Enable authentication.** Fabro supports `dev-token` and GitHub OAuth. Do not disable auth outside of local development or controlled demos.
+* **Configure a username allowlist for GitHub OAuth.** `[server.auth.github].allowed_usernames` should contain the exact GitHub users allowed to log in. An empty list rejects everyone.
+* **Configure the session secret used by the web flow.** `SESSION_SECRET` should be provisioned with a strong value on long-lived deployments.
+* **Terminate HTTPS or mTLS upstream when needed.** Fabro's listener is plain HTTP/Unix only. If CI, scripts, or a browser must connect over HTTPS, terminate TLS at a reverse proxy or load balancer and keep the Fabro listener on a private network.
+
+### Secrets
+
+* **Keep API keys out of sandboxes.** The local sandbox strips environment variables ending in `_API_KEY`, `_SECRET`, `_TOKEN`, `_PASSWORD`, or `_CREDENTIAL`, but Docker and Daytona sandboxes provide stronger isolation — only explicitly configured variables are passed through.
+* **Use the server vault for optional integration credentials.** For server-backed workflows, persist LLM provider keys, Slack, Daytona, Brave Search, GitHub token, and GitHub App secrets with `fabro provider login`, `fabro secret set`, or `fabro install`. Process env and `server.env` are reserved for bootstrap secrets such as `SESSION_SECRET`, `FABRO_DEV_TOKEN`, and object-store credentials. Do not commit secrets to version control.
+* **Rotate the session secret.** The `SESSION_SECRET` environment variable encrypts web app sessions. Rotate it periodically and use a strong random value.
+
+### Execution
+
+* **Use Docker or Daytona for untrusted workflows.** The `local` sandbox offers no filesystem or network isolation — agents have the same access as the host. Use `docker` or `daytona` when running code you haven't reviewed.
+* **Restrict agent permissions.** Use `--permissions read-only` or `--permissions read-write` to limit which tools agents can invoke without approval. In non-interactive mode (`--auto-approve`), tools outside the permission level are denied outright.
+
+## Security reporting
+
+If you discover a security vulnerability in Fabro, please report it responsibly:
+
+1. **Email** [security@fabro.dev](mailto:security@fabro.dev) with a description of the vulnerability, steps to reproduce, and any relevant details.
+2. **Do not** disclose the vulnerability publicly until we have had a chance to investigate and release a fix.
+3. We will acknowledge receipt within 48 hours and aim to provide an initial assessment within 5 business days.
+4. We will work with you to understand the issue and coordinate disclosure timing.
+
+We appreciate the security research community's efforts in helping keep Fabro and its users safe.

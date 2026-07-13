@@ -1,0 +1,223 @@
+# Fabro
+
+## Docs
+
+- [Railway](https://docs.fabro.sh/administration/deploy-railway.md): Deploy Fabro to Railway from the prebuilt GHCR image, with a persistent Volume for state
+- [Deployment](https://docs.fabro.sh/administration/deployment.md): Choose where the Fabro server runs: on your laptop or self-hosted on a server
+- [Security](https://docs.fabro.sh/administration/security.md): Security model and best practices
+- [Self-host with Docker](https://docs.fabro.sh/administration/self-host-docker.md): Run the Fabro server as a Docker container with docker compose, ECS, or any cloud container service
+- [Server Configuration](https://docs.fabro.sh/administration/server-configuration.md): Server-owned settings.toml sections, CLI overrides, and environment variables
+- [Troubleshooting](https://docs.fabro.sh/administration/troubleshooting.md): Diagnosing and resolving common issues with Fabro
+- [Hooks](https://docs.fabro.sh/agents/hooks.md): Run custom logic in response to workflow lifecycle events
+- [MCP](https://docs.fabro.sh/agents/mcp.md): Connect MCP tools to agents and expose Fabro runs to MCP clients
+- [Outputs & Artifacts](https://docs.fabro.sh/agents/outputs.md): How Fabro captures agent responses, tracks file changes, and collects test assets
+- [Permissions](https://docs.fabro.sh/agents/permissions.md): Controlling which tools agents can use
+- [Prompts](https://docs.fabro.sh/agents/prompts.md): How Fabro constructs and delivers prompts to agents
+- [Skills](https://docs.fabro.sh/agents/skills.md): Reusable prompt templates that extend agent capabilities
+- [Sub-agents](https://docs.fabro.sh/agents/subagents.md): Delegate subtasks to child agent sessions
+- [Tools](https://docs.fabro.sh/agents/tools.md): Built-in tools for file I/O, shell commands, search, and web access
+- [Create automation](https://docs.fabro.sh/api-reference/automations/create-automation.md): Creates a new automation definition.
+- [Create automation run](https://docs.fabro.sh/api-reference/automations/create-automation-run.md): Creates a new run by firing the automation's enabled API trigger.
+- [Delete automation](https://docs.fabro.sh/api-reference/automations/delete-automation.md): Deletes an automation definition when `If-Match` matches the current automation revision.
+- [List automation runs](https://docs.fabro.sh/api-reference/automations/list-automation-runs.md): Returns durable runs created by one automation.
+- [List automations](https://docs.fabro.sh/api-reference/automations/list-automations.md): Returns all configured automation definitions.
+- [Replace automation](https://docs.fabro.sh/api-reference/automations/replace-automation.md): Replaces an automation definition when `If-Match` matches the current automation revision.
+- [Retrieve automation](https://docs.fabro.sh/api-reference/automations/retrieve-automation.md): Returns one automation definition by id.
+- [Client SDKs](https://docs.fabro.sh/api-reference/client-sdks.md): Language-specific clients generated from the Fabro OpenAPI spec
+- [Create environment](https://docs.fabro.sh/api-reference/environments/create-environment.md): Creates a server-owned environment definition in the environment catalog. REST environment requests only accept inline Dockerfile content; local Dockerfile paths are supported by workflow/settings files but rejected by this API.
+- [Delete environment](https://docs.fabro.sh/api-reference/environments/delete-environment.md): Deletes a non-default environment definition when `If-Match` matches the current environment revision.
+- [List environments](https://docs.fabro.sh/api-reference/environments/list-environments.md): Returns all server-managed environment definitions, sorted by id.
+- [Replace environment](https://docs.fabro.sh/api-reference/environments/replace-environment.md): Replaces an environment definition when `If-Match` matches the current environment revision. The path id is authoritative; the request body omits `id`.
+- [Retrieve environment](https://docs.fabro.sh/api-reference/environments/retrieve-environment.md): Returns one server-managed environment definition by id.
+- [List Run Questions](https://docs.fabro.sh/api-reference/human-in-the-loop/list-run-questions.md): Returns pending human-in-the-loop questions for a run. Questions are generated when the workflow needs user input to proceed.
+- [Preview URL](https://docs.fabro.sh/api-reference/human-in-the-loop/preview-url.md): Generates a preview URL for a port exposed by the run's sandbox environment.
+- [Submit Run Answer](https://docs.fabro.sh/api-reference/human-in-the-loop/submit-run-answer.md): Submits an answer to a pending question. The answer can be freeform text or a selected option key, depending on the question type.
+- [List Models](https://docs.fabro.sh/api-reference/models/list-models.md): Returns a paginated list of available LLM models from the built-in catalog.
+- [Test Model](https://docs.fabro.sh/api-reference/models/test-model.md): Tests a model by sending a simple prompt and reporting pass/fail.
+- [API Overview](https://docs.fabro.sh/api-reference/overview.md): Introduction to the Fabro REST API
+- [List Run Artifacts](https://docs.fabro.sh/api-reference/run-internals/list-run-artifacts.md): Lists captured artifact files for a run.
+- [List Run Events](https://docs.fabro.sh/api-reference/run-internals/list-run-events.md): Returns a paginated JSON list of stored run events.
+- [List Run Stages](https://docs.fabro.sh/api-reference/run-internals/list-run-stages.md): Returns the ordered list of stages in a run's workflow graph with their current status and timing. Stages are bounded by the workflow graph size, typically fewer than 20.
+- [List Stage Events](https://docs.fabro.sh/api-reference/run-internals/list-stage-events.md): Returns a paginated JSON list of stored run events scoped to a single stage visit.
+- [Retrieve Run Checkpoint](https://docs.fabro.sh/api-reference/run-internals/retrieve-run-checkpoint.md): Returns the latest checkpoint data for a run, or null if no checkpoint has been recorded yet.
+- [Retrieve Run Settings](https://docs.fabro.sh/api-reference/run-internals/retrieve-run-settings.md): Returns the persisted dense `WorkflowSettings` snapshot used to launch this run.
+- [Retrieve Run Billing](https://docs.fabro.sh/api-reference/run-outputs/retrieve-run-billing.md): Returns token counts and billed totals broken down by stage and model for a specific run.
+- [Approve Run](https://docs.fabro.sh/api-reference/runs/approve-run.md): Approves a pending run that requires pre-execution approval and makes it runnable.
+- [Cancel Run](https://docs.fabro.sh/api-reference/runs/cancel-run.md): Cancels a pending, runnable, or running run. Returns 409 if the run has already completed or been cancelled.
+- [Create Run](https://docs.fabro.sh/api-reference/runs/create-run.md): Creates a new workflow run in `submitted` status from a self-contained manifest.
+- [Deny Run](https://docs.fabro.sh/api-reference/runs/deny-run.md): Denies a pending run that requires pre-execution approval and fails it with `approval_denied`.
+- [Link Run Parent](https://docs.fabro.sh/api-reference/runs/link-run-parent.md): Links a run under an orchestration parent. Parent links are mutable for all run states, including archived and terminal runs.
+- [List Runs](https://docs.fabro.sh/api-reference/runs/list-runs.md): Returns durable run summaries from the backing store, including runs persisted before the current server boot. Supports per-status filtering and sorting for both list and kanban renderings. Archived runs are hidden by default; pass `include_archived=true` (or `status=archived`) to include them. Runs…
+- [Pause Run](https://docs.fabro.sh/api-reference/runs/pause-run.md): Pauses a running run. Returns 409 if the run is not running.
+- [Render SVG](https://docs.fabro.sh/api-reference/runs/render-svg.md): Renders the workflow graph as an SVG image using Graphviz.
+- [Retrieve Run](https://docs.fabro.sh/api-reference/runs/retrieve-run.md): Returns the durable run summary for a run.
+- [Start Run](https://docs.fabro.sh/api-reference/runs/start-run.md): Requests start for a submitted run. User-created runs become runnable; parent-generated child runs may become pending until approved. Provide `resume=true` to resume an interrupted run from checkpoint. Returns 409 if the run is not startable.
+- [Unlink Run Parent](https://docs.fabro.sh/api-reference/runs/unlink-run-parent.md): Removes a run's orchestration parent. Already-root runs are returned unchanged.
+- [Unpause Run](https://docs.fabro.sh/api-reference/runs/unpause-run.md): Resumes a paused run. Returns 409 if the run is not paused.
+- [Retrieve Server Settings](https://docs.fabro.sh/api-reference/settings/retrieve-server-settings.md): Returns the server's current in-memory settings view as the typed `ServerSettings` payload.
+- [Delete a variable](https://docs.fabro.sh/api-reference/variables/delete-a-variable.md)
+- [Get a variable](https://docs.fabro.sh/api-reference/variables/get-a-variable.md)
+- [List variables](https://docs.fabro.sh/api-reference/variables/list-variables.md): Returns non-sensitive variables, including values.
+- [Replace a variable value](https://docs.fabro.sh/api-reference/variables/replace-a-variable-value.md): Replaces a variable value and preserves the existing description when omitted.
+- [Store or update a variable](https://docs.fabro.sh/api-reference/variables/store-or-update-a-variable.md): Stores a non-sensitive variable for run config interpolation.
+- [First CLI, Docker sandboxing, and web dashboard](https://docs.fabro.sh/changelog/2026-02-23.md)
+- [Auto-compaction and run progress logs](https://docs.fabro.sh/changelog/2026-02-24.md)
+- [Skills system and secret redaction](https://docs.fabro.sh/changelog/2026-02-25.md)
+- [Daytona cloud sandboxes and TOML run config](https://docs.fabro.sh/changelog/2026-02-26.md)
+- [MCP tool servers, web tools, and multi-CLI backends](https://docs.fabro.sh/changelog/2026-02-27.md)
+- [Fabro web app and git checkpointing](https://docs.fabro.sh/changelog/2026-02-28.md)
+- [Verifications, retrospectives, insights, and parallel branching](https://docs.fabro.sh/changelog/2026-03-01.md)
+- [Sessions and workflow improvements](https://docs.fabro.sh/changelog/2026-03-02.md)
+- [Authentication, setup wizard, and fabro doctor](https://docs.fabro.sh/changelog/2026-03-03.md)
+- [Concurrency limits, SSH access, and timer nodes](https://docs.fabro.sh/changelog/2026-03-04.md)
+- [Slack interviews, hooks, model failover, and GPT-5.4](https://docs.fabro.sh/changelog/2026-03-05.md)
+- [API restructuring and sandbox improvements](https://docs.fabro.sh/changelog/2026-03-06.md)
+- [Completions API, new sandbox providers, and sandbox.env](https://docs.fabro.sh/changelog/2026-03-07.md)
+- [Lifecycle hooks, server mode, and auto-PR](https://docs.fabro.sh/changelog/2026-03-08.md)
+- [Project config, fabro cp, fabro pr create, and exe.dev maturation](https://docs.fabro.sh/changelog/2026-03-09.md)
+- [One-line installer, MCP servers, and new CLI commands](https://docs.fabro.sh/changelog/2026-03-10.md)
+- [SSH sandbox, skill installer, and fabro graph](https://docs.fabro.sh/changelog/2026-03-11.md)
+- [Simpler model stylesheets with provider auto-inference](https://docs.fabro.sh/changelog/2026-03-12.md)
+- [.fabro file extension, human gate improvements, and user workflows](https://docs.fabro.sh/changelog/2026-03-13.md)
+- [fabro logs, background runs, and workflow scaffolding](https://docs.fabro.sh/changelog/2026-03-14.md)
+- [Run forking, self-update, and Docker-style fabro ps](https://docs.fabro.sh/changelog/2026-03-15.md)
+- [Auto-merge for PRs, three new lifecycle hooks, and styled workflow graphs](https://docs.fabro.sh/changelog/2026-03-16.md)
+- [OpenAI OAuth support and GPT-5.4 Mini](https://docs.fabro.sh/changelog/2026-03-17.md)
+- [Secret management and repo commands](https://docs.fabro.sh/changelog/2026-03-18.md)
+- [Provider login, auto-detect provider, and fabro wait](https://docs.fabro.sh/changelog/2026-03-19.md)
+- [Composable run lifecycle: create, start, attach](https://docs.fabro.sh/changelog/2026-03-20.md)
+- [Anthropic fast mode and deep model testing](https://docs.fabro.sh/changelog/2026-03-21.md)
+- [fabro resume subcommand](https://docs.fabro.sh/changelog/2026-03-22.md)
+- [Unlimited tool rounds and workflow syntax improvements](https://docs.fabro.sh/changelog/2026-03-23.md)
+- [Pull request pipeline stage and resume reliability](https://docs.fabro.sh/changelog/2026-03-26.md)
+- [fabro settings, preflight subcommand, and storage-dir](https://docs.fabro.sh/changelog/2026-03-27.md)
+- [File-based workflow imports](https://docs.fabro.sh/changelog/2026-03-28.md)
+- [Dump export command](https://docs.fabro.sh/changelog/2026-03-29.md)
+- [CLI restructuring, shell completions, and API versioning](https://docs.fabro.sh/changelog/2026-03-30.md)
+- [Global JSON output mode](https://docs.fabro.sh/changelog/2026-03-31.md)
+- [Server-backed web dashboard and event-sourced run state](https://docs.fabro.sh/changelog/2026-04-01.md)
+- [Background server daemon](https://docs.fabro.sh/changelog/2026-04-02.md)
+- [Run lifecycle API refinement](https://docs.fabro.sh/changelog/2026-04-04.md)
+- [System management API and log rotation](https://docs.fabro.sh/changelog/2026-04-06.md)
+- [Worker lifecycle hardening and object-backed artifacts](https://docs.fabro.sh/changelog/2026-04-07.md)
+- [Embedded web UI and fabro uninstall](https://docs.fabro.sh/changelog/2026-04-08.md)
+- [Settings v2 and events schema v2](https://docs.fabro.sh/changelog/2026-04-09.md)
+- [GitHub App owner selection](https://docs.fabro.sh/changelog/2026-04-10.md)
+- [Unified template syntax](https://docs.fabro.sh/changelog/2026-04-11.md)
+- [Provider credential auth and resolved settings](https://docs.fabro.sh/changelog/2026-04-12.md)
+- [Scripted install and local server auth](https://docs.fabro.sh/changelog/2026-04-13.md)
+- [Vendored Graphviz, version command, and install improvements](https://docs.fabro.sh/changelog/2026-04-14.md)
+- [Live Web UI with real-time stage tracking](https://docs.fabro.sh/changelog/2026-04-15.md)
+- [Server restart, runs page empty state, and prerelease upgrades](https://docs.fabro.sh/changelog/2026-04-16.md)
+- [Curated landing output and Homebrew-aware upgrades](https://docs.fabro.sh/changelog/2026-04-17.md)
+- [Homebrew install, deployment guides, and hardened hosting](https://docs.fabro.sh/changelog/2026-04-18.md)
+- [Run files, archived runs, and browser setup](https://docs.fabro.sh/changelog/2026-04-19.md)
+- [GitHub CLI auth and web run controls](https://docs.fabro.sh/changelog/2026-04-20.md)
+- [Install-first server startup and safer auth boundaries](https://docs.fabro.sh/changelog/2026-04-21.md)
+- [Object-store setup in the installer](https://docs.fabro.sh/changelog/2026-04-22.md)
+- [Server secrets, fabro dump, and faster workflow finalization](https://docs.fabro.sh/changelog/2026-04-23.md)
+- [Server-backed rewind, setup polish, and diff stats](https://docs.fabro.sh/changelog/2026-04-24.md)
+- [Files Changed sidebar, settings panels, and install validation](https://docs.fabro.sh/changelog/2026-04-25.md)
+- [Clone-based Docker sandboxes and per-run logs](https://docs.fabro.sh/changelog/2026-04-26.md)
+- [Install wizard sandbox selection and sandbox-native git metadata](https://docs.fabro.sh/changelog/2026-04-27.md)
+- [Workflow-relative prompt files and sandbox metadata fixes](https://docs.fabro.sh/changelog/2026-04-28.md)
+- [Faster preflight checks and clearer setup errors](https://docs.fabro.sh/changelog/2026-04-29.md)
+- [Command logs and precise stage outcomes](https://docs.fabro.sh/changelog/2026-04-30.md)
+- [Clearer failure diagnostics and deployment docs](https://docs.fabro.sh/changelog/2026-05-01.md)
+- [Answer blocked runs in the web app](https://docs.fabro.sh/changelog/2026-05-02.md)
+- [Run links and Daytona scope checks](https://docs.fabro.sh/changelog/2026-05-03.md)
+- [Smarter PRs, faster doctor checks, and GPT-5.5](https://docs.fabro.sh/changelog/2026-05-04.md)
+- [Mid-run steering, cancellable agents, and GitHub permissions](https://docs.fabro.sh/changelog/2026-05-05.md)
+- [Run events, raw logs, and refreshable GitHub tokens](https://docs.fabro.sh/changelog/2026-05-06.md)
+- [Run debugger, sticky steering, and run filters](https://docs.fabro.sh/changelog/2026-05-07.md)
+- [Run Events, sandbox lifecycle, and typed interviews](https://docs.fabro.sh/changelog/2026-05-08.md)
+- [Sparse inputs, sandbox terminals, and run file diffs](https://docs.fabro.sh/changelog/2026-05-09.md)
+- [Sandbox tools, auth sessions, and Live Events](https://docs.fabro.sh/changelog/2026-05-10.md)
+- [ACP backend and Fabro MCP server](https://docs.fabro.sh/changelog/2026-05-11.md)
+- [Managed run branches and validation fixes](https://docs.fabro.sh/changelog/2026-05-12.md)
+- [Configurable LLM providers, Slack reviews, and Daytona Dockerfiles](https://docs.fabro.sh/changelog/2026-05-13.md)
+- [Optional LLM setup and Daytona volumes](https://docs.fabro.sh/changelog/2026-05-14.md)
+- [Agent sessions, run relationships, and sandbox visibility](https://docs.fabro.sh/changelog/2026-05-16.md)
+- [Run detail summaries and MCP parent tools](https://docs.fabro.sh/changelog/2026-05-17.md)
+- [Strict agent backends and explicit credentials](https://docs.fabro.sh/changelog/2026-05-18.md)
+- [Settings pages, resource visibility, and pair sessions](https://docs.fabro.sh/changelog/2026-05-20.md)
+- [Run-aware Ask Fabro, stage timing, and context](https://docs.fabro.sh/changelog/2026-05-21.md)
+- [Ask Fabro sidebar, scoped run tools, and agent todos](https://docs.fabro.sh/changelog/2026-05-22.md)
+- [Runs list, Slack notifications, and structured outputs](https://docs.fabro.sh/changelog/2026-05-23.md)
+- [Run tools, sandbox controls, and richer run triage](https://docs.fabro.sh/changelog/2026-05-24.md)
+- [Sandbox inventory, model tests, and run approvals](https://docs.fabro.sh/changelog/2026-05-25.md)
+- [Integration readiness and run filters](https://docs.fabro.sh/changelog/2026-05-26.md)
+- [Run variables and the Automations API](https://docs.fabro.sh/changelog/2026-05-27.md)
+- [Automations in the web UI](https://docs.fabro.sh/changelog/2026-05-28.md)
+- [Scheduled automations](https://docs.fabro.sh/changelog/2026-05-29.md)
+- [Workflows settings section](https://docs.fabro.sh/changelog/2026-05-30.md)
+- [Installer sandbox provider selection](https://docs.fabro.sh/changelog/2026-06-02.md)
+- [Embedded VNC session fix](https://docs.fabro.sh/changelog/2026-06-03.md)
+- [Workflow templates scoped to prompt and goal](https://docs.fabro.sh/changelog/2026-06-05.md)
+- [Workflow playground](https://docs.fabro.sh/changelog/2026-06-09.md)
+- [Claude Fable 5 support](https://docs.fabro.sh/changelog/2026-06-10.md)
+- [Agents](https://docs.fabro.sh/core-concepts/agents.md): Core agent concepts in Fabro
+- [How Fabro Works](https://docs.fabro.sh/core-concepts/how-fabro-works.md): Understand the Fabro architecture and execution model
+- [Models](https://docs.fabro.sh/core-concepts/models.md): How Fabro routes tasks to LLM models and providers
+- [Workflows](https://docs.fabro.sh/core-concepts/workflows.md): Core workflow concepts in Fabro
+- [Clone Substack](https://docs.fabro.sh/examples/clone-substack.md): Build an entire application from a detailed specification using debate planning, a staged verify chain, ensemble review, and a postmortem repair loop
+- [Definition of Done](https://docs.fabro.sh/examples/definition-of-done.md): Audit a codebase against specification checklists, triage failures, implement fixes, and verify — with optional multi-model consensus
+- [NLSpec Conformance](https://docs.fabro.sh/examples/nlspec-conformance.md): Implement a system from a natural language specification and iterate until conformance tests pass
+- [REPL Handoff](https://docs.fabro.sh/examples/repl-handoff.md): Plan interactively in Claude Code, then delegate implementation to Fabro for autonomous execution with multi-model code review
+- [Semantic Port](https://docs.fabro.sh/examples/semantic-port.md): Continuously port upstream changes from one language to another using a ledger-driven loop
+- [Build Solitaire](https://docs.fabro.sh/examples/solitaire.md): Build a complete application from a spec using phased implementation with verification gates
+- [Automations](https://docs.fabro.sh/execution/automations.md): Named, repeatable run configurations with API and schedule triggers
+- [Checkpoints](https://docs.fabro.sh/execution/checkpoints.md): How Fabro uses Git to checkpoint and resume workflow runs
+- [Child Runs](https://docs.fabro.sh/execution/child-runs.md): Spawn and supervise additional Fabro runs from a parent run
+- [Context](https://docs.fabro.sh/execution/context.md): How data flows between workflow stages
+- [Environments](https://docs.fabro.sh/execution/environments.md): Reusable named execution environments for workflow runs
+- [Failures](https://docs.fabro.sh/execution/failures.md): How Fabro classifies, retries, and recovers from failures during workflow execution
+- [Observability](https://docs.fabro.sh/execution/observability.md): How to monitor, inspect, and analyze workflow runs
+- [Node Outcomes](https://docs.fabro.sh/execution/outcomes.md): The four stage outcomes and the attributes that control them
+- [Run Configuration](https://docs.fabro.sh/execution/run-configuration.md): Configure workflow runs with TOML files
+- [Comparison](https://docs.fabro.sh/getting-started/comparison.md): How Fabro compares to AI coding agents, software factories, and orchestration platforms.
+- [Dark Factory](https://docs.fabro.sh/getting-started/dark-factory.md): How Fabro helps small teams incrementally adopt a dark factory approach to software development
+- [Introduction](https://docs.fabro.sh/getting-started/introduction.md): Fabro is the open source dark software factory for small teams of expert engineers
+- [Quick Start](https://docs.fabro.sh/getting-started/quick-start.md): Get up and running with Fabro
+- [Why Fabro?](https://docs.fabro.sh/getting-started/why-fabro.md): The problems Fabro solves for AI-assisted software teams
+- [Interviews](https://docs.fabro.sh/human-tools/interviews.md): How Fabro collects human input during workflow execution
+- [Preview](https://docs.fabro.sh/human-tools/preview.md): Preview running applications in sandbox environments from your browser
+- [SSH Access](https://docs.fabro.sh/human-tools/ssh-access.md): Connect to sandbox environments via SSH for direct inspection and debugging
+- [Steering](https://docs.fabro.sh/human-tools/steering.md): Guide running agents with real-time course corrections
+- [VNC Access](https://docs.fabro.sh/human-tools/vnc-access.md): Access graphical desktop environments in sandboxes via VNC
+- [VPN Connections](https://docs.fabro.sh/human-tools/vpn-connections.md): Connect sandbox environments to private networks via VPN
+- [VS Code](https://docs.fabro.sh/human-tools/vs-code.md): Open sandbox environments in VS Code for interactive editing and debugging
+- [Amazon Bedrock](https://docs.fabro.sh/integrations/bedrock.md): Route Fabro models through Amazon Bedrock with SigV4 or API-key auth
+- [Brave Search](https://docs.fabro.sh/integrations/brave-search.md): Give Fabro agents web search capabilities via the Brave Search API
+- [Daytona](https://docs.fabro.sh/integrations/daytona.md): Run Fabro workflows in sandboxed Daytona cloud environments
+- [GitHub](https://docs.fabro.sh/integrations/github.md): Integrate Fabro with GitHub for repository access and OAuth login
+- [LiteLLM](https://docs.fabro.sh/integrations/litellm.md): Route Fabro models through a LiteLLM proxy
+- [OpenRouter](https://docs.fabro.sh/integrations/openrouter.md): Route Fabro models through OpenRouter's multi-provider gateway
+- [Slack](https://docs.fabro.sh/integrations/slack.md): Answer human-in-the-loop questions and receive run lifecycle notifications in Slack
+- [Acknowledgements](https://docs.fabro.sh/reference/acknowledgements.md): Projects and people that inspired Fabro
+- [Architecture](https://docs.fabro.sh/reference/architecture.md): How Fabro's CLI and API modes work under the hood
+- [CLI Reference](https://docs.fabro.sh/reference/cli.md): Fabro command-line interface reference
+- [Fabro Language](https://docs.fabro.sh/reference/dot-language.md): Complete reference for Fabro's Graphviz workflow language
+- [Run Directory](https://docs.fabro.sh/reference/run-directory.md): Structure of Fabro's per-run directory
+- [Fabro SDK](https://docs.fabro.sh/reference/sdk.md): Using Fabro as a Rust library for AI agents and multi-provider LLM completions
+- [Server Operations](https://docs.fabro.sh/reference/server-operations.md): Operate the Fabro server: starting, install wizard, auth, web UI, and pointing the CLI at it
+- [Shell Completions](https://docs.fabro.sh/reference/shell-completions.md): Set up tab completion for the fabro CLI in your shell
+- [Settings Configuration](https://docs.fabro.sh/reference/user-configuration.md): Configure CLI and shared machine defaults with settings.toml
+- [Verifying Releases](https://docs.fabro.sh/reference/verifying-releases.md): Verify Fabro binaries and images were built by our release workflow
+- [Branch & Loop](https://docs.fabro.sh/tutorials/branch-loop.md): Conditionals, test validation loops, and max_visits
+- [Ensemble](https://docs.fabro.sh/tutorials/ensemble.md): Multi-provider fan-out, error policies, and result synthesis
+- [Hello World](https://docs.fabro.sh/tutorials/hello-world.md): Your first workflow: prompt nodes, tool use, and sub-agents
+- [Multi-Model Routing](https://docs.fabro.sh/tutorials/multi-model.md): Model stylesheets, CSS selectors, and per-node reasoning effort
+- [Parallel Review](https://docs.fabro.sh/tutorials/parallel-review.md): Fan-out, fan-in, join policies, and merge nodes
+- [Plan & Implement](https://docs.fabro.sh/tutorials/plan-implement.md): Human gates, revision loops, and prompt file references
+- [Sub-Workflows](https://docs.fabro.sh/tutorials/sub-workflow.md): Reusable child workflows, context flow, and the supervisor pattern
+- [Decisions](https://docs.fabro.sh/workflows/human-in-the-loop.md): Adding human review and intervention to workflows
+- [Imports](https://docs.fabro.sh/workflows/imports.md): Reusing one workflow as a subgraph inside another
+- [Nodes & Stages](https://docs.fabro.sh/workflows/stages-and-nodes.md): All node types and how they become stages at runtime
+- [Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md): Assign LLM models to workflow nodes using CSS-like rules
+- [Transitions](https://docs.fabro.sh/workflows/transitions.md): How Fabro decides which node to execute next
+- [Variables](https://docs.fabro.sh/workflows/variables.md): Using templates in workflows
+
+## OpenAPI Specs
+
+- [fabro-api](https://docs.fabro.sh/api-reference/fabro-api.yaml)

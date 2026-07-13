@@ -1,0 +1,355 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Settings Configuration
+
+> Configure CLI and shared machine defaults with settings.toml
+
+Fabro loads machine defaults from `~/.fabro/settings.toml`. The file is optional. If it does not exist, Fabro falls back to built-in defaults.
+
+The CLI and server each read the sections relevant to their own process. On a remote deployment, the CLI machine and the server machine each have their own `settings.toml`.
+
+<Note>
+  Fabro only reads `settings.toml`. Older `cli.toml`, `user.toml`, and `server.toml` filenames are no longer part of the supported config surface.
+</Note>
+
+## File location
+
+The default path is `~/.fabro/settings.toml`.
+
+Use `fabro server start --config /path/to/settings.toml` if the server should read a different file.
+
+## Schema version
+
+Every Fabro config file must declare its schema version with a top-level `_version` key:
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+_version = 1
+```
+
+Files that omit `_version` are treated as version `1`. The legacy top-level `version` key is no longer accepted and raises a targeted rename hint.
+
+## Who reads what
+
+`settings.toml` uses the same schema as `.fabro/project.toml` and `workflow.toml`, but each process only reads the fields it understands. The top-level schema is strictly namespaced — the only allowed domains are `[project]`, `[workflow]`, `[run]`, `[cli]`, `[server]`, and `[features]`.
+
+| Scope               | Examples                                                                                                                                                                                            |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CLI-only            | `[cli.target]`, `[cli.auth]`, `[cli.exec]`, `[cli.output]`, `[cli.updates]`, `[cli.logging]`                                                                                                        |
+| Shared run defaults | `[run.model]`, `[run.sandbox]`, `[run.checkpoint]`, `[run.inputs]`, `[run.prepare]`, `[run.pull_request]`, `[run.hooks]`, `[run.agent.mcps]`                                                        |
+| Server-only         | `[server.listen]`, `[server.api]`, `[server.web]`, `[server.auth]`, `[server.storage]`, `[server.artifacts]`, `[server.slatedb]`, `[server.scheduler]`, `[server.logging]`, `[server.integrations]` |
+
+`[cli.*]` and `[server.*]` stanzas are owner-specific: they are only consumed from `~/.fabro/settings.toml` (plus process-local flags and env overrides). The same stanzas in `.fabro/project.toml` or `workflow.toml` remain schema-valid but runtime-inert.
+
+See [Server Configuration](/administration/server-configuration) for the server-owned sections.
+
+## Precedence
+
+Shared layered domains (`[project]`, `[workflow]`, `[run]`, `[features]`) use this override order:
+
+1. **CLI flags** — always win
+2. **Environment overrides** — Fabro-defined override channels
+3. **`workflow.toml`** — per-workflow overrides
+4. **`.fabro/project.toml`** — project defaults
+5. **`~/.fabro/settings.toml`** — machine defaults
+6. **Built-in defaults**
+
+Owner-specific domains (`[cli.*]`, `[server.*]`) use a narrower trust boundary — only CLI flags, env overrides, `~/.fabro/settings.toml`, and built-in defaults apply.
+
+## Full example
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+_version = 1
+
+[cli.target]
+type = "http"
+url = "https://fabro.example.com/api/v1"
+
+[cli.exec]
+prevent_idle_sleep = true
+
+[cli.exec.model]
+provider = "anthropic"
+name = "claude-opus-4-6"
+
+[cli.exec.agent]
+permissions = "read-write"
+
+[cli.output]
+format = "text"
+verbosity = "normal"
+
+[cli.updates]
+check = true
+
+[cli.logging]
+level = "info"
+
+[run.model]
+name = "claude-sonnet-4-5"
+
+[run.git.author]
+name = "fabro-bot"
+email = "fabro-bot@company.com"
+
+[run.pull_request]
+enabled = true
+
+[run.agent.mcps.filesystem]
+type = "stdio"
+command = ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/workspace"]
+startup_timeout = "15s"
+tool_timeout = "90s"
+
+[run.agent.mcps.filesystem.env]
+NODE_ENV = "production"
+
+[run.agent.mcps.sentry]
+type = "http"
+url = "https://mcp.sentry.dev/mcp"
+
+[run.agent.mcps.sentry.headers]
+Authorization = "Bearer sk-xxx"
+```
+
+All fields are optional. Include only the sections and keys you want to override. A single file can still include both CLI and server sections when you run both processes on one machine, but explicit remote targets do not read remote server state from the local machine.
+
+## `[cli.updates]`
+
+Controls whether Fabro runs a daily background check for new releases. The check runs during `run`, `exec`, `init`, and `install` commands and prints a notice to stderr when a newer version is available.
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[cli.updates]
+check = true
+```
+
+| Key     | Value   | Description                      |
+| ------- | ------- | -------------------------------- |
+| `check` | `true`  | Check for new releases (default) |
+| `check` | `false` | Disable automatic upgrade checks |
+
+The `--no-upgrade-check` CLI flag overrides this for a single invocation. See [`fabro upgrade`](/reference/cli#fabro-upgrade) for manual upgrades.
+
+## `[cli.output]`
+
+Generic CLI output defaults.
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[cli.output]
+format = "text"
+verbosity = "verbose"
+```
+
+| Key         | Values                             | Default    |
+| ----------- | ---------------------------------- | ---------- |
+| `format`    | `"text"`, `"json"`                 | `"text"`   |
+| `verbosity` | `"quiet"`, `"normal"`, `"verbose"` | `"normal"` |
+
+The `-v` / `--verbose` CLI flag always takes effect regardless of this setting.
+
+## `[cli.exec]` section
+
+Defaults for `fabro exec` sessions.
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[cli.exec]
+prevent_idle_sleep = true
+
+[cli.exec.model]
+provider = "anthropic"
+name = "claude-opus-4-6"
+
+[cli.exec.agent]
+permissions = "read-write"
+```
+
+`[cli.exec.model]` selects the default LLM for exec:
+
+| Key        | Description  | Values                                      |
+| ---------- | ------------ | ------------------------------------------- |
+| `provider` | LLM provider | `"anthropic"`, `"openai"`, `"gemini"`, etc. |
+| `name`     | Model name   | Any model ID from `fabro model list`        |
+
+`[cli.exec.agent]` controls agent behavior during exec:
+
+| Key           | Description           | Values                                  | Default        |
+| ------------- | --------------------- | --------------------------------------- | -------------- |
+| `permissions` | Tool permission level | `"read-only"`, `"read-write"`, `"full"` | `"read-write"` |
+
+### Permission levels
+
+* **`read-only`** — auto-approves read tools (`read_file`, `grep`, `glob`, `list_dir`) and subagent tools
+* **`read-write`** — adds write tools (`write_file`, `edit_file`, `apply_patch`)
+* **`full`** — allows all tools including shell commands
+
+Tools outside the permission level are interactively prompted (if a TTY is present) or denied (with `--auto-approve`).
+
+## `[run.model]` section
+
+Defaults for workflow model selection in commands like `fabro run` and `fabro preflight`.
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.model]
+provider = "anthropic"
+name = "claude-sonnet-4-5"
+fallbacks = ["openai", "gpt-5.4", "gemini/gemini-flash"]
+```
+
+| Key         | Description                               | Values                                         | Default                          |
+| ----------- | ----------------------------------------- | ---------------------------------------------- | -------------------------------- |
+| `name`      | Model name                                | Any model ID from `fabro model list`           | Per provider                     |
+| `provider`  | Provider name                             | `"anthropic"`, `"openai"`, `"gemini"`, etc.    | Auto-inferred from model/catalog |
+| `fallbacks` | Ordered list of fallback model references | bare provider, bare alias, or `provider/model` | `[]`                             |
+
+<Note>
+  Use `[cli.exec.model]` to configure provider and model for `fabro exec`. Use `[run.model]` for workflow-oriented defaults.
+</Note>
+
+## `[cli.logging]` section
+
+Configure the default CLI log level. Precedence: `FABRO_LOG` env var > `--debug` flag > `[cli.logging].level` > `"info"`.
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[cli.logging]
+level = "info"
+```
+
+| Key     | Values                                              | Default  |
+| ------- | --------------------------------------------------- | -------- |
+| `level` | `"error"`, `"warn"`, `"info"`, `"debug"`, `"trace"` | `"info"` |
+
+Server-side logging is a separate namespace at `[server.logging]`.
+
+## `[run.git.author]`
+
+Customize the git author identity used for checkpoint commits.
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.git.author]
+name = "fabro-bot"
+email = "fabro-bot@company.com"
+```
+
+| Key     | Description      | Default         |
+| ------- | ---------------- | --------------- |
+| `name`  | Git author name  | `"fabro"`       |
+| `email` | Git author email | `"fabro@local"` |
+
+## `[cli.target]` section
+
+Connection info for commands that target a remote Fabro server.
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[cli.target]
+type = "http"
+url = "https://fabro.example.com/api/v1"
+```
+
+| Key    | Description                                                  |
+| ------ | ------------------------------------------------------------ |
+| `type` | `"http"` or `"unix"` — explicit transport selection          |
+| `url`  | Required for `type = "http"` — the API base URL              |
+| `path` | Required for `type = "unix"` — the absolute Unix socket path |
+
+`fabro model` uses `[cli.target]` by default when no explicit `--storage-dir` is passed. An explicit `--server` flag overrides the configured target:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro model list --server https://fabro.example.com/api/v1
+```
+
+An explicit `http(s)://...` target is always remote-by-contract. Fabro does not derive auth for that target from a local storage dir, an active local daemon record, or `~/.fabro/dev-token`. Use CLI OAuth (`fabro auth login --server ...`) or an explicit `FABRO_DEV_TOKEN` when you need remote auth.
+
+`fabro auth login` only works with `type = "http"` targets. Unix-socket targets use the local dev-token flow instead of browser OAuth. Plain `http://...` targets are supported for local or trusted deployments; operators remain responsible for providing HTTPS anywhere real credentials cross an untrusted network.
+
+`fabro exec` does not automatically use `[cli.target]`. It only routes model traffic through a Fabro server when you pass `--server` for that invocation.
+
+## `[run.pull_request]`
+
+Enable auto-PR globally so workflows open a GitHub pull request on successful completion.
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.pull_request]
+enabled = true
+```
+
+| Key              | Description                                                          | Default    |
+| ---------------- | -------------------------------------------------------------------- | ---------- |
+| `enabled`        | Automatically create a PR after successful runs                      | `false`    |
+| `draft`          | Open the PR as a draft                                               | `true`     |
+| `auto_merge`     | Enable GitHub auto-merge on the created PR (implies `draft = false`) | `false`    |
+| `merge_strategy` | One of `"squash"`, `"merge"`, `"rebase"`                             | `"squash"` |
+
+Precedence: `workflow.toml` > `.fabro/project.toml` > `~/.fabro/settings.toml` > built-in default (`false`).
+
+## `[run.agent.mcps]` section
+
+Configure [MCP servers](/agents/mcp) to connect to during agent-driven runs. Each server is a named TOML table under `[run.agent.mcps]`. For `fabro exec`-only MCPs, use `[cli.exec.agent.mcps.*]` with the same shape.
+
+### Stdio transport
+
+Spawn a local process and communicate over stdin/stdout:
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.agent.mcps.filesystem]
+type = "stdio"
+command = ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/workspace"]
+startup_timeout = "15s"
+tool_timeout = "90s"
+
+[run.agent.mcps.filesystem.env]
+NODE_ENV = "production"
+```
+
+| Key               | Description                                                | Default |
+| ----------------- | ---------------------------------------------------------- | ------- |
+| `type`            | Must be `"stdio"`                                          | —       |
+| `command`         | Array: executable + arguments                              | —       |
+| `env`             | Additional environment variables for the child process     | `{}`    |
+| `startup_timeout` | Max duration for the MCP handshake (e.g. `"10s"`, `"30s"`) | `"10s"` |
+| `tool_timeout`    | Max duration for a single tool call (e.g. `"60s"`, `"2m"`) | `"60s"` |
+
+### HTTP transport
+
+Connect to a remote MCP server over Streamable HTTP:
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.agent.mcps.sentry]
+type = "http"
+url = "https://mcp.sentry.dev/mcp"
+
+[run.agent.mcps.sentry.headers]
+Authorization = "Bearer sk-xxx"
+```
+
+| Key               | Description                                             | Default |
+| ----------------- | ------------------------------------------------------- | ------- |
+| `type`            | Must be `"http"`                                        | —       |
+| `url`             | The MCP server endpoint URL                             | —       |
+| `headers`         | Optional HTTP headers (for example, for authentication) | `{}`    |
+| `startup_timeout` | Max duration for the MCP handshake                      | `"10s"` |
+| `tool_timeout`    | Max duration for a single tool call                     | `"60s"` |
+
+### Sandbox transport
+
+Run an MCP server inside the workflow's sandbox and connect via preview URL. Only available with remote sandbox providers ([Daytona](/integrations/daytona)) that support port previews. Typically configured in `workflow.toml` rather than `settings.toml`:
+
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.agent.mcps.playwright]
+type = "sandbox"
+command = ["npx", "@playwright/mcp@latest", "--port", "3100", "--headless"]
+port = 3100
+startup_timeout = "60s"
+tool_timeout = "2m"
+```
+
+| Key               | Description                                             | Default |
+| ----------------- | ------------------------------------------------------- | ------- |
+| `type`            | Must be `"sandbox"`                                     | —       |
+| `command`         | Array: the command to run inside the sandbox            | —       |
+| `port`            | Port the server listens on inside the sandbox           | —       |
+| `env`             | Additional environment variables for the server process | `{}`    |
+| `startup_timeout` | Max duration for startup + MCP handshake                | `"10s"` |
+| `tool_timeout`    | Max duration for a single tool call                     | `"60s"` |
+
+See [MCP — Sandbox transport](/agents/mcp#sandbox) for how Fabro launches and connects to sandbox MCP servers.

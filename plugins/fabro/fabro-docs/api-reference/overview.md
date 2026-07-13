@@ -1,0 +1,140 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# API Overview
+
+> Introduction to the Fabro REST API
+
+<Warning>
+  The Fabro API is **under active development** and may be subject to change. Endpoints, request/response formats, and authentication mechanisms may evolve as the project matures.
+</Warning>
+
+The Fabro API is a REST API for managing workflow runs, interactive sessions, and related resources. All requests and responses use JSON.
+
+## Base URL
+
+By default, `fabro server start` listens on the Unix socket `~/.fabro/fabro.sock`. If you bind Fabro to TCP instead, the versioned API is served at a URL like:
+
+```
+http://localhost:3000/api/v1
+```
+
+The advertised public API URL is configurable via `settings.toml`:
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[server.api]
+url = "https://fabro.example.com/api/v1"
+```
+
+## Authentication
+
+Fabro configures server auth with bootstrap methods:
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[server.auth]
+methods = ["dev-token", "github"]
+
+[server.auth.github]
+allowed_usernames = ["alice", "bob"]
+```
+
+Protected `/api/v1/*` routes always accept:
+
+* `Authorization: Bearer <token>`
+* the browser session cookie when the web UI is enabled
+
+If both are present, the `Authorization` header wins.
+
+### Dev Token
+
+When `"dev-token"` is enabled, the API accepts the raw dev token directly as a bearer credential:
+
+```
+Authorization: Bearer fabro_dev_...
+```
+
+This is the simplest way to make ad hoc local requests with `curl` or a script. The dev token is also available as a web login method when the web UI is enabled.
+
+### GitHub OAuth
+
+When `"github"` is enabled, browser users can sign in through GitHub OAuth. Successful logins mint a server-issued session cookie that the browser automatically sends on subsequent API requests.
+
+`[server.auth.github].allowed_usernames` restricts which GitHub usernames may complete login.
+
+### Browser Sessions
+
+When `[server.web].enabled = true`, the server requires `SESSION_SECRET` and issues a private `__fabro_session` cookie after successful login. The cookie is session transport only; the underlying bootstrap method remains `dev-token` or `github`, and that provenance is preserved in run metadata.
+
+### HTTPS and Reverse Proxies
+
+Fabro's listener is plain HTTP (or a Unix socket) only. If you want a public HTTPS endpoint, terminate TLS at a reverse proxy, load balancer, or platform ingress and point it at Fabro's internal listener.
+
+## Errors
+
+### Error Shape
+
+All error responses share a consistent JSON structure:
+
+```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+{
+  "errors": [
+    {
+      "status": "404",
+      "title": "Not Found",
+      "detail": "Run abc123 not found."
+    }
+  ]
+}
+```
+
+Each entry in the `errors` array contains:
+
+| Field    | Type     | Description                                     |
+| -------- | -------- | ----------------------------------------------- |
+| `status` | `string` | The HTTP status code as a string                |
+| `title`  | `string` | The canonical reason phrase for the status code |
+| `detail` | `string` | A human-readable explanation of the error       |
+
+### HTTP Status Codes
+
+| Status                | Meaning                                        | When It Occurs                                          |
+| --------------------- | ---------------------------------------------- | ------------------------------------------------------- |
+| `400 Bad Request`     | The request body or parameters are invalid     | Missing required fields, malformed JSON                 |
+| `401 Unauthorized`    | Authentication is missing or invalid           | No token, invalid dev token, or missing/expired session |
+| `403 Forbidden`       | The authenticated user lacks access            | Username not in the allowed list                        |
+| `404 Not Found`       | The requested resource does not exist          | Unknown run ID, unknown workflow name                   |
+| `409 Conflict`        | The resource is in a conflicting state         | Answering a question on a run that isn't running yet    |
+| `410 Gone`            | The resource is no longer available            | SSE event stream has closed                             |
+| `501 Not Implemented` | The endpoint exists but is not yet implemented | Placeholder routes                                      |
+| `502 Bad Gateway`     | An upstream dependency failed                  | An upstream service returned an error                   |
+
+## Pagination
+
+List endpoints that return large collections use offset-based pagination. Pass pagination parameters as query strings:
+
+| Parameter      | Type      | Default | Description                                          |
+| -------------- | --------- | ------- | ---------------------------------------------------- |
+| `page[limit]`  | `integer` | `20`    | Maximum number of items to return (clamped to 1–100) |
+| `page[offset]` | `integer` | `0`     | Number of items to skip                              |
+
+Paginated responses include a `meta` object alongside the `data` array:
+
+```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+{
+  "data": [...],
+  "meta": {
+    "has_more": true
+  }
+}
+```
+
+When `has_more` is `true`, increment the offset by the limit to fetch the next page.
+
+## Versioning
+
+The Fabro API is versioned under `/api/v1`. All versioned endpoints, including the OpenAPI document, live under that prefix. Future breaking changes can be introduced under a new versioned prefix while preserving existing clients.
+
+## Discovery
+
+The root endpoint (`GET /`) returns discovery URLs. The health endpoint (`GET /health`) can be used for liveness checks. The OpenAPI spec is available at `GET /api/v1/openapi.json`.

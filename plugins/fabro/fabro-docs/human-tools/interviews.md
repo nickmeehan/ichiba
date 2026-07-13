@@ -1,0 +1,132 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Interviews
+
+> How Fabro collects human input during workflow execution
+
+When a workflow reaches a [human gate](/workflows/human-in-the-loop), it needs to pause and wait for a person to respond. The **interviewer** is the abstraction that makes this work — it presents a question, collects an answer, and returns it to the engine so execution can continue.
+
+Fabro ships with several interviewer implementations for different environments: an interactive terminal prompt for the CLI, a web-based queue for the API server and web UI, an auto-approve mode for CI, and record/replay support for testing.
+
+## Question types
+
+Every human interaction is modeled as a `Question` with a type that determines how it's presented:
+
+| Type             | Description                    | CLI presentation                    |
+| ---------------- | ------------------------------ | ----------------------------------- |
+| `YesNo`          | Binary yes/no decision         | `[Y/N]` prompt                      |
+| `Confirmation`   | Confirm an action (like YesNo) | `[Y/N]` prompt                      |
+| `MultipleChoice` | Pick one option from a list    | Arrow-key selector or numbered list |
+| `MultiSelect`    | Pick one or more from a list   | Checkbox selector                   |
+| `Freeform`       | Open-ended text input          | `>` prompt                          |
+
+### Question structure
+
+Each question carries metadata beyond the prompt text:
+
+| Field             | Description                                                      |
+| ----------------- | ---------------------------------------------------------------- |
+| `text`            | The question displayed to the user                               |
+| `question_type`   | One of the types above                                           |
+| `options`         | List of `{key, label}` pairs for choice questions                |
+| `allow_freeform`  | Whether free-text input is accepted in addition to fixed options |
+| `default`         | Default answer used on timeout                                   |
+| `timeout_seconds` | How long to wait before using the default or timing out          |
+| `stage`           | The node ID that generated this question                         |
+| `metadata`        | Arbitrary key-value metadata for integrations                    |
+
+## Answer values
+
+Answers are one of seven variants:
+
+| Value           | Meaning                                                                                                           |
+| --------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `Yes`           | Affirmative response to a yes/no or confirmation question                                                         |
+| `No`            | Negative response                                                                                                 |
+| `Selected(key)` | A specific option was chosen (carries the option key)                                                             |
+| `Text(string)`  | Free-text input                                                                                                   |
+| `Interrupted`   | No answer was obtained because the prompt ended early (EOF, cancel, disconnected session, exhausted replay/queue) |
+| `Skipped`       | Legacy skip-style answer; not treated as approval by human gates                                                  |
+| `Timeout`       | The question's timeout elapsed without a response                                                                 |
+
+An answer can also carry a `selected_option` (the full `{key, label}` pair) and a `text` field for freeform input.
+
+## How human gates build questions
+
+When the engine reaches a human gate node (`shape=hexagon`), the [human handler](/workflows/human-in-the-loop) builds a question from the node's outgoing edges:
+
+1. Each edge becomes an option, with the accelerator key parsed from the label (e.g. `[A] Approve` → key `A`, label `[A] Approve`)
+2. Edges with `freeform=true` are excluded from the option list and enable free-text fallback
+3. The question text comes from the node's `label` attribute
+4. The question type defaults to `multiple_choice` when fixed options exist and `freeform` when only a freeform edge exists. Set `question_type="yes_no"`, `question_type="confirmation"`, `question_type="multi_select"`, or another supported value to override it.
+
+The handler then passes the question to the interviewer, waits for an answer, and maps it back to an edge for [transition](/workflows/transitions#human-gate-transitions).
+
+## Channels
+
+The `Interviewer` trait has a simple interface — `ask(question) → answer` — and Fabro provides implementations for each delivery channel:
+
+### Console
+
+The default for CLI runs. On a TTY, the console interviewer uses interactive widgets (arrow-key selection, checkbox multi-select, confirm prompts) via `dialoguer`. When stdin is piped (non-TTY), it falls back to a line-based reader with numbered options.
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro run workflow.fabro
+# At a human gate:
+# ? Approve Plan
+#   [1] A - [A] Approve
+#   [2] R - [R] Revise
+# Select:
+```
+
+If the console prompt is canceled or stdin is already closed, the interviewer returns `Interrupted`. That does not count as approval.
+
+### Web
+
+The default for API server runs. The web interviewer holds questions in a queue until answers are submitted externally — typically by the web UI or a REST API call. Each question gets a unique ID (e.g. `q-1`), and the `ask()` call blocks on a oneshot channel until `submit_answer(id, answer)` is called.
+
+This decoupling means the workflow engine and the user interface can run in different processes. The web UI shows pending questions in the run page's interview dock, listens for interview events, and posts answers back to the API.
+
+The dock supports yes/no, confirmation, multiple choice, multi-select, and freeform questions. When multiple questions are pending, the dock lets you cycle through them without leaving the run detail page.
+
+If the pending session disappears before an answer is submitted, the waiting question resolves as `Interrupted`.
+
+### Slack
+
+Fabro's [Slack integration](/integrations/slack) uses the web interviewer under the hood. When a human gate fires, the pending question is rendered as a Slack message with interactive buttons. When a user clicks a button, the Slack event handler calls `submit_answer()` on the web interviewer, unblocking the workflow.
+
+Slack interview prompts require Slack server credentials, an enabled `[server.integrations.slack]` table, and a destination channel. Most servers should configure `server.integrations.slack.default_channel`; lifecycle notifications use their own per-route channels instead.
+
+### Auto-approve
+
+For fully automated runs or CI pipelines, the auto-approve interviewer answers every question without human input:
+
+* `YesNo` / `Confirmation` → `Yes`
+* `MultipleChoice` / `MultiSelect` → first option
+* `Freeform` → `"auto-approved"`
+
+Enable it with the `--auto-approve` flag:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro run workflow.fabro --auto-approve
+```
+
+`--auto-approve` is intentionally distinct from an unanswered prompt. Auto-approve is an explicit operator choice to advance human gates automatically.
+
+## Timeouts
+
+Questions can have a `timeout_seconds` field. When set, Fabro wraps the interviewer call with a timeout:
+
+* If the user answers before the deadline, their answer is used normally
+* If the timeout elapses and a `default` answer is set on the question, the default is used
+* If the timeout elapses with no default, the answer is `Timeout`
+
+The human handler then checks the node's `human.default_choice` attribute. If set, execution continues to the default target. Otherwise, the stage retries.
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+approve [shape=hexagon, label="Approve?", human.default_choice="deploy"]
+```
+
+Outside of timeout defaults, human gates fail closed: `Interrupted` and `Skipped` answers do not fall through to ordinary approval edges. To model an explicit unanswered path, add an edge such as `condition="outcome=failed"` or configure a `retry_target`.

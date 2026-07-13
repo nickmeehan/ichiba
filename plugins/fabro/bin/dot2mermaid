@@ -1,0 +1,135 @@
+#!/usr/bin/env ruby
+# Convert a Fabro workflow graph (.fabro / Graphviz DOT subset) to a Mermaid flowchart.
+# Zero dependencies. Usage: bin/dot2mermaid workflow.fabro   (or pipe DOT on stdin)
+#
+# Lossy by design: edge conditions/labels become edge text; prompts, models,
+# stylesheets, and other attributes are dropped. Node shape maps to the nearest
+# Mermaid shape so handler semantics stay visible.
+
+# Fabro shape => [open, close] Mermaid delimiters (label is always quoted inside).
+SHAPES = {
+  'Mdiamond'      => ['(["', '"])'],   # start
+  'Msquare'       => ['(["', '"])'],   # exit
+  'box'           => ['["', '"]'],     # agent
+  'tab'           => ['("', '")'],     # prompt
+  'parallelogram' => ['[/"', '"/]'],   # command
+  'hexagon'       => ['{{"', '"}}'],   # human gate
+  'diamond'       => ['{"', '"}'],     # conditional
+  'component'     => ['(("', '"))'],   # parallel fan-out
+  'tripleoctagon' => ['((("', '")))'], # parallel fan-in
+  'house'         => ['[["', '"]]'],   # sub-workflow
+}
+SHAPES.default = ['["', '"]']
+
+# Words Mermaid treats specially as node ids ("end" famously breaks flowcharts).
+RESERVED = %w[end graph subgraph direction style class classdef click linkstyle flowchart]
+
+def mermaid_id(id)
+  s = id.gsub(/\W/, '_')
+  RESERVED.include?(s.downcase) ? "#{s}_" : s
+end
+
+def mermaid_text(s)
+  s.gsub('"', '#quot;')
+end
+
+def unquote(v)
+  return v unless v.start_with?('"')
+  v[1..-2].gsub(/\\(.)/) { %w[n l r].include?($1) ? '<br/>' : $1 }
+end
+
+# Split DOT source into statements, respecting quoted strings (which may
+# contain ;, ], and comment markers) and multi-line [...] attribute blocks.
+def statements(src)
+  stmts, cur = [], +''
+  quote, depth, i, n = false, 0, 0, src.length
+  while i < n
+    c = src[i]
+    if quote
+      cur << c
+      if c == '\\' && i + 1 < n
+        cur << src[i + 1]
+        i += 1
+      elsif c == '"'
+        quote = false
+      end
+    elsif c == '"'
+      quote = true
+      cur << c
+    elsif c == '/' && src[i + 1] == '/' || c == '#'
+      i += 1 until i >= n || src[i] == "\n"
+      next
+    elsif c == '/' && src[i + 1] == '*'
+      i += 2
+      i += 1 until i >= n - 1 || (src[i] == '*' && src[i + 1] == '/')
+      i += 2
+      next
+    elsif c == '['
+      depth += 1
+      cur << c
+    elsif c == ']'
+      depth -= 1
+      cur << c
+    elsif (c == ';' || c == "\n") && depth.zero?
+      stmts << cur.strip
+      cur = +''
+    else
+      cur << c
+    end
+    i += 1
+  end
+  stmts << cur.strip
+  stmts.reject(&:empty?)
+end
+
+def parse_attrs(text)
+  text.scan(/(\w+)\s*=\s*("(?:[^"\\]|\\.)*"|[^,\s\]]+)/).to_h { |k, v| [k, unquote(v)] }
+end
+
+def convert(src)
+  rankdir = nil
+  nodes = {}  # id => attrs
+  edges = []  # [from, to, label]
+
+  statements(src).each do |stmt|
+    stmt = stmt.delete('{}').strip
+    next if stmt.empty?
+    if (open = stmt.index('['))
+      head = stmt[...open].strip
+      attrs = parse_attrs(stmt[(open + 1)..stmt.rindex(']')])
+    else
+      head, attrs = stmt, {}
+    end
+
+    if head.include?('->')
+      ids = head.split('->').map(&:strip)
+      label = attrs['label'] || attrs['condition']
+      ids.each_cons(2) do |from, to|
+        nodes[from] ||= {}
+        nodes[to] ||= {}
+        edges << [from, to, label]
+      end
+    elsif head =~ /\A(?:strict\s+)?(?:di|sub)?graph\b/ || head == 'graph' || head == 'edge' || head == 'node'
+      rankdir ||= attrs['rankdir']
+    elsif head =~ /\Arankdir\s*=\s*(\w+)/
+      rankdir = $1
+    elsif head =~ /\A\w+\z/
+      nodes[head] = (nodes[head] || {}).merge(attrs)
+    end
+  end
+
+  dir = { 'LR' => 'LR', 'RL' => 'RL', 'BT' => 'BT' }[rankdir] || 'TD'
+  out = ["flowchart #{dir}"]
+  nodes.each do |id, attrs|
+    open, close = SHAPES[attrs['shape']]
+    label = attrs['label'] || id
+    out << "    #{mermaid_id(id)}#{open}#{mermaid_text(label)}#{close}"
+  end
+  edges.each do |from, to, label|
+    arrow = label ? "-->|\"#{mermaid_text(label)}\"|" : '-->'
+    out << "    #{mermaid_id(from)} #{arrow} #{mermaid_id(to)}"
+  end
+  out.join("\n")
+end
+
+puts convert(ARGF.read) if $PROGRAM_NAME == __FILE__

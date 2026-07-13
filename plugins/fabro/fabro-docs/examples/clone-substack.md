@@ -1,0 +1,746 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Clone Substack
+
+> Build an entire application from a detailed specification using debate planning, a staged verify chain, ensemble review, and a postmortem repair loop
+
+The Clone Substack workflow takes a detailed specification document and autonomously builds a complete, working application — in this case, a Substack-like newsletter creation tool. It uses ensemble planning (two independent plans debated into one), a multi-stage verification chain, parallel code review with consensus, and a postmortem repair loop that feeds failures back into the next iteration.
+
+This pattern is adapted from [Kilroy](https://github.com/danshapiro/kilroy)'s `substack-spec-v01.fabro`, which builds a full React application from a natural language spec with acceptance criteria.
+
+## When to use this
+
+* You have a detailed spec and a definition of done with concrete acceptance criteria
+* The deliverable is large enough that a single agent pass won't get it right
+* You want automated verification (build, format, tests, browser checks) with human-free repair loops
+* You want independent review perspectives before accepting the result
+
+## The workflow
+
+<Frame>
+  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/example-clone-substack.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=9358961a786afc885b4e6d38b94eb8a4" alt="Clone Substack workflow: Start → Bootstrap → Plan Fan-Out → Plan A and Plan B → Debate → Implement → Verify Chain → Review Fan-Out → Review A and Review B → Consensus → Exit, with Fix loop from Verify back to Implement, Rejected path from Consensus to Postmortem, and Replan loop from Postmortem back to Plan Fan-Out" width="1250" height="210" data-path="images/example-clone-substack.svg" />
+</Frame>
+
+```dot title="clone-substack.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph CloneSubstack {
+    graph [
+        goal="Build the Substack Creator Newsletter Engine — a pure React frontend \
+(no backend) for brand-driven Substack content creation. Client-side Gemini LLM \
+integration (gemini-3-flash-preview for fast tasks, gemini-3.1-pro-preview with \
+extended thinking for important tasks, gemini-2.5-flash-lite for tests). IndexedDB \
+persistence via idb library. Setup flow with API key, company identity, voice \
+definition, and guardrails — each confirmed by gemini-3.1-pro-preview. Dashboard \
+with post history, draft management, New Post and Trending Topics access. Trending \
+Topics uses gemini-3-flash-preview with search grounding for research, \
+gemini-3.1-pro-preview synthesizes 3 writing prompts. New Post pipeline: Topic \
+(rich input) then Research (gemini-3-flash-preview search grounding, source \
+metadata) then Outline (gemini-3.1-pro-preview one-shot) then Write/Edit/Guardrails \
+(3 automatic gemini-3.1-pro-preview cycles) then Complete (serif footnoted citations \
+with attribution lineage). Demo mode replays recorded sessions through production \
+code path with fade-in prefills; ships with one bundled P&G session; cache miss \
+shows error, no API fallback. Visual design matches Substack (serif fonts, horizontal \
+dot step indicators, card primitives, accent progress bars, numbered footnotes). Test \
+infrastructure: integration tests with canned data, smoke tests with live \
+gemini-2.5-flash-lite, manual test option with real models. Deployment readiness for \
+GitHub to Railway validated by code review only — no live deployment execution.",
+        rankdir=LR,
+        default_max_retries=3,
+        retry_target="plan_fanout",
+        fallback_retry_target="plan_fanout",
+        model_stylesheet="
+            *          { model: claude-opus-4-6;      }
+            .hard      { model: gpt-5.4;              }
+            .verify    { model: claude-opus-4-6;      }
+            .branch-a  { model: claude-opus-4-6;      }
+            .branch-b  { model: gemini-3-flash-preview;}
+        "
+    ]
+
+    exit [shape=Msquare, label="Exit"]
+
+    // =========================================================================
+    // Bootstrap
+    // =========================================================================
+
+    subgraph cluster_bootstrap {
+        label="Bootstrap"
+        start [shape=Mdiamond, label="Start"]
+
+        check_toolchain [
+            shape=parallelogram,
+            label="Check Toolchain",
+            max_retries=0,
+            script="command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1 \
+&& node --version && npm --version"
+        ]
+
+        expand_spec [
+            label="Expand Spec",
+            prompt="Goal: {{ goal }}\n\n\
+The project specification is at substack-spec-v01.md and the Definition of Done \
+is at substack-dod-v01.md. The UI flow diagram is at substack-spec-v01-ui.gv.\n\n\
+Read all three files. Scratch artifacts go under .workflow/.\n\n\
+If .workflow/spec.md does not exist or is a placeholder, copy the spec verbatim \
+to .workflow/spec.md, appending a reference to the UI flow diagram. If \
+.workflow/definition_of_done.md does not exist or is a placeholder, copy the DoD \
+verbatim to .workflow/definition_of_done.md. If both already exist and are \
+adequate, skip."
+        ]
+    }
+
+    // =========================================================================
+    // Planning Fanout
+    // =========================================================================
+
+    subgraph cluster_planning {
+        label="Planning Fanout"
+        node [shape=box]
+
+        plan_fanout [shape=component, label="Plan Fan-Out"]
+
+        plan_a [
+            label="Plan A",
+            class="branch-a",
+            prompt="Goal: {{ goal }}\n\n\
+Read .workflow/spec.md and .workflow/definition_of_done.md. If those files do not \
+exist, fall back to reading substack-spec-v01.md and substack-dod-v01.md directly. \
+If .workflow/postmortem_latest.md exists, incorporate its lessons.\n\n\
+Create an implementation plan for the Substack Creator Newsletter Engine covering \
+all deliverables and acceptance criteria from the DoD. Be specific about:\n\
+- React project setup (Vite + TypeScript + idb + @google/generative-ai SDK)\n\
+- Module decomposition with file paths and estimated sizes (~200-500 lines each)\n\
+- Core infrastructure: LLM client with structured JSON output and retry/backoff, \
+IndexedDB persistence layer, shared UI components (rich input, card, progress bar, \
+step indicators)\n\
+- Feature modules: Setup flow, Dashboard, Trending Topics, New Post pipeline, \
+Demo mode\n\
+- Test infrastructure: integration (canned data), smoke (gemini-2.5-flash-lite), \
+manual (real models)\n\
+- Deployment config: Railway config, validation scripts\n\
+- Build/validate scripts: validate-build.sh, validate-fmt.sh, validate-test.sh, \
+validate-browser.sh, fix-fmt.sh, validate-artifacts.sh\n\
+- Visual design: Substack-like serif styling, no spinners\n\n\
+Specify dependency ordering between modules.\n\n\
+Write to .workflow/plan_a.md."
+        ]
+
+        plan_b [
+            label="Plan B",
+            class="branch-b",
+            prompt="Goal: {{ goal }}\n\n\
+Read .workflow/spec.md and .workflow/definition_of_done.md. If those files do not \
+exist, fall back to reading substack-spec-v01.md and substack-dod-v01.md directly. \
+If .workflow/postmortem_latest.md exists, incorporate its lessons.\n\n\
+Create an implementation plan for the Substack Creator Newsletter Engine covering \
+all deliverables and acceptance criteria from the DoD. Be specific about:\n\
+- React project setup (Vite + TypeScript + idb + @google/generative-ai SDK)\n\
+- Module decomposition with file paths and estimated sizes (~200-500 lines each)\n\
+- Core infrastructure: LLM client with structured JSON output and retry/backoff, \
+IndexedDB persistence layer, shared UI components (rich input, card, progress bar, \
+step indicators)\n\
+- Feature modules: Setup flow, Dashboard, Trending Topics, New Post pipeline, \
+Demo mode\n\
+- Test infrastructure: integration (canned data), smoke (gemini-2.5-flash-lite), \
+manual (real models)\n\
+- Deployment config: Railway config, validation scripts\n\
+- Build/validate scripts: validate-build.sh, validate-fmt.sh, validate-test.sh, \
+validate-browser.sh, fix-fmt.sh, validate-artifacts.sh\n\
+- Visual design: Substack-like serif styling, no spinners\n\n\
+Specify dependency ordering between modules.\n\n\
+Write to .workflow/plan_b.md."
+        ]
+
+        debate [
+            label="Debate & Consolidate",
+            prompt="Synthesize the two implementation plans into a single best-of-breed \
+final plan.\n\n\
+Read branch outputs via parallel_results.json. If parallel_results.json is missing, \
+fall back to reading .workflow/plan_a.md and .workflow/plan_b.md.\n\n\
+If .workflow/postmortem_latest.md exists, read it FIRST. The postmortem contains \
+root-cause analysis and concrete fixes from the previous iteration. The final plan \
+MUST be adjusted to address every issue identified in the postmortem — add new \
+steps, change approaches, or reorder work as needed. Do not simply re-emit the \
+same plan that failed.\n\n\
+Also read .workflow/implementation_log.md and .workflow/verify_fidelity.md if they \
+exist, to understand what worked and what failed in the previous iteration.\n\n\
+Read .workflow/spec.md and .workflow/definition_of_done.md for context. If those \
+files do not exist, fall back to reading substack-spec-v01.md and \
+substack-dod-v01.md directly. Resolve conflicts between plans. Ensure dependency \
+order is correct. Pick the most detailed and actionable approach for each module. \
+The final plan must produce a work queue of bounded modules (~200-500 lines each), \
+ordered so core infrastructure items come first (lower IDs), features next, and \
+tests/deployment last.\n\n\
+Write the final plan to .workflow/plan_final.md."
+        ]
+    }
+
+    // =========================================================================
+    // Implement
+    // =========================================================================
+
+    subgraph cluster_implement {
+        label="Implement"
+
+        implement [
+            class="hard",
+            max_tokens=32768,
+            label="Implement",
+            prompt="Goal: {{ goal }}\n\n\
+Read .workflow/plan_final.md, .workflow/spec.md, and \
+.workflow/definition_of_done.md. If the spec or DoD files do not exist at those \
+paths, fall back to reading substack-spec-v01.md and substack-dod-v01.md directly.\n\n\
+BEFORE ANYTHING ELSE: check if .workflow/verify_errors.log exists. If it does, \
+read it — it contains the exact commands that failed and their error output from \
+the verify chain. Fix every error listed in that file, then delete \
+.workflow/verify_errors.log when all fixes are applied. Do NOT regenerate working \
+code — only fix the specific errors.\n\n\
+Also check if .workflow/verify_fidelity.md exists. If it does, read it — it \
+contains per-AC pass/fail verdicts from the fidelity check. Fix every failing AC \
+listed in that file.\n\n\
+If .workflow/postmortem_latest.md exists, read it and fix ONLY identified gaps — \
+do NOT regenerate working code. On repair passes, read and fix existing files \
+rather than skipping them.\n\n\
+Implement the complete Substack Creator Newsletter Engine as a single pass. On a \
+fresh pass (no postmortem), check if target files already exist on disk and are \
+non-empty — if so, skip those files. Implement each module with complete, \
+functional code — no stubs, no placeholders, no TODO comments. Follow the plan \
+and spec precisely.\n\n\
+Implementation order (core infrastructure first, then features, then tests/deploy):\n\n\
+1. Project scaffold — package.json, vite.config.ts, tsconfig.json, index.html, \
+src/main.tsx, src/App.tsx. Install dependencies: react, react-dom, \
+react-router-dom, idb, @google/generative-ai. Write ALL validation scripts:\n\
+   - scripts/validate-build.sh: runs npm run build, checks dist/ exists\n\
+   - scripts/validate-fmt.sh: runs npx prettier --check src/\n\
+   - scripts/validate-test.sh: runs integration scenarios first, then smoke, \
+writes evidence + .workflow/test-evidence/latest/manifest.json even on failure\n\
+   - scripts/validate-browser.sh: runs browser verification and captures artifacts\n\
+   - scripts/fix-fmt.sh: runs npx prettier --write src/\n\
+   - scripts/validate-artifacts.sh: verifies manifest scenario IDs match DoD \
+integration scenarios\n\
+   All scripts: #!/bin/sh, set -e, POSIX sh failure trap.\n\n\
+2. LLM client — src/lib/llm.ts, src/lib/llm-schemas.ts: structured JSON output \
+with schema enforcement, retry with error feedback and intelligent backoff, model \
+switching (gemini-3-flash-preview/gemini-3.1-pro-preview/gemini-2.5-flash-lite), \
+client-side API key.\n\n\
+3. Persistence — src/lib/db.ts, src/lib/types.ts: IndexedDB via idb with stores \
+for configuration (API key, company, voice, guardrails), drafts, sessions (all \
+inputs/LLM responses/intermediate state), post history (Markdown + attribution). \
+All data persists unless user resets.\n\n\
+4. Shared UI — src/components/RichInput.tsx, Card.tsx, ProgressBar.tsx, \
+StepIndicator.tsx, src/styles/global.css.\n\n\
+5. Setup flow — src/pages/Settings.tsx and step components: API key, company \
+(rich input + gemini-3.1-pro-preview confirm + back), voice, guardrails. Parallel \
+completion, status icons. Reset everything with confirmation.\n\n\
+6. Dashboard — src/pages/Dashboard.tsx: New Post button, Trending Topics button, \
+Settings link, post history, draft resume.\n\n\
+7. Trending Topics — src/pages/TrendingTopics.tsx: parallel gemini-3-flash-preview \
+search grounding queries, trend visualization, 3 gemini-3.1-pro-preview writing \
+prompts, navigate to New Post prefilled.\n\n\
+8. New Post — src/pages/NewPost.tsx with step components: Topic (rich input), \
+Research (gemini-3-flash-preview search grounding, source cards with \
+URL/title/author/date, highlight/delete), Outline (gemini-3.1-pro-preview one-shot, \
+accept/back), Write (3 automatic gemini-3.1-pro-preview cycles: Write with \
+citations, Edit for style, Guardrails-only), Complete (serif post with numbered \
+footnotes, linked sources, attribution lineage).\n\n\
+9. Demo mode — src/lib/demo.ts, src/pages/DemoMode.tsx, \
+src/demo/bundled-session.json: session recording, replay through production path \
+(fade-in prefills, highlight next button), bundled P&G session, cache-miss error \
+with no API fallback.\n\n\
+10. Test infrastructure — src/__tests__/: integration with canned data, smoke with \
+gemini-2.5-flash-lite, manual mode option.\n\n\
+11. Deploy config — railway.json or equivalent, deployment docs.\n\n\
+Ensure App.tsx routing includes all pages. Verify imports/exports are consistent. \
+Run npm install. Fix TypeScript errors.\n\n\
+Log progress to .workflow/implementation_log.md.\n\n\
+PRE-EXIT VERIFICATION: if .workflow/postmortem_latest.md exists, run \
+sh scripts/validate-build.sh and re-read targeted files to confirm fixes."
+        ]
+    }
+
+    // =========================================================================
+    // Verify Chain
+    // =========================================================================
+
+    subgraph cluster_verify {
+        label="Verify"
+
+        fix_fmt [
+            shape=parallelogram,
+            label="Fix Format",
+            max_retries=0,
+            script="sh scripts/fix-fmt.sh 2>&1 || { printf '\\n=== VERIFY FAILURE: \
+fix-fmt ===\\n%s\\n' \"$(cat /tmp/fix-fmt.log 2>/dev/null || echo 'script missing \
+or produced no output')\" >> .workflow/verify_errors.log; exit 1; }"
+        ]
+
+        verify_fmt [
+            shape=parallelogram,
+            label="Check Format",
+            max_retries=0,
+            script="sh scripts/validate-fmt.sh 2>&1 | tee /tmp/validate-fmt.log; \
+test ${PIPESTATUS[0]} -eq 0 || { printf '\\n=== VERIFY FAILURE: validate-fmt \
+===\\n%s\\n' \"$(tail -30 /tmp/validate-fmt.log)\" >> .workflow/verify_errors.log; \
+exit 1; }"
+        ]
+        gate_fmt [shape=diamond, label="Fmt OK?"]
+
+        verify_build [
+            shape=parallelogram,
+            label="Check Build",
+            script="sh scripts/validate-build.sh 2>&1 | tee /tmp/validate-build.log; \
+test ${PIPESTATUS[0]} -eq 0 || { printf '\\n=== VERIFY FAILURE: validate-build \
+===\\n%s\\n' \"$(tail -50 /tmp/validate-build.log)\" >> .workflow/verify_errors.log; \
+exit 1; }"
+        ]
+        gate_build [shape=diamond, label="Build OK?"]
+
+        verify_test [
+            shape=parallelogram,
+            label="Run Tests",
+            script="sh scripts/validate-test.sh 2>&1 | tee /tmp/validate-test.log; \
+test ${PIPESTATUS[0]} -eq 0 || { printf '\\n=== VERIFY FAILURE: validate-test \
+===\\n%s\\n' \"$(tail -50 /tmp/validate-test.log)\" >> .workflow/verify_errors.log; \
+exit 1; }"
+        ]
+        gate_test [shape=diamond, label="Tests OK?"]
+
+        verify_browser [
+            shape=parallelogram,
+            label="Check Browser",
+            script="sh scripts/validate-browser.sh 2>&1 | tee \
+/tmp/validate-browser.log; test ${PIPESTATUS[0]} -eq 0 || { printf '\\n=== VERIFY \
+FAILURE: validate-browser ===\\n%s\\n' \"$(tail -50 /tmp/validate-browser.log)\" \
+>> .workflow/verify_errors.log; exit 1; }"
+        ]
+        gate_browser [shape=diamond, label="Browser OK?"]
+
+        verify_artifacts [
+            shape=parallelogram,
+            label="Check Artifacts",
+            max_retries=0,
+            script="sh scripts/validate-artifacts.sh 2>&1 | tee \
+/tmp/validate-artifacts.log; test ${PIPESTATUS[0]} -eq 0 || { printf '\\n=== \
+VERIFY FAILURE: validate-artifacts ===\\n%s\\n' \"$(tail -30 \
+/tmp/validate-artifacts.log)\" >> .workflow/verify_errors.log; exit 1; }"
+        ]
+        gate_artifacts [shape=diamond, label="Artifacts OK?"]
+
+        verify_fidelity [
+            label="Verify Fidelity",
+            class="verify",
+            prompt="Read .workflow/spec.md, .workflow/definition_of_done.md, \
+.workflow/verify_fidelity.md (if present), \
+.workflow/test-evidence/latest/manifest.json, and relevant implementation files.\n\n\
+Evaluate these grouped acceptance checks and map each to concrete file paths:\n\
+AC1: src/**/settings* and src/**/router* and src/**/indexeddb* - first-run routing, \
+setup flow, persistence.\n\
+AC2: src/**/dashboard* and src/**/history* and src/**/draft* - dashboard actions \
+and resume/view flows.\n\
+AC3: src/**/trending* and src/**/research* - grounded research, deterministic \
+trends, prompt handoff.\n\
+AC4: src/**/new-post* and src/**/outline* and src/**/write* and src/**/complete* - \
+full Topic->Complete pipeline with automatic write cycles.\n\
+AC5: src/**/citation* and src/**/markdown* - citation lineage, footnote rendering, \
+attribution persistence.\n\
+AC6: src/**/demo* and src/demo/** - session picker/replay, bundled P&G demo, \
+cache-miss no-fallback behavior.\n\
+AC7: src/**/llm* and src/**/schema* - structured outputs, retry/backoff, \
+production/test model intent.\n\
+AC8: scripts/validate-build.sh and railway.json/Procfile/README* - \
+build/deploy-readiness by static review only, no live deployment execution.\n\
+AC9: scripts/validate-test.sh and scripts/validate-browser.sh and test sources - \
+integration before smoke, manual mode option, browser evidence capture.\n\
+AC10: .workflow/test-evidence/latest/manifest.json and \
+.workflow/test-evidence/latest/** - IT-1..IT-12 manifest coverage and required \
+artifact types.\n\
+AC11: src/**/style* and src/**/card* and src/**/progress* - Substack-like visual \
+contract including bars, cards, and serif post preview.\n\n\
+Write .workflow/verify_fidelity.md with pass/fail verdict and evidence per \
+AC1..AC11.\n\n\
+On ANY failure: also append to .workflow/verify_errors.log with the header \
+'=== VERIFY FAILURE: verify_fidelity ===' followed by the list of failing ACs \
+and their specific issues, so the implement node can read the consolidated \
+error log.\n\n\
+If all ACs pass, include in your response:\n\
+{\"context_updates\": {\"all_acs_pass\": \"true\"}}\n\n\
+If any AC fails, include in your response:\n\
+{\"context_updates\": {\"all_acs_pass\": \"false\"}}"
+        ]
+        gate_fidelity [shape=diamond, label="Fidelity OK?"]
+    }
+
+    // =========================================================================
+    // Review Fanout
+    // =========================================================================
+
+    subgraph cluster_review {
+        label="Review Fanout"
+        node [shape=box]
+
+        review_fanout [shape=component, label="Review Fan-Out"]
+
+        review_a [
+            label="Review A",
+            class="branch-a",
+            prompt="Review the Substack Creator Newsletter Engine implementation \
+against .workflow/definition_of_done.md.\n\n\
+Read the DoD for acceptance criteria. Read all implementation source files and \
+.workflow/test-evidence/latest/manifest.json.\n\n\
+## MANDATORY: Browser verification\n\
+You MUST verify the app works in a real browser. Do not trust code reading alone.\n\
+1. Run: npm run build (must exit 0)\n\
+2. Start the preview server: npx vite preview --port 4567 &\n\
+3. Wait 2 seconds, then use curl to fetch http://localhost:4567/ and verify it \
+returns HTML with a root div\n\
+4. Check that the HTML references JS and CSS bundles\n\
+5. Kill the preview server when done\n\
+6. Check browser artifacts in .workflow/test-evidence/latest/ — screenshots must \
+be real rendered pages (not 1x1 placeholders). If screenshot files are under 5KB, \
+they are fake. REJECT.\n\
+7. Check that playwright-report or equivalent browser test output exists and shows \
+real test execution\n\n\
+If browser verification fails or artifacts are fake, REJECT immediately.\n\n\
+## Code and AC verification\n\
+Check every AC group (AC1 through AC11):\n\n\
+AC1: Build exits 0, static assets produced, deployment config present and coherent \
+(review only, no live deploy)\n\
+AC2: IndexedDB persistence for API key, config, posts, drafts, sessions, \
+attribution mappings across reloads\n\
+AC3: Structured JSON output with retry/backoff, correct model routing \
+(gemini-3-flash-preview/gemini-3.1-pro-preview/gemini-2.5-flash-lite), \
+client-side key\n\
+AC4: Parallel setup (any order), status icons, rich input (text/upload/link), \
+gemini-3.1-pro-preview confirmation, back button\n\
+AC5: Dashboard with New Post and Trending Topics buttons, Settings link, post \
+history, draft resume\n\
+AC6: Trending Topics: parallel gemini-3-flash-preview search research, trend \
+visualization, 3 gemini-3.1-pro-preview writing prompts, navigate to New Post\n\
+AC7: Full post pipeline with source metadata, highlight/delete, one-shot outline, \
+3 automatic write cycles, citations with attribution lineage\n\
+AC8: Demo replay through production path, fade-in/highlight, bundled P&G session, \
+cache-miss error\n\
+AC9: Validation scripts and runtime evidence contract for build/test/browser checks\n\
+AC10: IT-1..IT-12 evidence manifest coverage and artifact completeness\n\
+AC11: Substack visual design: serif fonts, step dots, card primitive, accent \
+progress bars, no spinners, footnoted post\n\n\
+Verdict: APPROVED (all criteria met with evidence) or REJECTED (specific gaps \
+by AC ID).\n\
+Write to .workflow/review_a.md."
+        ]
+
+        review_b [
+            label="Review B",
+            class="branch-b",
+            prompt="Review the Substack Creator Newsletter Engine implementation \
+against .workflow/definition_of_done.md.\n\n\
+Read the DoD for acceptance criteria. Read all implementation source files and \
+.workflow/test-evidence/latest/manifest.json.\n\n\
+## MANDATORY: Browser verification\n\
+You MUST verify the app works in a real browser. Do not trust code reading alone.\n\
+1. Run: npm run build (must exit 0)\n\
+2. Start the preview server: npx vite preview --port 4568 &\n\
+3. Wait 2 seconds, then use curl to fetch http://localhost:4568/ and verify it \
+returns HTML with a root div\n\
+4. Check that the HTML references JS and CSS bundles\n\
+5. Kill the preview server when done\n\
+6. Check browser artifacts in .workflow/test-evidence/latest/ — screenshots must \
+be real rendered pages (not 1x1 placeholders). If screenshot files are under 5KB, \
+they are fake. REJECT.\n\
+7. Check that playwright-report or equivalent browser test output exists and shows \
+real test execution\n\n\
+If browser verification fails or artifacts are fake, REJECT immediately.\n\n\
+## Code and AC verification\n\
+Check every AC group (AC1 through AC11):\n\n\
+AC1: Build exits 0, static assets produced, deployment config present and coherent \
+(review only, no live deploy)\n\
+AC2: IndexedDB persistence for API key, config, posts, drafts, sessions, \
+attribution mappings across reloads\n\
+AC3: Structured JSON output with retry/backoff, correct model routing \
+(gemini-3-flash-preview/gemini-3.1-pro-preview/gemini-2.5-flash-lite), \
+client-side key\n\
+AC4: Parallel setup (any order), status icons, rich input (text/upload/link), \
+gemini-3.1-pro-preview confirmation, back button\n\
+AC5: Dashboard with New Post and Trending Topics buttons, Settings link, post \
+history, draft resume\n\
+AC6: Trending Topics: parallel gemini-3-flash-preview search research, trend \
+visualization, 3 gemini-3.1-pro-preview writing prompts, navigate to New Post\n\
+AC7: Full post pipeline with source metadata, highlight/delete, one-shot outline, \
+3 automatic write cycles, citations with attribution lineage\n\
+AC8: Demo replay through production path, fade-in/highlight, bundled P&G session, \
+cache-miss error\n\
+AC9: Validation scripts and runtime evidence contract for build/test/browser checks\n\
+AC10: IT-1..IT-12 evidence manifest coverage and artifact completeness\n\
+AC11: Substack visual design: serif fonts, step dots, card primitive, accent \
+progress bars, no spinners, footnoted post\n\n\
+Verdict: APPROVED (all criteria met with evidence) or REJECTED (specific gaps \
+by AC ID).\n\
+Write to .workflow/review_b.md."
+        ]
+
+        review_consensus [
+            label="Review Consensus",
+            goal_gate=true,
+            retry_target="postmortem",
+            prompt="Synthesize the two reviews into a consensus verdict.\n\n\
+Read branch outputs via parallel_results.json. If parallel_results.json is \
+missing, fall back to reading .workflow/review_a.md and .workflow/review_b.md.\n\n\
+Read .workflow/definition_of_done.md for acceptance criteria reference.\n\n\
+Consensus rules:\n\
+- Both APPROVED with no critical gaps: the implementation passes\n\
+- Any critical gap identified by either reviewer: rejected with specific AC IDs\n\
+- Mixed verdicts: rejected with gaps enumerated\n\n\
+Write to .workflow/review_consensus.md.\n\n\
+If approved, respond with:\n\
+{\"preferred_next_label\": \"approved\"}\n\n\
+If rejected, respond with:\n\
+{\"preferred_next_label\": \"rejected\"}"
+        ]
+    }
+
+    // =========================================================================
+    // Postmortem
+    // =========================================================================
+
+    subgraph cluster_postmortem {
+        label="Postmortem"
+
+        postmortem [
+            label="Postmortem",
+            prompt="Analyze the failure and guide the next repair iteration.\n\n\
+Read (if they exist):\n\
+- .workflow/review_consensus.md\n\
+- .workflow/verify_fidelity.md\n\
+- .workflow/implementation_log.md\n\
+- .workflow/test-evidence/latest/manifest.json\n\
+- Evidence files referenced by manifest entries for failed or suspicious IT \
+scenarios\n\
+- Branch review outputs via parallel_results.json (if available)\n\n\
+Output to .workflow/postmortem_latest.md (overwrite previous):\n\
+- Root causes of failure\n\
+- What works and must be preserved\n\
+- What failed and must be fixed\n\
+- Concrete next changes (specific files, specific fixes)\n\
+- Evidence file paths read (or explicit reason each was skipped)\n\
+- Do NOT direct from-scratch restart — preserve working code\n\n\
+PROGRESS DETECTION (required):\n\
+Extract current failing AC IDs from verify_fidelity.md or review outputs. \
+Compare with previous iteration and note whether progress was made \
+(fewer/different failing ACs) or zero progress (identical set).\n\n\
+OUTCOME CLASSIFICATION:\n\
+- replan: default — always routes back through planning so the plan can be \
+adjusted based on this postmortem\n\
+- needs_toolchain: environment/bootstrap/toolchain issue detected (routes to \
+check_toolchain)\n\n\
+Respond with exactly one of:\n\
+{\"preferred_next_label\": \"replan\", \"context_updates\": \
+{\"last_failing_acs\": \"AC1,AC7\"}}\n\
+{\"preferred_next_label\": \"needs_toolchain\", \"context_updates\": \
+{\"last_failing_acs\": \"AC1,AC7\"}}"
+        ]
+    }
+
+    // =========================================================================
+    // Edges
+    // =========================================================================
+
+    // Bootstrap
+    start -> check_toolchain
+    check_toolchain -> expand_spec [condition="outcome=succeeded"]
+    check_toolchain -> check_toolchain [condition="outcome=failed && context.failure_class=transient_infra", loop_restart=true]
+    check_toolchain -> postmortem [condition="outcome=failed && context.failure_class!=transient_infra"]
+    check_toolchain -> postmortem
+
+    expand_spec -> plan_fanout
+
+    // Planning
+    plan_fanout -> plan_a
+    plan_fanout -> plan_b
+    plan_a -> debate
+    plan_b -> debate
+    debate -> implement
+
+    // Implement -> Verify chain
+    implement -> fix_fmt
+
+    // Verify chain — failures go directly back to implement (errors logged to .workflow/verify_errors.log)
+    fix_fmt -> verify_fmt
+    verify_fmt -> gate_fmt
+    gate_fmt -> verify_build [condition="outcome=succeeded"]
+    gate_fmt -> implement
+
+    verify_build -> gate_build
+    gate_build -> verify_test [condition="outcome=succeeded"]
+    gate_build -> implement
+
+    verify_test -> gate_test
+    gate_test -> verify_browser [condition="outcome=succeeded"]
+    gate_test -> implement
+
+    verify_browser -> gate_browser
+    gate_browser -> verify_artifacts [condition="outcome=succeeded"]
+    gate_browser -> implement
+
+    verify_artifacts -> gate_artifacts
+    gate_artifacts -> verify_fidelity [condition="outcome=succeeded"]
+    gate_artifacts -> implement
+
+    verify_fidelity -> gate_fidelity
+    gate_fidelity -> review_fanout [condition="context.all_acs_pass=true"]
+    gate_fidelity -> implement
+
+    // Review
+    review_fanout -> review_a
+    review_fanout -> review_b
+    review_a -> review_consensus
+    review_b -> review_consensus
+    review_consensus -> exit       [label="Approved", condition="preferred_label=approved"]
+    review_consensus -> postmortem [label="Rejected"]
+
+    // Postmortem recovery routing
+    postmortem -> check_toolchain [label="Toolchain", condition="preferred_label=needs_toolchain"]
+    postmortem -> plan_fanout     [label="Replan"]
+}
+```
+
+## Key patterns
+
+### Debate planning with independent providers
+
+Instead of a single plan, the workflow generates two independent plans using different models, then synthesizes them:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+plan_fanout -> plan_a   // Claude Opus (Anthropic)
+plan_fanout -> plan_b   // Gemini Flash (Google)
+plan_a -> debate
+plan_b -> debate
+```
+
+Plan A runs on Claude Opus and Plan B on Gemini Flash. A different provider for each plan means genuinely independent perspectives — different training data, different reasoning patterns, different blind spots. The `debate` node reads both plans and produces a single best-of-breed plan that resolves conflicts and picks the strongest approach for each module.
+
+When a postmortem exists from a prior iteration, both planners and the debate node read it and adjust the plan to address every identified issue. This creates a feedback loop where each planning round is informed by the failures of the previous one.
+
+### Six-stage verify chain
+
+After implementation, the workflow runs a gauntlet of six automated checks. Each check is a command node followed by a conditional gate. If any check fails, execution loops back to `implement` where the agent reads the consolidated error log and fixes the specific failures:
+
+```
+implement → fix_fmt → verify_fmt → gate_fmt → verify_build → gate_build →
+verify_test → gate_test → verify_browser → gate_browser →
+verify_artifacts → gate_artifacts → verify_fidelity → gate_fidelity → review
+```
+
+The checks are ordered by cost — format fixing is nearly instant, builds take seconds, tests take longer, browser checks need a running server, artifact validation cross-references evidence files, and the LLM-based fidelity check is the most expensive. By failing fast on cheap checks, the workflow avoids wasting tokens on fidelity verification when the code doesn't even compile.
+
+Each verify step appends errors to `.workflow/verify_errors.log`. When the `implement` node runs again, it reads this error log and makes targeted fixes rather than regenerating from scratch.
+
+### Fidelity verification
+
+The `verify_fidelity` node is an LLM-based acceptance test. It reads every acceptance criterion (AC1–AC11) from the definition of done, maps each one to concrete files in the implementation, and produces a per-criterion pass/fail verdict. This catches semantic gaps that automated tests miss — a test suite can pass while the app is missing entire features.
+
+The fidelity node communicates its result via [context updates](/workflows/transitions#agent-transitions). It sets `all_acs_pass` to `"true"` or `"false"`, and the downstream gate routes based on that context value:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+gate_fidelity -> review_fanout [condition="context.all_acs_pass=true"]
+gate_fidelity -> implement
+```
+
+### Ensemble review with consensus
+
+After all automated checks pass, two independent reviewers evaluate the implementation using different providers:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+review_fanout -> review_a   // Claude Opus (Anthropic)
+review_fanout -> review_b   // Gemini Flash (Google)
+review_a -> review_consensus
+review_b -> review_consensus
+```
+
+Both reviewers are instructed to perform **mandatory browser verification** — they must build the app, start a preview server, and verify it serves real HTML. Screenshot artifacts under 5KB are rejected as fake. This prevents the pattern where code passes static analysis but doesn't actually render.
+
+The `review_consensus` node applies strict consensus rules:
+
+* Both APPROVED with no critical gaps: pass
+* Any critical gap from either reviewer: rejected with specific AC IDs
+* Mixed verdicts: rejected with gaps enumerated
+
+### Postmortem repair loop
+
+When the review consensus rejects the implementation, the workflow runs a postmortem before replanning:
+
+```
+review_consensus → [Rejected] → postmortem → plan_fanout → ... → implement → verify → review
+```
+
+The postmortem node reads all available evidence (review outputs, fidelity checks, implementation logs, test evidence) and produces a structured analysis: root causes, what works and must be preserved, what failed and must be fixed, and concrete next changes. Critically, it directs targeted repair, not a from-scratch restart.
+
+The postmortem also classifies the failure. Most failures route back through planning (`replan`), but environment issues route to `check_toolchain` for bootstrap repair:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+postmortem -> check_toolchain [label="Toolchain", condition="preferred_label=needs_toolchain"]
+postmortem -> plan_fanout     [label="Replan"]
+```
+
+### Bootstrap self-heal
+
+The `check_toolchain` node has a self-heal edge for transient infrastructure failures. If Node.js or npm fail to respond due to a temporary issue, the workflow retries via a `loop_restart` edge. Deterministic failures (toolchain not installed) route to the postmortem for diagnosis:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+check_toolchain -> expand_spec      [condition="outcome=succeeded"]
+check_toolchain -> check_toolchain  [condition="outcome=failed && context.failure_class=transient_infra", loop_restart=true]
+check_toolchain -> postmortem       [condition="outcome=failed && context.failure_class!=transient_infra"]
+```
+
+### Model routing strategy
+
+The stylesheet assigns models based on task difficulty:
+
+```
+*          { model: claude-opus-4-6; }        // Default: spec expansion, debate, postmortem
+.hard      { model: gpt-5.4; }                // Implementation: optimized for code generation
+.verify    { model: claude-opus-4-6; }        // Fidelity verification: careful analysis
+.branch-a  { model: claude-opus-4-6; }        // Plan A, Review A: Anthropic perspective
+.branch-b  { model: gemini-3-flash-preview; } // Plan B, Review B: Google perspective
+```
+
+The `.branch-b` class uses a different provider for both planning and review. This ensures the second opinion is genuinely independent — not just a second run of the same model. The `.hard` class routes implementation to OpenAI's Codex, which is optimized for high-throughput code generation.
+
+## Adapting this pattern
+
+This pattern generalizes beyond React applications:
+
+* **API implementation** — spec is an OpenAPI document, verify chain runs contract tests
+* **CLI tool** — spec is a man page or usage doc, verify chain runs integration tests
+* **Infrastructure** — spec is a Terraform design doc, verify chain runs `terraform plan` and policy checks
+* **Library** — spec is an API surface doc, verify chain runs unit tests and type checks
+
+The core structure is always the same: debate plan, implement, verify with escalating checks, ensemble review, postmortem on failure, loop.
+
+To adapt for your project:
+
+1. **Write your spec** with concrete acceptance criteria (the more specific, the better the fidelity check)
+2. **Write validation scripts** for each stage of the verify chain (format, build, test, browser/integration, artifacts)
+3. **Adjust the model stylesheet** for your budget and quality requirements
+4. **Customize prompts** with your project's language, conventions, and file paths
+5. **Tune the verify chain** — add or remove stages to match your project's quality gates
+
+## Further reading
+
+<Columns cols={2}>
+  <Card title="NLSpec Conformance" icon="arrows-rotate" href="/examples/nlspec-conformance">
+    A simpler implement-test-fix loop for spec-driven development.
+  </Card>
+
+  <Card title="Ensemble" icon="users" href="/tutorials/ensemble">
+    Multi-provider fan-out and synthesis.
+  </Card>
+
+  <Card title="Failures" icon="triangle-exclamation" href="/execution/failures">
+    Retry policies, loop detection, goal gates, and circuit breakers.
+  </Card>
+
+  <Card title="Model Stylesheets" icon="palette" href="/workflows/stylesheets">
+    CSS-like rules for assigning models to workflow nodes.
+  </Card>
+</Columns>

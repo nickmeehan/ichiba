@@ -1,0 +1,223 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Nodes & Stages
+
+> All node types and how they become stages at runtime
+
+## Nodes vs. stages
+
+A **node** is a step defined in the Graphviz file at author time. A **stage** is the runtime execution of a node. In a simple linear workflow, each node runs once and produces one stage. But when a workflow loops — for example, an implement-test-fix cycle — the same node can produce multiple stages within a single run.
+
+This distinction matters for observability and debugging: the workflow graph shows nodes, but the run timeline shows stages. Each stage records its own inputs, outputs, duration, and token usage.
+
+## Node types
+
+Every node's Graphviz `shape` attribute determines its execution behavior. If no shape is specified, the node defaults to an agent.
+
+### Start
+
+**Shape:** `Mdiamond`
+
+The entry point of the workflow. Every workflow must have exactly one start node.
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+start [shape=Mdiamond, label="Start"]
+```
+
+### Exit
+
+**Shape:** `Msquare`
+
+The terminal node. When execution reaches exit, the workflow completes. Every workflow must have exactly one exit node.
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+exit [shape=Msquare, label="Exit"]
+```
+
+### Agent
+
+**Shape:** `box` (default)
+
+Runs an LLM with access to tools — bash, file editing, sub-agents — in an agentic loop. The agent works autonomously, calling tools as needed, until it decides the task is complete.
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+implement [label="Implement", prompt="Read plan.md and implement every step."]
+```
+
+Key attributes:
+
+| Attribute          | Description                                                                                                          |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `prompt`           | The task instructions for the agent                                                                                  |
+| `reasoning_effort` | `low`, `medium`, or `high` (default: `high`)                                                                         |
+| `max_tokens`       | Maximum tokens for LLM responses                                                                                     |
+| `fidelity`         | How much prior context is passed to this node (see [Context](/execution/context#fidelity-controlling-agent-context)) |
+| `thread_id`        | Groups nodes into a shared conversation thread (advanced — see below)                                                |
+| `timeout`          | Execution timeout (e.g. `"900s"`)                                                                                    |
+
+**Fidelity levels:**
+
+| Value            | Behavior                                                  |
+| ---------------- | --------------------------------------------------------- |
+| `compact`        | Structured summary of prior stages (default)              |
+| `full`           | Complete context from all prior stages — no summarization |
+| `summary:high`   | Detailed summary including outputs and key details        |
+| `summary:medium` | Moderate summary with outcomes and notable findings       |
+| `summary:low`    | Brief summary with just outcomes per stage                |
+| `truncate`       | Minimal — only the goal and run ID                        |
+
+Fidelity can also be set at the graph level (`default_fidelity`) or on individual edges to control the transition between stages. See [Context](/execution/context#fidelity-controlling-agent-context) for the full reference on fidelity precedence, preamble construction, and thread integration.
+
+**Thread ID:**
+
+Setting `thread_id` on multiple nodes (e.g. `thread_id="impl"`) groups them into a shared conversation thread, preserving context continuity across nodes as if they were part of the same session. This is an advanced feature typically used within subgraph clusters:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+subgraph cluster_impl {
+    node [fidelity="full", thread_id="impl"]
+    plan      [label="Plan"]
+    implement [label="Implement"]
+    review    [label="Review"]
+}
+```
+
+### Prompt
+
+**Shape:** `tab`
+
+Makes a single LLM call with no tool use. Useful for analysis, summarization, generation, and lightweight reasoning where tools aren't needed.
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+spec [label="Write Spec", shape=tab, prompt="Write a brief spec for a string utility module."]
+```
+
+Prompt nodes accept the same attributes as agent nodes (`prompt`, `reasoning_effort`, `max_tokens`, etc.) but never invoke tools.
+
+### Command
+
+**Shape:** `parallelogram`
+
+Runs a shell script inside the configured sandbox and captures its output. The output is available to downstream nodes as context. This ensures command nodes execute in the same environment as agent nodes.
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+test [label="Run Tests", shape=parallelogram, script="cargo test 2>&1 || true"]
+```
+
+| Attribute  | Description                       |
+| ---------- | --------------------------------- |
+| `script`   | The shell command to execute      |
+| `language` | `"shell"` (default) or `"python"` |
+
+### Human
+
+**Shape:** `hexagon`
+
+Pauses the workflow and waits for a person to choose a path. The outgoing edge labels define the available options:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+approve [shape=hexagon, label="Approve Plan"]
+
+approve -> implement [label="[A] Approve"]
+approve -> plan      [label="[R] Revise"]
+```
+
+In the web UI, human gates appear as interactive prompts. From the CLI, they appear as a menu.
+
+### Wait
+
+**Shape:** `insulator`
+
+Pauses the workflow for a configured duration before proceeding. Useful for rate limiting between API calls or waiting for external processes to complete.
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+cooldown [label="Wait 30s", shape=insulator, duration="30s"]
+```
+
+| Attribute  | Description                                                                                          |
+| ---------- | ---------------------------------------------------------------------------------------------------- |
+| `duration` | How long to pause (required). Supports `ms`, `s`, and `m` suffixes (e.g. `"500ms"`, `"30s"`, `"2m"`) |
+
+### Conditional
+
+**Shape:** `diamond`
+
+Routes execution to different edges based on conditions evaluated against the current run context:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+gate [shape=diamond, label="Tests passing?"]
+
+gate -> exit      [label="Pass", condition="outcome=succeeded"]
+gate -> implement [label="Fix"]
+```
+
+Conditions support `=`, `!=`, `&&`, and context variable lookups (e.g. `context.tests_passed=true`). An edge with no condition acts as the default fallback.
+
+### Parallel (fan-out)
+
+**Shape:** `component`
+
+Fans out to execute multiple branches concurrently. Each branch gets its own isolated context.
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fork [label="Fan Out", shape=component, join_policy="wait_all"]
+
+fork -> security
+fork -> architecture
+fork -> quality
+```
+
+| Attribute      | Description                                  |
+| -------------- | -------------------------------------------- |
+| `join_policy`  | When the merge can proceed (see table below) |
+| `max_parallel` | Maximum concurrent branches (default: 4)     |
+
+**Join policies:**
+
+| Policy          | Behavior                                  |
+| --------------- | ----------------------------------------- |
+| `wait_all`      | Wait for every branch to finish (default) |
+| `first_success` | Proceed as soon as one branch succeeds    |
+
+### Merge (fan-in)
+
+**Shape:** `tripleoctagon`
+
+Collects results from parallel branches into a single context. Typically paired with a parallel fan-out node:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+merge [label="Merge Results", shape=tripleoctagon]
+
+security     -> merge
+architecture -> merge
+quality      -> merge
+merge -> report
+```
+
+The merged results are available to downstream nodes as `parallel_results.json`.
+
+## Common node attributes
+
+These attributes can be set on any node type:
+
+| Attribute      | Description                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------ |
+| `label`        | Display name shown in the graph visualization                                                          |
+| `class`        | CSS-like class for [model stylesheet](/workflows/stylesheets) targeting (space-separated for multiple) |
+| `max_visits`   | Max times this node can execute in a run. Overrides the graph-level `max_node_visits` for this node.   |
+| `goal_gate`    | When `true`, the workflow fails if this node doesn't succeed                                           |
+| `max_retries`  | Override default retry count for this node                                                             |
+| `retry_policy` | Named retry preset (see table below)                                                                   |
+
+**Retry policies:**
+
+| Preset       | Attempts | Backoff                       | Description                          |
+| ------------ | -------- | ----------------------------- | ------------------------------------ |
+| `none`       | 1        | —                             | No retries, fail immediately         |
+| `standard`   | 5        | 5s initial, 2x exponential    | Good default for transient failures  |
+| `aggressive` | 5        | 500ms initial, 2x exponential | Longer initial delay for rate limits |
+| `linear`     | 3        | 500ms fixed                   | Constant delay between attempts      |
+| `patient`    | 3        | 2s initial, 3x exponential    | Slow ramp for unreliable services    |
+
+If neither `retry_policy` nor `max_retries` is set, nodes default to 3 retries with standard backoff.

@@ -1,0 +1,99 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Architecture
+
+> How Fabro's CLI and API modes work under the hood
+
+Fabro provides two interfaces — a CLI for local development and an HTTP API for production use. Both share a common workflow engine.
+
+## Shared engine
+
+At the core of both modes is the `WorkflowRunEngine`. It parses the Graphviz graph, walks nodes, dispatches to handlers (agent, command, human, etc.), selects edges, and checkpoints after each stage. The engine is parameterized by an `Interviewer` trait that controls how human-in-the-loop questions are presented — terminal prompts in CLI mode, HTTP request/response in API mode.
+
+## CLI mode
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro run workflow.fabro --goal "Implement the login feature"
+```
+
+The CLI parses the workflow, creates the engine with a `ConsoleInterviewer`, and executes synchronously. Events are printed to stderr, progress is shown with terminal indicators, and human-in-the-loop questions are answered via interactive terminal prompts. When the run finishes, the process exits.
+
+CLI mode is ideal for:
+
+* Local development and iteration on workflows
+* One-off runs and debugging
+* Scripting and CI/CD pipelines
+
+## API mode
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro server start
+```
+
+`fabro server start` starts an HTTP server, binding to `~/.fabro/fabro.sock` by default (or plain TCP when configured), with persistent run storage. Runs are submitted via the REST API and executed asynchronously. Public HTTPS, when needed, is terminated upstream by a reverse proxy or platform ingress.
+
+### Configuration
+
+The server reads `~/.fabro/settings.toml` for default settings (model, sandbox, variables, authentication). This file is live-reloaded — changes take effect within seconds without restarting the server.
+
+Key server config options:
+
+| Setting                                | Description                                                       |
+| -------------------------------------- | ----------------------------------------------------------------- |
+| `server.listen`                        | Bind transport: Unix socket or plain TCP listener                 |
+| `server.api.url` / `server.web.url`    | External API base URL and the single canonical browser/API origin |
+| `server.auth.methods`                  | Bootstrap auth methods: `dev-token`, `github`, or both            |
+| `server.scheduler.max_concurrent_runs` | Scheduler concurrency limit (default 5)                           |
+| `[run.*]`                              | Defaults applied to every run (overridable per-run)               |
+
+### Run lifecycle
+
+1. **Submit** — `POST /api/v1/runs` with a Graphviz workflow source. The run is created with status `submitted` and the response returns immediately with the run ID.
+2. **Start request** — `POST /api/v1/runs/{id}/start` moves normal runs to `runnable`. Parent-generated [child runs](/execution/child-runs) may move to `pending` with `approval_required`.
+3. **Approve if needed** — `POST /api/v1/runs/{id}/approve` moves an approval-gated run to `runnable`; `deny` fails it with `approval_denied`.
+4. **Schedule** — A background scheduler promotes `runnable` runs to `running` in FIFO order, up to the concurrency limit.
+5. **Execute** — The engine walks the graph, streaming events to all subscribers.
+6. **Complete** — The run transitions to `succeeded`, `failed`, or `dead`.
+
+### Event streaming
+
+The API streams run events via [Server-Sent Events (SSE)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events). Every significant action — stage starts, LLM calls, tool invocations, edge selections — is emitted as a structured JSON event. The web UI uses this endpoint for real-time run monitoring. Any HTTP client that supports SSE can subscribe. See the [run events endpoint](/api-reference/runs/stream-run-events) in the API reference.
+
+### Human-in-the-loop
+
+In API mode, human-in-the-loop questions are served over HTTP instead of terminal prompts. The engine blocks the current stage until an answer is received, then continues execution. See the [list questions](/api-reference/human-in-the-loop/list-run-questions) and [submit answer](/api-reference/human-in-the-loop/submit-run-answer) API reference pages.
+
+### Authentication
+
+API mode supports two bootstrap auth methods, configurable in `settings.toml`:
+
+* **`dev-token`** — Bearer token access for operators and automation
+* **`github`** — GitHub OAuth for browser users, resulting in a session cookie
+
+### Demo mode
+
+Demo mode is per-request: send the `X-Fabro-Demo: 1` HTTP header to get static mock data with authentication disabled. The web UI sends this header automatically when configured with `FABRO_DEMO=1`. This lets you explore the UI without API keys or real workflow execution.
+
+## Web UI
+
+The web UI is a React app (`apps/fabro-web`) that connects to the API server. Start it alongside `fabro server start`:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro server start                 # API on ~/.fabro/fabro.sock by default
+cd apps/fabro-web && bun run dev   # rebuilds web assets on change; refresh the browser
+```
+
+The UI provides:
+
+* **Run board** — List and monitor all runs
+* **Run detail** — Real-time stage progress, event stream, diffs, usage stats
+* **Start new run** — Submit a Graphviz workflow from the browser
+* **Human-in-the-loop** — Answer agent questions through the web interface
+* **Sessions** — Interactive chat interface (coming soon)
+* **Insights** — SQL-based analysis across runs via DuckDB
+
+## Comparison
+
+See [Deployment](/administration/deployment) for where the Fabro server runs and the trade-offs between local and self-hosted modes.

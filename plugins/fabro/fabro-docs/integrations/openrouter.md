@@ -1,0 +1,167 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# OpenRouter
+
+> Route Fabro models through OpenRouter's multi-provider gateway
+
+[OpenRouter](https://openrouter.ai/) is an aggregator that fronts hundreds of models behind one OpenAI-compatible API. Fabro ships a disabled `openrouter` provider entry with a curated model catalog, so you can opt in from `settings.toml` without changing Fabro code.
+
+## Prerequisites
+
+* An [OpenRouter account](https://openrouter.ai/) with credit for paid models
+* An API key from [openrouter.ai/keys](https://openrouter.ai/keys)
+
+## Enable the provider
+
+Fabro runs execute through a Fabro server. Add the provider override to the settings file used by that server. For a local server, this is usually `~/.fabro/settings.toml`; for a remote deployment, update the server host's Fabro settings.
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+_version = 1
+
+[llm.providers.openrouter]
+enabled = true
+```
+
+## Configure credentials
+
+Store the key in the target Fabro server vault:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro provider login --provider openrouter
+
+# For a non-default remote server:
+fabro provider login --server https://your-fabro.example --provider openrouter
+
+# Or set the vault token directly:
+fabro secret set OPENROUTER_API_KEY sk-or-v1-...
+fabro secret --server https://your-fabro.example set OPENROUTER_API_KEY sk-or-v1-...
+```
+
+Direct SDK usage outside a Fabro server can use an env-backed credential source explicitly:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+export OPENROUTER_API_KEY=sk-or-v1-...
+```
+
+## Included models
+
+The built-in catalog curates frontier and open-weights models under vendor-namespaced IDs:
+
+| Fabro model ID                                                   | Notes                                                |
+| ---------------------------------------------------------------- | ---------------------------------------------------- |
+| `anthropic/claude-opus-4-7`                                      | Claude via OpenRouter, Anthropic-style cache billing |
+| `anthropic/claude-sonnet-4-6`                                    | Provider default                                     |
+| `anthropic/claude-haiku-4-5`                                     | Provider small default                               |
+| `openai/gpt-5.4`, `openai/gpt-5.5`                               |                                                      |
+| `google/gemini-3.1-pro-preview`, `google/gemini-3.5-flash`       |                                                      |
+| `deepseek/deepseek-v4-pro`, `deepseek/deepseek-v4-flash`         |                                                      |
+| `moonshotai/kimi-k2.6`, `qwen/qwen3-coder`, `qwen/qwen3.6-flash` |                                                      |
+| `z-ai/glm-4.6`, `minimax/minimax-m2.7`, `xiaomi/mimo-v2.5-pro`   |                                                      |
+| `nvidia/nemotron-3-super-120b-a12b`, `mistralai/devstral-2512`   |                                                      |
+
+Any other OpenRouter model can be added as a settings model entry with `provider = "openrouter"` and the OpenRouter slug as `api_id`:
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[llm.models."meta-llama/llama-4-maverick"]
+provider = "openrouter"
+api_id = "meta-llama/llama-4-maverick"
+display_name = "Llama 4 Maverick"
+family = "llama-4"
+
+[llm.models."meta-llama/llama-4-maverick".limits]
+context_window = 1000000
+
+[llm.models."meta-llama/llama-4-maverick".features]
+tools = true
+vision = false
+reasoning = false
+```
+
+## Use OpenRouter models
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro model list --provider openrouter
+fabro model test --model anthropic/claude-sonnet-4-6
+fabro run workflow.fabro --model deepseek/deepseek-v4-flash
+```
+
+When targeting a non-default remote server, pass the same `--server` value to verification commands:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro model list --server https://your-fabro.example --provider openrouter
+fabro model test --server https://your-fabro.example --model anthropic/claude-sonnet-4-6
+```
+
+In workflow stylesheets:
+
+```dot title="workflow.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph Example {
+    graph [
+        model_stylesheet="
+            * { model: anthropic/claude-sonnet-4-6; }
+        "
+    ]
+
+    start [shape=Mdiamond, label="Start"]
+    work  [label="Work", prompt="Use the configured OpenRouter model."]
+    exit  [shape=Msquare, label="Exit"]
+
+    start -> work -> exit
+}
+```
+
+## Cost telemetry
+
+Every OpenRouter response includes an inline `usage.cost` with authoritative USD billing. Fabro surfaces it as `cost_usd` with `cost_source = "authoritative"` on completion responses. Other providers populate the same fields from catalog price estimates with `cost_source = "estimated"`.
+
+The catalog prices on OpenRouter model rows are best-effort estimates used only before the authoritative figure arrives (for example, mid-stream rollups).
+
+## Provider routing
+
+OpenRouter's [provider routing preferences](https://openrouter.ai/docs/guides/routing/provider-selection) pass through verbatim via `provider_options.openrouter` on API/SDK requests — the keys merge into the top level of the request body:
+
+```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+{
+  "model": "anthropic/claude-sonnet-4-6",
+  "provider_options": {
+    "openrouter": {
+      "provider": { "sort": "throughput", "data_collection": "deny" },
+      "models": ["anthropic/claude-sonnet-4.6", "deepseek/deepseek-v4-pro"]
+    }
+  }
+}
+```
+
+## Attribution headers
+
+Fabro does not send OpenRouter's optional attribution headers (`HTTP-Referer`, `X-Title`) by default, so self-hosted installations stay anonymous on OpenRouter's public app leaderboard. To opt in:
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[llm.providers.openrouter.extra_headers]
+"HTTP-Referer" = { literal = "https://your-site.example" }
+"X-Title" = { literal = "Your App" }
+```
+
+## Troubleshooting
+
+**"No API key configured"** — Set the key on the target server with `fabro provider login --provider openrouter` or `fabro secret set OPENROUTER_API_KEY ...`. For direct SDK usage outside a Fabro server, export `OPENROUTER_API_KEY` in the invoking shell.
+
+**"provider 'openrouter' is not configured in the server model catalog"** — Confirm the server host's `settings.toml` has `[llm.providers.openrouter]` with `enabled = true`. Fabro live-reloads `settings.toml` within a few seconds; after that, `fabro model list --provider openrouter` against the same server should show the enabled catalog.
+
+**402 / insufficient credits** — Paid OpenRouter models require prepaid credit; check your balance at [openrouter.ai/credits](https://openrouter.ai/credits).
+
+**Unknown model** — Confirm the model's `api_id` matches an OpenRouter slug exactly (including the vendor prefix), then run `fabro model test --model <fabro-model-id>`.
+
+## Further reading
+
+<Columns cols={2}>
+  <Card title="Models" icon="microchip" href="/core-concepts/models">
+    How Fabro routes model IDs, providers, and fallbacks.
+  </Card>
+
+  <Card title="Settings Configuration" icon="gear" href="/reference/user-configuration">
+    Full reference for `[llm.providers.<id>]` and `[llm.models.<id>]`.
+  </Card>
+</Columns>

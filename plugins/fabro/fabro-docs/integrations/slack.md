@@ -1,0 +1,255 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Slack
+
+> Answer human-in-the-loop questions and receive run lifecycle notifications in Slack
+
+Fabro's Slack integration lets your team answer [human-in-the-loop](/workflows/human-in-the-loop) questions without leaving Slack and receive opt-in run lifecycle notifications. When a workflow reaches a human gate, Fabro posts an interactive message to a Slack channel with buttons for each option. Team members click a button (or reply in a thread for freeform input), and the workflow continues.
+
+The integration uses Slack's [Socket Mode](https://api.slack.com/apis/socket-mode), so no public URL or webhook endpoint is required — Fabro connects outbound over a WebSocket.
+
+## What it looks like
+
+When a workflow hits a human gate like this:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+approve [shape=hexagon, label="Approve Plan"]
+
+approve -> implement [label="[A] Approve"]
+approve -> plan      [label="[R] Revise"]
+```
+
+Fabro posts a message to your configured Slack channel:
+
+> **Approve Plan**
+>
+> stage `approve`
+>
+> Open in Fabro
+>
+> *(context from the upstream stage, when available)*
+>
+> `[Approve]` `[Revise]`
+
+A team member clicks a button, the message updates to show the selection, and the workflow resumes on the chosen path.
+
+## Supported question types
+
+| Question type       | Slack UI                        |
+| ------------------- | ------------------------------- |
+| **Yes/No**          | Two buttons: Yes, No            |
+| **Confirmation**    | Two buttons: Yes, No            |
+| **Multiple choice** | One button per option           |
+| **Multi-select**    | Checkboxes with a Submit button |
+| **Freeform**        | Prompt to reply in a thread     |
+
+For freeform questions, Fabro posts a message asking the user to reply in the thread. The reply text (with any `@mention` prefix stripped) becomes the answer.
+
+## Setup
+
+### 1. Create a Slack App
+
+1. Go to [api.slack.com/apps](https://api.slack.com/apps) and click **Create New App**
+2. Choose **From scratch**, give it a name (e.g. "Fabro"), and select your workspace
+
+### 2. Enable Socket Mode
+
+1. In the app settings sidebar, go to **Socket Mode**
+2. Toggle **Enable Socket Mode** on
+3. Create an **App-Level Token** with the `connections:write` scope
+4. Copy the token (starts with `xapp-`) — this is your `FABRO_SLACK_APP_TOKEN`
+
+### 3. Add bot token scopes
+
+1. Go to **OAuth & Permissions** in the sidebar
+2. Under **Bot Token Scopes**, add the scopes you need:
+   * `chat:write` — required to post and update Slack messages
+   * `chat:write.public` — optional, only needed to post lifecycle notifications or interview prompts to public channels without inviting the bot first
+   * `channels:history` — optional, only needed for freeform thread replies in public channels
+   * `groups:history` — optional, only needed for freeform thread replies in private channels
+
+### 4. Enable interactivity
+
+For human-in-the-loop buttons, multi-select menus, and other interactive controls:
+
+1. Go to **Interactivity & Shortcuts** in the sidebar
+2. Toggle **Interactivity** on
+
+Because Socket Mode is enabled, Slack delivers interactive payloads over the WebSocket connection instead of requiring a public Request URL.
+
+Lifecycle notifications are one-way messages and do not require interactivity.
+
+### 5. Subscribe to events for freeform replies
+
+Skip this step if you only use lifecycle notifications, buttons, confirmations, multiple choice, or multi-select questions.
+
+1. Go to **Event Subscriptions** in the sidebar
+2. Toggle **Enable Events** on
+3. Under **Subscribe to bot events**, add:
+   * `message.channels` — receive public channel messages, needed for freeform thread replies in public channels
+   * `message.groups` — receive private channel messages, needed for freeform thread replies in private channels
+
+If you add scopes or event subscriptions after installing the app, reinstall it so Slack grants the new permissions.
+
+### 6. Install the app
+
+1. Go to **Install App** in the sidebar
+2. Click **Install to Workspace** and authorize
+3. Copy the **Bot User OAuth Token** (starts with `xoxb-`) — this is your `FABRO_SLACK_BOT_TOKEN`
+
+### 7. Configure Fabro
+
+Add both tokens to the Fabro server vault:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro secret set FABRO_SLACK_BOT_TOKEN xoxb-your-bot-token
+fabro secret set FABRO_SLACK_APP_TOKEN xapp-your-app-token
+```
+
+The server runtime does not read Slack tokens from process env or `server.env`. `server.env` is reserved for bootstrap secrets such as `SESSION_SECRET`, `FABRO_DEV_TOKEN`, and object-store credentials.
+
+Restart the server after changing Slack credentials so the Socket Mode connection is recreated with the new tokens.
+
+Enable Slack in your [server configuration](/administration/server-configuration). You can leave `default_channel` out if you only use per-route lifecycle notification channels:
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[server.integrations.slack]
+enabled = true
+default_channel = "#fabro-reviews"
+```
+
+`default_channel` is used only for human-in-the-loop interview prompts. Run lifecycle notifications use per-run or per-workflow `[run.notifications]` routes instead.
+
+### 8. Invite the bot
+
+Invite the bot to any channel where you want it to post interview questions or lifecycle notifications:
+
+```
+/invite @Fabro
+```
+
+The `chat:write.public` scope allows posting to public channels without an invite. Private channels always require an invite.
+
+### 9. Verify startup
+
+Start or restart the Fabro server and check its logs. A working Slack connection should include:
+
+```text theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+INFO Slack integration enabled
+INFO Slack Socket Mode WebSocket connected
+INFO Slack Socket Mode handshake complete
+```
+
+If either token is missing or empty, startup logs the missing keys instead:
+
+```text theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+INFO Slack integration disabled; missing credentials
+```
+
+Foreground servers log to stdout by default. Daemonized servers log under `<storage>/logs/server.log` unless you configure `[server.logging]` differently.
+
+You can also check **Settings > Integrations** in the web UI. The Slack row is computed from server configuration, vault credential presence, and the live Socket Mode connection state, so it can distinguish missing credentials, connecting, connected, and error states.
+
+## How it works
+
+Fabro uses the same [web interviewer](/execution/interviews#web) that powers the web UI. When a human gate fires:
+
+1. Fabro builds a [Block Kit](https://api.slack.com/block-kit) message from the question, stage hint, upstream context, optional run link, and answer controls
+2. Posts the message to the configured Slack channel
+3. The workflow blocks, waiting for an answer
+
+When a user interacts:
+
+* **Button click** — Slack delivers the interaction over the Socket Mode WebSocket. Fabro maps the button's action ID back to the question and submits the answer. The original message is updated to show the selection.
+* **Thread reply** (freeform) — The user replies in the message thread. Fabro receives the reply as a message event, matches it to the pending question via the thread timestamp, and submits the text as the answer.
+
+The connection is maintained with automatic reconnection and exponential backoff (1s initial, 30s max). If the WebSocket disconnects, Fabro reconnects transparently — no manual intervention needed.
+
+## Run lifecycle notifications
+
+Slack run lifecycle notifications are opt-in per run or workflow through the `[run.notifications]` namespace. Notification settings do not live in server config.
+
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.notifications.deploys]
+enabled = true
+provider = "slack"
+events = ["run.started", "run.completed", "run.failed"]
+
+[run.notifications.deploys.slack]
+channel = "#deploys"
+```
+
+Each enabled route posts one message when a matching event is emitted. Lifecycle messages include the run ID, a link back to Fabro when the server has a web URL, the workflow label, result and duration for terminal events, and pull request details when the run has already created or linked a PR.
+
+`run.failed` is a terminal run event. A stage can fail and still be followed by another graph edge that lets the run complete; in that case a route listening for `run.completed` fires, not `run.failed`.
+
+The route-level Slack channel is required for lifecycle notifications. The channel may be a literal (`"#deploys"`) or an environment interpolation (`"{{ env.DEPLOYS_SLACK_CHANNEL }}"`). If the channel is missing, empty, or cannot be resolved, Fabro logs a warning and skips that route without affecting the run or other notification routes.
+
+Lifecycle notifications are one-way and fire-and-forget. They never accept answers, register reply threads, update prior messages, or interact with interview state.
+
+### Smoke test lifecycle notifications
+
+To verify delivery end to end, add a Slack route to any workflow and run it on the server:
+
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+_version = 1
+
+[workflow]
+graph = "workflow.fabro"
+
+[run]
+goal = "Verify Slack notifications"
+
+[run.notifications.smoke]
+enabled = true
+provider = "slack"
+events = ["run.started", "run.completed", "run.failed"]
+
+[run.notifications.smoke.slack]
+channel = "#fabro-reviews"
+```
+
+```dot title="workflow.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph Smoke {
+    start [shape=Mdiamond, label="Start"]
+    ping  [shape=parallelogram, label="Ping", script="echo slack smoke"]
+    done  [shape=Msquare, label="Done"]
+
+    start -> ping -> done
+}
+```
+
+Then launch it against the server:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro run --server http://127.0.0.1:32276/api/v1 ./workflow.toml
+```
+
+The channel should receive `run.started` and `run.completed`. To verify `run.failed`, replace the graph with a failing command stage that has no normal exit path, then run it again:
+
+```dot title="workflow.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph SmokeFailure {
+    start [shape=Mdiamond, label="Start"]
+    fail  [shape=parallelogram, label="Fail", script="exit 1"]
+
+    start -> fail
+}
+```
+
+## Environment variables
+
+| Variable                | Required | Description                                                          |
+| ----------------------- | -------- | -------------------------------------------------------------------- |
+| `FABRO_SLACK_BOT_TOKEN` | Yes      | Bot User OAuth Token (`xoxb-...`). Used to post and update messages. |
+| `FABRO_SLACK_APP_TOKEN` | Yes      | App-Level Token (`xapp-...`). Used to connect via Socket Mode.       |
+
+Both must be set for the Slack integration to activate. If either is missing or empty, Slack is disabled and the startup log names the missing variables. A server-level `default_channel` is not required for lifecycle notifications; it is only needed when you want interview prompts to use a default Slack channel.
+
+## Limitations
+
+* **Single workspace** — Fabro connects to one Slack workspace at a time.
+* **One answer per question** — The first person to click a button or reply in a thread provides the answer. Subsequent interactions on the same question are ignored.
+* **No Slack steering** — Slack does not support [steering](/human-tools/steering) running agents.
+* **Lifecycle notifications are one-way** — `run.started`, `run.completed`, and `run.failed` messages are posted once per matching route and are not updated later.

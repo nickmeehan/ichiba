@@ -1,0 +1,101 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# How Fabro Works
+
+> Understand the Fabro architecture and execution model
+
+Fabro is a workflow engine that reads a graph definition, executes nodes one at a time (or in parallel), and uses edge selection rules to decide what happens next. Here's the end-to-end flow.
+
+<Frame>
+  <img src="https://mintcdn.com/qltysoftware-21b56213/XJ0dat7C3YMglaQF/images/how-fabro-works.svg?fit=max&auto=format&n=XJ0dat7C3YMglaQF&q=85&s=9e68b1fb36e93586efa3bc4685b547ce" alt="How Fabro works: author-time inputs flow into the workflow engine, which dispatches to handlers that interact with LLMs, sandboxes, and humans" width="912" height="565" data-path="images/how-fabro-works.svg" />
+</Frame>
+
+## Two ways to use Fabro
+
+Fabro has two interfaces, both backed by the same workflow engine:
+
+* **Direct CLI runs** (`fabro run`) — Run a single workflow synchronously in your terminal. Best for local development, one-off runs, and CI/CD.
+* **Server interface** (`fabro server start`) — Start an HTTP API server with a web UI, concurrent run scheduling, and team access. Best for production use and running at scale.
+
+Both interfaces parse the same Graphviz files, use the same execution engine, and support the same sandbox providers. See [Deployment](/administration/deployment) for where the server runs and [Server Operations](/reference/server-operations) for operating it, or [Architecture](/reference/architecture) for internals.
+
+## Author time
+
+You provide three inputs:
+
+1. **Workflow graph** (`.fabro`) — A Graphviz file defining nodes, edges, and their attributes. This is the core of what Fabro executes. See [Workflows](/core-concepts/workflows).
+2. **Run config** (`.toml`, optional) — Overrides for the default model, sandbox provider, setup commands, and variables. See [Run Configuration](/execution/run-configuration).
+3. **Credentials** — Provider credentials from the server-owned secret store or the invoking shell environment. See [Quick Start](/getting-started/quick-start).
+
+## Parse and validate
+
+When you run `fabro run` or submit a run to the server, Fabro:
+
+1. Parses the Graphviz file into an in-memory graph of nodes and edges
+2. Validates the graph structure (exactly one start node, one exit node, all edges point to valid nodes)
+3. Applies the [model stylesheet](/workflows/stylesheets) to resolve which LLM model each node uses
+4. Merges run config defaults with CLI flags (CLI flags override the config, config overrides graph defaults)
+
+## The execution loop
+
+The engine walks the graph starting from the start node. For each node it:
+
+1. **Resolves context** — Assembles the node's input from prior stage outputs, run context, and the workflow goal. The [fidelity](/workflows/stages-and-nodes#agent) setting controls how much prior context is included.
+2. **Dispatches to a handler** — Each [node type](/workflows/stages-and-nodes) has a handler: the agent handler runs an LLM tool loop, the command handler runs a shell script, the human handler waits for input, and so on.
+3. **Collects the outcome** — The handler returns a [stage outcome](/execution/outcomes) (`succeeded`, `failed`, `partially_succeeded`, or `skipped`), optional routing directives, and any context updates.
+4. **Selects the next edge** — Fabro evaluates outgoing edges using conditions, labels, and weights to pick the next node. See [Transitions](/workflows/transitions).
+5. **Checkpoints** — After each stage, Fabro writes a checkpoint so the run can be resumed if interrupted.
+
+This loop repeats until execution reaches the exit node or an unrecoverable error occurs.
+
+<Frame caption="The run detail view shows stage progress alongside the workflow graph.">
+  <img src="https://mintcdn.com/qltysoftware-21b56213/CeBrW099_Fr5Vnfo/images/web/run-overview.png?fit=max&auto=format&n=CeBrW099_Fr5Vnfo&q=85&s=3f61f24580a49e95d179a9f2dec1ed13" alt="Fabro web UI run detail showing stages and workflow graph" width="2400" height="1558" data-path="images/web/run-overview.png" />
+</Frame>
+
+## Retries and error handling
+
+When a node fails, Fabro consults its [retry policy](/workflows/stages-and-nodes#common-node-attributes). If retries remain, the node re-executes with exponential backoff. If all retries are exhausted, the failure propagates to edge selection — a `condition="outcome=failed"` edge can route to a fix node, creating a recovery loop.
+
+For workflows with loops, Fabro tracks failure signatures to detect infinite retry cycles. If the same failure repeats beyond the configured limit, the workflow aborts rather than looping forever.
+
+## Goal gates
+
+Before completing, Fabro checks all nodes marked with `goal_gate=true`. If any goal gate node didn't succeed, the workflow fails — even though execution reached the exit node. This ensures critical quality checks can't be skipped by routing around them.
+
+## Parallel execution
+
+When the engine hits a [parallel fan-out node](/workflows/stages-and-nodes#parallel-fan-out), it spawns concurrent branches, each with an isolated copy of the context. A [merge node](/workflows/stages-and-nodes#merge-fan-in) collects the results according to the join policy before the workflow continues on a single path.
+
+## Sandboxes
+
+Node handlers execute tools (bash commands, file edits) inside a **sandbox**. Fabro supports three sandbox providers:
+
+| Sandbox   | Description                                   |
+| --------- | --------------------------------------------- |
+| `docker`  | Tools run inside a Docker container (default) |
+| `local`   | Tools run directly on the host machine        |
+| `daytona` | Tools run in a cloud VM with SSH access       |
+
+Runs select a named environment via CLI flags (`--environment ci`) or run config TOML (`[run.environment] id = "ci"`). Fabro then creates a concrete sandbox from that environment. See [Environments](/execution/environments) for details.
+
+## Events and observability
+
+Every significant action — stage starts, LLM calls, tool invocations, edge selections, stage completions — is emitted as a structured event. These events power:
+
+* The **web UI** for real-time run monitoring
+* **Run summaries** built from durable events, checkpoints, conclusions, and stage outputs
+* **DuckDB queries** via `fabro insights` for SQL-based analysis across runs
+
+See [Observability](/execution/observability) for more on querying run data.
+
+## Resuming runs
+
+Because Fabro checkpoints after every stage, interrupted runs can be resumed from where they left off:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro resume <RUN_ID>
+```
+
+The engine restores the full context, node visit counts, and retry state from the run directory, then continues execution from the next node.

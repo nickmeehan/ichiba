@@ -1,0 +1,52 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Steering
+
+> Guide running agents with real-time course corrections
+
+Steering lets you send guidance to an agent while it's working — without waiting for a human gate or stopping the run. If you see the agent heading down the wrong path, you can nudge it back on track mid-stage.
+
+## How steering works
+
+A steering message is injected into the agent's conversation as a user-role message. The agent sees it on its next LLM turn and can adjust its approach immediately.
+
+The delivery flow:
+
+1. You send a steering request with your guidance text
+2. The message is queued on the agent session's steering queue
+3. Before the next LLM call, Fabro drains the queue and injects each message as a `Steering` turn in the conversation history
+4. The LLM sees the guidance alongside its existing context and adjusts accordingly
+
+Steering is **asynchronous** — the agent picks up the message at its next natural pause point.
+
+When you send steering with `interrupt=true`, Fabro first cancels the active API-mode agent round, then queues the steering text in the same worker-control operation. The agent resumes with that steering text as the next user turn. A standalone interrupt through the API cancels the active round without text and keeps the session waiting until a later steer arrives.
+
+## When steering is delivered
+
+Steering messages are drained from the queue at two points during the agent loop:
+
+1. **Before the first LLM call** — any messages queued before the agent starts its first turn
+2. **After each interrupted or completed round** — before the next LLM call
+
+This means there is a natural latency between sending a plain steering message and the agent seeing it. If the agent is in the middle of a long-running shell command, the message waits until that command finishes and the next LLM turn begins. Use interrupting steering when the current round should stop before the message is delivered.
+
+Multiple steering messages sent in quick succession are all delivered together at the next drain point.
+
+## Steering vs. human gates
+
+Steering and [human gates](/workflows/human-in-the-loop) serve different purposes:
+
+|                          | Steering                                 | Human gates                                      |
+| ------------------------ | ---------------------------------------- | ------------------------------------------------ |
+| **When**                 | Any time during an agent stage           | At a defined point in the workflow graph         |
+| **Blocks execution**     | No — agent continues working             | Yes — workflow pauses until a choice is made     |
+| **Defined in the graph** | No — sent ad hoc via the API             | Yes — `hexagon` nodes with edge options          |
+| **Use case**             | Course corrections, hints, focus changes | Approval decisions, strategy selection, go/no-go |
+
+Use human gates for structured decisions that are part of the workflow design. Use steering for reactive guidance when you're watching a run and want to intervene.
+
+<Frame caption="The Files Changed tab shows a side-by-side diff of all changes made during the run.">
+  <img src="https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/web/run-files-changed.png?fit=max&auto=format&n=_yTKyxnEAApivGto&q=85&s=9ec61f3149ef6e096eadb1950235494b" alt="Fabro web UI Files Changed tab showing a side-by-side diff" width="2400" height="1558" data-path="images/web/run-files-changed.png" />
+</Frame>

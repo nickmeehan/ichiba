@@ -1,0 +1,70 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# SSH Access
+
+> Connect to sandbox environments via SSH for direct inspection and debugging
+
+When a workflow runs in a [Daytona sandbox](/execution/environments#daytona), you can SSH into the sandbox to inspect files, run commands, and debug issues — all while the workflow is still executing.
+
+<Note>
+  SSH access is only available with the Daytona sandbox provider. Local, Docker, and exe.dev sandboxes do not support SSH access.
+</Note>
+
+## Connecting to a run's sandbox
+
+Use `fabro sandbox ssh` to connect to the Daytona sandbox from any completed or in-progress run:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro sandbox ssh <run-id>
+```
+
+Fabro creates temporary SSH credentials and connects directly. Use `--print` to print the SSH command instead of connecting, or `--ttl` to set the credential expiry:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro sandbox ssh <run-id> --print
+fabro sandbox ssh <run-id> --ttl 120
+```
+
+## Keeping the sandbox alive
+
+By default, Daytona sandboxes are destroyed when the workflow finishes. To keep the sandbox running after the workflow completes — so you can continue debugging — pass `--preserve-sandbox`:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro run workflow.fabro --environment cloud --preserve-sandbox
+```
+
+Without `--preserve-sandbox`, the SSH session is terminated when the run ends and the sandbox is cleaned up.
+
+You can also set `lifecycle.auto_stop` in your environment to control how long an idle sandbox stays alive:
+
+```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.environment]
+id = "cloud"
+
+[environments.cloud]
+provider = "daytona"
+
+[environments.cloud.lifecycle]
+preserve = true
+auto_stop = "60m"
+```
+
+## What you can do over SSH
+
+Once connected, you have a full shell inside the sandbox VM:
+
+* **Inspect the working directory** — Agent file changes are at `/home/daytona/workspace`
+* **Run commands** — Execute tests, check logs, inspect process state
+* **Edit files** — Make manual fixes while the workflow is paused at a human gate
+* **Debug failures** — Reproduce and diagnose issues in the exact environment where they occurred
+
+## Credential lifetime
+
+SSH credentials are temporary and expire after **60 minutes** by default. With `fabro sandbox ssh`, you can set a custom TTL with `--ttl <MINUTES>`. If your session expires, run `fabro sandbox ssh` again to get fresh credentials.
+
+## Limitations
+
+* SSH access is **Daytona-only**.
+* SSH access is currently available only from the **CLI**. The API server and web UI do not yet expose an SSH endpoint.

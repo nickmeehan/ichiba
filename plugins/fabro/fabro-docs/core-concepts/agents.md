@@ -1,0 +1,147 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Agents
+
+> Core agent concepts in Fabro
+
+An agent in Fabro is an LLM session with access to tools. When a workflow reaches an agent node, Fabro creates a session, sends the prompt and prior context to the model, and lets the agent work autonomously — reading files, running commands, editing code, spawning sub-agents — until it decides the task is complete.
+
+## The agent loop
+
+Each agent turn follows the same cycle:
+
+1. **Send** — Fabro sends the conversation history (system prompt, prior messages, tool results) to the LLM
+2. **Receive** — The model responds with text, tool calls, or both
+3. **Execute** — Fabro executes any tool calls in the sandbox and appends the results to the conversation
+4. **Repeat** — If the model made tool calls, go back to step 1. If it responded with only text, the agent is done.
+
+This loop continues until the model stops calling tools, indicating it considers the task complete. Fabro also enforces guardrails: token budgets, turn limits, and loop detection to prevent runaway agents.
+
+## Backends
+
+Every agent node uses a **backend** that determines how Fabro interacts with the LLM or external agent process. Prompt nodes always use the API backend. Agent nodes support two backend values: `api` and `acp`.
+
+### API backend (default)
+
+Fabro manages the agent loop directly — it calls the LLM provider's API, executes built-in tools in the sandbox, and tracks file changes via tool call events. This is the default and supports the full feature set:
+
+* [Session caching](/execution/context) via `fidelity="full"` + `thread_id`
+* [Sub-agents](/agents/subagents)
+* Provider failover
+* All [built-in tools](/agents/tools) and [MCP](/agents/mcp) integrations
+
+### ACP backend
+
+Fabro can run Agent Client Protocol (ACP) stdio agents with `backend="acp"`. ACP agents run inside the active Fabro sandbox, so local and Docker runs keep the same workspace isolation, cancellation, and file-change tracking behavior as other agent stages.
+
+ACP stages do not use Fabro model/provider credentials. The ACP process owns its auth, tools, and model behavior. Configure the process with exactly one of:
+
+* `acp.command`: a shell command string
+* `acp.config`: a JSON stdio ACP config
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+implement [label="Implement", backend="acp", acp.command="python3 tools/fake_acp_agent.py"]
+```
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+implement [
+  label="Implement"
+  backend="acp"
+  acp.config="{\"type\":\"stdio\",\"name\":\"agent\",\"command\":\"python3\",\"args\":[\"tools/fake_acp_agent.py\"]}"
+]
+```
+
+Fabro does not install ACP agents, Node.js, npm, or `npx` at runtime. Commands must already be available in the sandbox image, repository, or setup steps. You can use `npx ...@latest` as an explicit `acp.command` if that is the behavior you want, but Fabro will treat it like any other user-supplied command.
+
+The legacy `acp_command` attribute is rejected; use `acp.command` for shell commands or `acp.config` for JSON stdio configs. ACP is supported with local and Docker sandboxes; Daytona does not expose bidirectional stdio yet, so ACP nodes fail there with an explicit unsupported-provider error.
+
+### Comparison
+
+| Capability                 | API backend                          | ACP backend                       |
+| -------------------------- | ------------------------------------ | --------------------------------- |
+| Tools                      | Fabro built-in tools + MCP           | ACP agent's own tool set          |
+| Session caching            | Supported (`fidelity` + `thread_id`) | Agent-dependent                   |
+| Sub-agents                 | Supported                            | Not supported through Fabro tools |
+| Provider failover          | Supported                            | Not supported                     |
+| Model/provider credentials | Resolved by Fabro                    | Not used by Fabro                 |
+| File tracking              | Tool call events                     | `git diff` before/after           |
+
+### When to use the ACP backend
+
+* **Protocol adapters** — run ACP-compatible coding agents through a stable stdio protocol
+* **Sandbox parity** — keep agent process execution inside Fabro's local or Docker sandbox
+* **Command-owned auth** — let the ACP command manage its own provider login, model selection, and credentials
+* **Custom agents** — use `acp.command` or `acp.config` for a checked-in or preinstalled ACP adapter
+
+## Tools
+
+Agents have access to a set of built-in tools for interacting with the codebase and environment:
+
+| Tool         | Description                                       |
+| ------------ | ------------------------------------------------- |
+| `shell`      | Run shell commands (bash)                         |
+| `read_file`  | Read file contents with optional offset and limit |
+| `write_file` | Create or overwrite a file                        |
+| `edit_file`  | Make targeted edits to an existing file           |
+| `grep`       | Search file contents with regex patterns          |
+| `glob`       | Find files by name pattern                        |
+| `web_search` | Search the web                                    |
+| `web_fetch`  | Fetch and summarize a URL                         |
+
+Additional tools can be added via [MCP servers](/agents/mcp) for integrations like databases, APIs, or custom services.
+
+See [Tools](/agents/tools) for the full reference.
+
+## Prompts
+
+The agent's behavior is shaped by its prompt — the task instructions set in the `prompt` attribute of the workflow node. Prompts can be inline strings or references to external Markdown files:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+// Inline prompt
+plan [label="Plan", prompt="Analyze the codebase and write a step-by-step plan."]
+
+// External file reference
+simplify [label="Simplify", prompt="@prompts/simplify.md"]
+```
+
+Fabro also injects a system prompt with context about the workflow goal, prior stage outputs, available tools, and the agent's role. See [Prompts](/agents/prompts) for details.
+
+## Sub-agents
+
+An agent can spawn **sub-agents** to delegate subtasks. Sub-agents run in their own session with their own tool access, and return results to the parent. This is useful for parallelizing research, isolating risky operations, or breaking complex tasks into manageable pieces.
+
+See [Sub-agents](/agents/subagents) for details.
+
+## Skills
+
+Skills are reusable prompt templates that extend an agent's capabilities for common tasks — code review, test writing, refactoring, and more. They're discovered automatically from the project and can be invoked by the agent during its session.
+
+See [Skills](/agents/skills) for details.
+
+## Hooks
+
+Hooks are shell commands that run in response to agent lifecycle events (e.g. before a tool executes, after a stage completes). They enable custom validation, notifications, and guardrails without modifying the workflow graph.
+
+See [Hooks](/agents/hooks) for details.
+
+## Further reading
+
+<Columns cols={2}>
+  <Card title="Prompts" icon="message" href="/agents/prompts">
+    How prompts are constructed and injected.
+  </Card>
+
+  <Card title="Tools" icon="wrench" href="/agents/tools">
+    Built-in tools and custom tool registration.
+  </Card>
+
+  <Card title="MCP" icon="plug" href="/agents/mcp">
+    Extend agents with Model Context Protocol servers.
+  </Card>
+
+  <Card title="Sub-agents" icon="users" href="/agents/subagents">
+    Delegate subtasks to child agent sessions.
+  </Card>
+</Columns>

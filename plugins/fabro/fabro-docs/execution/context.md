@@ -1,0 +1,259 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Context
+
+> How data flows between workflow stages
+
+Every workflow run has a **context** — a shared key-value store that carries data between stages. When an agent writes code, a command captures test output, or a human makes a selection, the results are recorded as context updates. Downstream nodes can read these values to make decisions, build prompts, and route execution.
+
+## How context flows
+
+The context starts empty at the beginning of a run. As each stage completes, its outcome includes a set of **context updates** — key-value pairs that are merged into the shared context. Later stages see all updates from earlier stages.
+
+```
+Start → Plan → Implement → Test → Exit
+         │         │          │
+         │         │          └─ sets command.output
+         │         └─ sets response.implement, last_response
+         └─ sets response.plan, last_response
+```
+
+Context is thread-safe and shared across the entire run. Parallel branches receive an isolated **deep copy** of the context at the point of fan-out, so branches can't interfere with each other. When branches merge, the fan-in handler records the results under `parallel.fan_in.*` keys.
+
+## How agents access context
+
+Agents do not have a tool to query the context store directly. Instead, context is made available through two mechanisms:
+
+* **Preamble injection** — When a node starts, Fabro assembles a preamble from the current context and prepends it to the node's prompt. The [fidelity setting](#fidelity-controlling-agent-context) controls how detailed this preamble is.
+* **Context updates** — Agents can write to the context by including a `context_updates` object in a JSON response. See [Transitions](/workflows/transitions#agent-transitions) for the response format.
+
+## Keys set by handlers
+
+Each handler type writes specific keys into the context after execution:
+
+### Agent and prompt nodes
+
+| Key                  | Value                                         |
+| -------------------- | --------------------------------------------- |
+| `last_stage`         | The node ID of the stage that just completed  |
+| `last_response`      | Truncated LLM response (first 200 characters) |
+| `response.{node_id}` | Full LLM response text                        |
+
+Agents can also emit arbitrary context updates by including a JSON object with a `context_updates` field in their response. See [Transitions](/workflows/transitions#agent-transitions).
+
+### Command nodes
+
+| Key              | Value                                                                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `command.output` | The command's ordered output stream. Durable context stores this as a `blob://sha256/...` ref after the command completes; downstream prompts resolve it back to text. |
+
+### Human gates
+
+| Key                          | Value                                                              |
+| ---------------------------- | ------------------------------------------------------------------ |
+| `human.gate.selected`        | The accelerator key (e.g. `"A"`) or `"freeform"`                   |
+| `human.gate.label`           | The full label of the selected edge                                |
+| `human.gate.text`            | The user's freeform text (if applicable)                           |
+| `human.gate.<node>.question` | The question text for a specific human gate node                   |
+| `human.gate.<node>.answer`   | The answer text for a specific human gate node                     |
+| `human.gate.<node>.label`    | The selected label for a specific human gate node, when applicable |
+
+### Parallel merge (fan-in)
+
+| Key                             | Value                                        |
+| ------------------------------- | -------------------------------------------- |
+| `parallel.fan_in.best_id`       | Node ID of the best-performing branch        |
+| `parallel.fan_in.best_outcome`  | Status of the best branch                    |
+| `parallel.fan_in.best_head_sha` | Git SHA from the best branch (if applicable) |
+
+### Engine-managed keys
+
+The engine sets several keys automatically. These are prefixed with `internal.` and are excluded from preambles:
+
+| Key                              | Value                                                            |
+| -------------------------------- | ---------------------------------------------------------------- |
+| `internal.run_id`                | Unique identifier for this run                                   |
+| `internal.work_dir`              | Working directory path                                           |
+| `internal.fidelity`              | The resolved fidelity mode for the current node                  |
+| `internal.thread_id`             | Thread ID for shared-conversation nodes (or null)                |
+| `internal.node_visit_count`      | How many times the current node has been visited                 |
+| `internal.retry_count.{node_id}` | Number of retry attempts used by a node                          |
+| `outcome`                        | Status of the last completed stage (`succeeded`, `failed`, etc.) |
+| `failure_class`                  | Classification of the last failure (if any)                      |
+| `failure_signature`              | Deduplication signature for the last failure                     |
+| `preferred_label`                | Label selected by a human gate or agent routing directive        |
+| `current_node`                   | ID of the node currently executing                               |
+| `graph.goal`                     | The workflow's goal attribute                                    |
+| `graph.{attr}`                   | All graph-level attributes, mirrored into context                |
+
+## Using context in conditions
+
+Edge [conditions](/workflows/transitions#conditions) can read context values to route execution:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+gate -> deploy [condition="outcome=succeeded && context.tests_passed=true"]
+gate -> fix    [condition="outcome=failed"]
+```
+
+The `context.` prefix is optional — `tests_passed=true` and `context.tests_passed=true` are equivalent.
+
+Engine-managed keys like `internal.node_visit_count` work in conditions too. This is useful for [fixed-count loops](/tutorials/branch-loop#fixed-count-loops):
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+gate -> exit    [condition="context.internal.node_visit_count >= 5"]
+gate -> improve
+```
+
+## Fidelity: Controlling agent context
+
+When a new agent or prompt node starts, Fabro assembles a **preamble** — a summary of what happened in prior stages. The **fidelity** setting controls how detailed this preamble is.
+
+| Fidelity         | Behavior                                                                                         |
+| ---------------- | ------------------------------------------------------------------------------------------------ |
+| `full`           | No preamble. The agent continues in the same conversation thread, seeing complete prior context. |
+| `compact`        | Nested-bullet summary with handler-specific details (default).                                   |
+| `summary:high`   | Detailed per-stage Markdown report.                                                              |
+| `summary:medium` | Moderate detail with outcomes and notable findings (\~1500 token target).                        |
+| `summary:low`    | Brief summary with just outcomes per stage (\~600 token target).                                 |
+| `truncate`       | Minimal — only the goal and run ID.                                                              |
+
+### Setting fidelity
+
+Fidelity can be set at three levels. The first match wins:
+
+1. **Edge attribute** — Set `fidelity` on an edge to control the transition into a specific node:
+   ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+   plan -> implement [fidelity="full"]
+   ```
+
+2. **Node attribute** — Set `fidelity` on a node to control all transitions into it:
+   ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+   implement [fidelity="full"]
+   ```
+
+3. **Graph default** — Set `default_fidelity` on the graph for a run-wide default:
+   ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+   digraph Example {
+       graph [default_fidelity="summary:medium"]
+   }
+   ```
+
+If none of these are set, fidelity defaults to `compact`.
+
+### Full fidelity and threads
+
+`full` fidelity is typically used with `thread_id` to create a shared conversation across multiple nodes. Nodes with the same `thread_id` share a single LLM session, preserving full context continuity:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+subgraph cluster_impl {
+    node [fidelity="full", thread_id="impl"]
+    plan      [label="Plan"]
+    implement [label="Implement"]
+    review    [label="Review"]
+}
+```
+
+In this example, the implement node sees the plan node's entire conversation, and the review node sees both.
+
+### Fidelity on resume
+
+When a run is resumed from a checkpoint, the first node after resume degrades `full` fidelity to `summary:high`. This prevents the resumed node from expecting a conversation thread that no longer exists in memory.
+
+## Preamble construction
+
+For non-`full` fidelity modes, Fabro builds a preamble from runtime data and prepends it to the node's prompt.
+
+<Accordion title="Example compact preamble">
+  Given a plan-test-implement workflow where the plan and test stages have completed, the `implement` node would receive a preamble like this prepended to its prompt:
+
+  ```markdown theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+  Goal: Add a /health endpoint to the API server
+
+  ## Completed stages
+  - **plan**: success
+    - Model: claude-sonnet-4-5, 12.4k tokens in / 3.2k out
+    - Files: docs/plan.md
+  - **test**: success
+    - Script: `cargo test 2>&1 || true`
+    - Output:
+  ```
+
+  running 42 tests ... 41 passed, 1 failed
+
+  ```
+
+  ## Context
+  - tests_passed: false
+  ```
+</Accordion>
+
+The preamble includes:
+
+* The workflow goal
+* A summary of completed stages (format depends on fidelity level)
+* Handler-specific details:
+  * **Command nodes** — the script that ran and the ordered output
+  * **Agent/prompt nodes** — the model used, token counts, and files touched
+* Non-internal context values that weren't already rendered inline
+
+Internal keys (prefixed with `internal.`, `current`, `graph.`, `thread.`, `response.`) are excluded from preambles to avoid noise.
+
+## Artifact offloading
+
+When a stage produces a large output (over 100KB of serialized JSON), Fabro stores the serialized bytes in a global content-addressed blob store and replaces the context value with a durable blob ref. Command output is always finalized into a blob ref after command completion, even when it is small or empty:
+
+```
+response.plan → blob://sha256/2cf24dba5fb0...
+command.output → blob://sha256/a4f3c1d9c2e1...
+```
+
+Checkpoints and checkpoint-completed events persist these `blob://` refs, not host-specific file paths.
+
+Before Fabro builds a preamble or starts the next stage, it resolves any blob refs into execution-local files so handlers and agents still see normal `file://` references:
+
+* Local execution materializes blobs under `{run_dir}/runtime/blobs/{blob_id}.json`
+* Remote sandboxes materialize blobs under `{working_directory}/.fabro/blobs/{blob_id}.json`
+
+These materialized `file://` paths are runtime-only. They are not written back into durable context snapshots.
+
+This keeps the durable context lean and portable while still giving downstream stages a filesystem path they can read.
+
+## Context compaction
+
+During long-running agent sessions, the conversation history can grow large enough to exceed the LLM's context window. **Context compaction** automatically summarizes older turns and replaces them with a structured summary, keeping the session running without manual intervention.
+
+Compaction is always enabled and runs with hardcoded defaults — there are no user-facing configuration options.
+
+### When it triggers
+
+After every assistant turn, Fabro estimates the total token usage of the system prompt and conversation history (using a rough heuristic of 1 token per 4 characters). If the estimate exceeds **80%** of the model's context window, compaction runs.
+
+### How it works
+
+1. **Split history** — The conversation is divided into older turns (to be summarized) and the most recent **6 turns** (preserved verbatim).
+2. **Render old turns** — Older turns are serialized to a human-readable text format. Tool call arguments and tool results are truncated to 500 characters each.
+3. **Summarize via LLM** — Fabro makes a non-streaming LLM call (using the same model and provider as the agent session) with a structured summarization prompt. The summary uses these sections:
+   * **Goal** — what the user asked for
+   * **Progress** — what was accomplished, with file paths and key decisions
+   * **Key Decisions** — important choices and their rationale
+   * **Failed Approaches** — what was tried and didn't work
+   * **Open Issues** — remaining bugs, edge cases, or TODOs
+   * **Next Steps** — what should happen next
+   * **File Operations** — if the agent has tracked file modifications, this section is copied verbatim into the summary
+4. **Replace history** — All old turns are removed and replaced with a single `[Context Summary]` system message containing the structured summary. The preserved recent turns remain unchanged.
+
+### Failure behavior
+
+Compaction failures are **non-fatal**. If the summarization LLM call fails, Fabro emits an `Agent.Error` event and the session continues with the original uncompacted history. The next assistant turn will trigger another compaction attempt.
+
+### Events
+
+Compaction emits three events to the [event stream](/execution/observability#event-stream):
+
+| Event                                    | When                                         | Key fields                                                                                         |
+| ---------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `Agent.Warning` (kind: `context_window`) | Token estimate exceeds 80% of context window | `kind`, `message`, `details` (contains `estimated_tokens`, `context_window_size`, `usage_percent`) |
+| `Agent.CompactionStarted`                | Compaction begins                            | `estimated_tokens`, `context_window_size`                                                          |
+| `Agent.CompactionCompleted`              | Summary generated and history replaced       | `original_turn_count`, `preserved_turn_count`, `summary_token_estimate`, `tracked_file_count`      |

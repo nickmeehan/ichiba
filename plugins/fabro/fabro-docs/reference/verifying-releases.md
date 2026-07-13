@@ -1,0 +1,45 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Verifying Releases
+
+> Verify Fabro binaries and images were built by our release workflow
+
+Fabro publishes [SLSA Build Provenance](https://slsa.dev/) attestations for every release tarball and the multi-arch Docker image. Attestations are signed via [Sigstore](https://www.sigstore.dev/) and recorded in the public transparency log, so you can verify that an artifact was built by our GitHub Actions workflow from a specific commit in [`fabro-sh/fabro`](https://github.com/fabro-sh/fabro) before you run it.
+
+<Note>
+  Provenance proves **where and how** an artifact was built. It does not vouch for the correctness or security of the source code itself — only that what you downloaded was built by our workflow from the commit it claims.
+</Note>
+
+## Prerequisites
+
+Install the [GitHub CLI](https://cli.github.com/) and authenticate:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+gh auth login
+```
+
+## Verify a binary tarball
+
+Download the tarball for your platform from the [releases page](https://github.com/fabro-sh/fabro/releases), then:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+gh attestation verify fabro-aarch64-apple-darwin.tar.gz --repo fabro-sh/fabro
+```
+
+A successful verification prints `Loaded digest …` followed by `✓ Verification succeeded!` and details of the matched attestation.
+
+## Verify the Docker image
+
+The attestation is attached to the image in GHCR, so no separate download is needed:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+gh attestation verify oci://ghcr.io/fabro-sh/fabro:<version> --repo fabro-sh/fabro
+```
+
+Replace `<version>` with the release version (e.g. `0.207.0`) or use `latest` / `nightly`.
+
+## Homebrew installs
+
+The `fabro-sh/tap` Homebrew formula verifies a SHA-256 checksum against each tarball Homebrew downloads, so there is no separate attestation step to run at install time. If you want provenance verification for a Homebrew-installed release, download the matching tarball from the [releases page](https://github.com/fabro-sh/fabro/releases) and run `gh attestation verify` against it.

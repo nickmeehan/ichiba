@@ -1,0 +1,120 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Ensemble
+
+> Multi-provider fan-out, error policies, and result synthesis
+
+This tutorial combines parallel execution with multi-model routing to get independent opinions from four different LLM providers, then synthesizes the results. This is the ensemble pattern — useful when you want diverse perspectives, consensus-based decisions, or protection against any single model's blind spots.
+
+## The workflow
+
+<Frame>
+  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-ensemble.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=358ce3f0f18530b104e0fcdf125ec7f8" alt="Ensemble workflow: Start → Fan Out → Opus, Gemini, Codex, Mercury → Merge → Synthesize → Exit" width="780" height="275" data-path="images/tutorial-ensemble.svg" />
+</Frame>
+
+```dot title="ensemble.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph Ensemble {
+    graph [
+        goal="Get independent opinions from multiple providers, then synthesize",
+        model_stylesheet="
+            #opus    { model: claude-opus-4-6;      }
+            #gemini  { model: gemini-3.1-pro-preview;}
+            #codex   { model: gpt-5.4;              }
+            #mercury { model: mercury-2;             provider: inception; }
+            #synth   { model: claude-opus-4-6;      reasoning_effort: high; }
+        "
+    ]
+    rankdir=LR
+
+    start [shape=Mdiamond, label="Start"]
+    exit  [shape=Msquare, label="Exit"]
+
+    fork [label="Fan Out", shape=component, join_policy="wait_all"]
+
+    opus    [label="Opus",    prompt="Analyze the goal. Provide your independent assessment, recommendations, and any code or prose needed. Be thorough.", shape=tab]
+    gemini  [label="Gemini",  prompt="Analyze the goal. Provide your independent assessment, recommendations, and any code or prose needed. Be thorough.", shape=tab]
+    codex   [label="Codex",   prompt="Analyze the goal. Provide your independent assessment, recommendations, and any code or prose needed. Be thorough.", shape=tab]
+    mercury [label="Mercury", prompt="Analyze the goal. Provide your independent assessment, recommendations, and any code or prose needed. Be thorough.", shape=tab]
+
+    merge [label="Merge", shape=tripleoctagon]
+    synth [label="Synthesize", prompt="You have received independent analyses from four different models (Opus, Gemini, Codex, Mercury). Compare their perspectives: identify consensus, highlight disagreements, and synthesize the strongest ideas into a single coherent recommendation. Note where models agreed and where they diverged.", shape=tab]
+
+    start -> fork
+    fork -> opus
+    fork -> gemini
+    fork -> codex
+    fork -> mercury
+    opus    -> merge
+    gemini  -> merge
+    codex   -> merge
+    mercury -> merge
+    merge -> synth -> exit
+}
+```
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro run docs/internal/demo/11-ensemble.fabro
+```
+
+<Note>
+  This workflow requires API keys for all four providers (`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `OPENAI_API_KEY`, `INCEPTION_API_KEY`). If a provider key is missing, that branch will fail — but the remaining branches still complete.
+</Note>
+
+## How it works
+
+The workflow has three phases:
+
+### 1. Fan-out to four providers
+
+The `fork` node spawns four parallel branches, each assigned to a different provider via the stylesheet:
+
+```
+#opus    { model: claude-opus-4-6;      }
+#gemini  { model: gemini-3.1-pro-preview;}
+#codex   { model: gpt-5.4;              }
+#mercury { model: mercury-2;             provider: inception; }
+```
+
+Each branch receives the same prompt but runs on a completely different model. The branches execute concurrently and have no knowledge of each other's responses.
+
+### 2. Merge results
+
+The `merge` node collects all four responses. It waits for every branch — even if some fail. A missing API key or provider outage doesn't cancel the entire workflow.
+
+### 3. Synthesize
+
+The `synth` node receives all four perspectives in its preamble and produces a unified recommendation. It uses `reasoning_effort: high` because comparing and synthesizing multiple viewpoints is a harder task than generating any single one.
+
+## Combining patterns
+
+This workflow combines two patterns from earlier tutorials:
+
+* **Parallel execution** from [Parallel Review](/tutorials/parallel-review) — fan-out/fan-in with join policies
+* **Model routing** from [Multi-Model Routing](/tutorials/multi-model) — stylesheet selectors assigning different providers to each node
+
+The key difference from the parallel review tutorial is that here each branch uses a *different provider*, not just a different prompt. This gives you genuinely independent perspectives — each model has different training data, different reasoning patterns, and different blind spots.
+
+## When to use ensembles
+
+The ensemble pattern is most valuable when:
+
+* **Correctness matters more than speed** — e.g., security audits, architectural decisions, spec reviews
+* **You want to detect model-specific blind spots** — if three models agree and one disagrees, the disagreement is worth investigating
+* **You need confidence in a judgment call** — consensus across models is stronger than any single model's opinion
+
+The tradeoff is cost and latency — you're making 4x the LLM calls. Use single-model workflows for routine tasks and ensembles for high-stakes decisions.
+
+## What you've learned
+
+* **Ensemble workflows** fan out the same task to multiple providers
+* **ID selectors** (`#opus`, `#gemini`) assign each branch to a specific model
+* A **synthesis node** compares perspectives and produces a unified result
+* Combine parallel execution and model routing for diverse, independent analysis
+
+## Next
+
+<Card title="Sub-Workflows" icon="arrow-right" href="/tutorials/sub-workflow">
+  Delegate to reusable child workflows with the supervisor pattern.
+</Card>

@@ -1,0 +1,1735 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# CLI Reference
+
+> Fabro command-line interface reference
+
+## Global options
+
+These flags apply to all subcommands:
+
+| Flag                 | Description                                               |
+| -------------------- | --------------------------------------------------------- |
+| `--json`             | Output machine-readable JSON when the command supports it |
+| `--debug`            | Enable DEBUG-level logging (default is INFO)              |
+| `--no-upgrade-check` | Skip the automatic background upgrade check               |
+| `--quiet`            | Suppress non-essential output                             |
+| `--verbose`          | Enable verbose output                                     |
+| `-h, --help`         | Print help                                                |
+| `-V, --version`      | Print version                                             |
+
+Connection-target flags like `--storage-dir` and `--server` are command-specific, not global. Fabro no longer auto-loads `~/.fabro/.env`; persist server-owned credentials with `fabro provider login` / `fabro secret set`, or provide environment variables in the invoking shell.
+
+## Configuration
+
+CLI defaults can be set in `~/.fabro/settings.toml` so you don't have to pass common flags every time:
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+_version = 1
+
+[cli.exec.model]
+provider = "anthropic"
+name = "claude-opus-4-6"
+
+[cli.exec.agent]
+permissions = "read-write"
+
+[cli.output]
+format = "text"
+
+[run.model]
+name = "claude-sonnet-4-5"
+
+[cli.target]
+type = "http"
+url = "https://fabro.example.com/api/v1"
+```
+
+`[cli.exec]` config applies to `fabro exec`. `[run.model]` sets the default workflow model/provider for commands like `fabro run` and `fabro preflight`. `[cli.target]` stores connection info for commands that can target a remote Fabro server.
+
+`fabro model` uses `[cli.target]` by default when no explicit `--storage-dir` is passed. `fabro exec` remains a local session unless you pass `--server`, even if `[cli.target]` is configured.
+
+Explicit `http(s)://...` targets are always treated as remote servers. They do not inherit identity from a local daemon, a local storage dir, or `~/.fabro/dev-token`. For remote URLs, use `fabro auth login --server ...` or a stored CLI auth session.
+
+CLI flags always override `settings.toml` values, which override hardcoded defaults.
+
+## `fabro`
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro [OPTIONS] [COMMAND]
+```
+
+#### Subcommands
+
+| Command            | Description                                                                                                         |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `fabro approve`    | Approve pending workflow runs                                                                                       |
+| `fabro archive`    | Mark terminal runs as archived (reviewed, no further action needed). Archived runs are hidden from default listings |
+| `fabro artifact`   | Inspect and copy run artifacts (screenshots, reports, traces)                                                       |
+| `fabro ask`        | Ask Fabro a read-only question about a run                                                                          |
+| `fabro attach`     | Attach to a running or finished workflow run                                                                        |
+| `fabro auth`       | Manage CLI authentication state                                                                                     |
+| `fabro completion` | Generate shell completions                                                                                          |
+| `fabro create`     | Create a workflow run (allocate run dir, persist spec)                                                              |
+| `fabro deny`       | Deny pending workflow runs                                                                                          |
+| `fabro discord`    | Open the Discord community in the browser                                                                           |
+| `fabro docs`       | Open the docs website in the browser                                                                                |
+| `fabro doctor`     | Check environment and integration health                                                                            |
+| `fabro dump`       | Export a run's durable state to a directory                                                                         |
+| `fabro events`     | View the event log of a workflow run                                                                                |
+| `fabro fork`       | Fork a workflow run from an earlier checkpoint into a new run                                                       |
+| `fabro graph`      | Render a workflow graph as SVG                                                                                      |
+| `fabro inspect`    | Show detailed information about a workflow run                                                                      |
+| `fabro install`    | Set up the Fabro environment (LLMs, certs, GitHub)                                                                  |
+| `fabro logs`       | View the raw worker tracing log of a workflow run                                                                   |
+| `fabro mcp`        | Model Context Protocol server                                                                                       |
+| `fabro model`      | List and test LLM models                                                                                            |
+| `fabro parent`     | Manage run parent links                                                                                             |
+| `fabro pr`         | Pull request operations                                                                                             |
+| `fabro preflight`  | Validate run configuration without executing                                                                        |
+| `fabro provider`   | Provider operations                                                                                                 |
+| `fabro repo`       | Repository commands                                                                                                 |
+| `fabro resume`     | Resume an interrupted workflow run                                                                                  |
+| `fabro rewind`     | Rewind a workflow run to an earlier checkpoint                                                                      |
+| `fabro rm`         | Remove one or more workflow runs                                                                                    |
+| `fabro run`        | Launch a workflow run                                                                                               |
+| `fabro sandbox`    | Sandbox operations (cp, ssh, preview)                                                                               |
+| `fabro secret`     | Manage server-owned secrets                                                                                         |
+| `fabro server`     | Server operations                                                                                                   |
+| `fabro settings`   | Inspect effective settings                                                                                          |
+| `fabro start`      | Start a created workflow run on the server                                                                          |
+| `fabro steer`      | Steer a running agent mid-execution                                                                                 |
+| `fabro system`     | System maintenance commands                                                                                         |
+| `fabro unarchive`  | Restore archived runs to their prior terminal status                                                                |
+| `fabro uninstall`  | Uninstall Fabro from this machine                                                                                   |
+| `fabro upgrade`    | Upgrade fabro to the latest version                                                                                 |
+| `fabro validate`   | Validate a workflow                                                                                                 |
+| `fabro variable`   | Manage server-owned variables                                                                                       |
+| `fabro version`    | Show client and server version information                                                                          |
+| `fabro wait`       | Block until a workflow run completes                                                                                |
+| `fabro workflow`   | Workflow operations                                                                                                 |
+
+### `fabro approve`
+
+Approve pending workflow runs
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro approve [OPTIONS] <RUNS>...
+```
+
+#### Arguments
+
+| Name   | Description                          |
+| ------ | ------------------------------------ |
+| `RUNS` | Run IDs or workflow names to approve |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro archive`
+
+Mark terminal runs as archived (reviewed, no further action needed). Archived runs are hidden from default listings
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro archive [OPTIONS] <RUNS>...
+```
+
+#### Arguments
+
+| Name   | Description                          |
+| ------ | ------------------------------------ |
+| `RUNS` | Run IDs or workflow names to archive |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro artifact`
+
+Inspect and copy run artifacts (screenshots, reports, traces)
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro artifact [OPTIONS] <COMMAND>
+```
+
+#### Subcommands
+
+| Command               | Description                        |
+| --------------------- | ---------------------------------- |
+| `fabro artifact cp`   | Copy artifacts from a workflow run |
+| `fabro artifact list` | List artifacts for a workflow run  |
+
+#### `fabro artifact cp`
+
+Copy artifacts from a workflow run
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro artifact cp [OPTIONS] <SOURCE> [DEST]
+```
+
+#### Arguments
+
+| Name     | Description                                                             |
+| -------- | ----------------------------------------------------------------------- |
+| `SOURCE` | Source: RUN\_ID (all artifacts) or RUN\_ID:path (specific artifact)     |
+| `DEST`   | Destination directory (defaults to current directory)<br />Default: `.` |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--node <node>`     | Filter to artifacts from a specific node                      |
+| `--retry <retry>`   | Filter to artifacts from a specific retry attempt             |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--tree`            | Preserve {node_slug}/retry\_{N}/ directory structure          |
+
+#### `fabro artifact list`
+
+List artifacts for a workflow run
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro artifact list [OPTIONS] <RUN_ID>
+```
+
+#### Arguments
+
+| Name     | Description        |
+| -------- | ------------------ |
+| `RUN_ID` | Run ID (or prefix) |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--node <node>`     | Filter to artifacts from a specific node                      |
+| `--retry <retry>`   | Filter to artifacts from a specific retry attempt             |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro ask`
+
+Ask Fabro a read-only question about a run
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro ask [OPTIONS] --prompt <PROMPT> <RUN>
+```
+
+#### Arguments
+
+| Name  | Description                    |
+| ----- | ------------------------------ |
+| `RUN` | Run ID prefix or workflow name |
+
+#### Options
+
+| Option                  | Description                                                   |
+| ----------------------- | ------------------------------------------------------------- |
+| `--model <model>`       | Optional model name                                           |
+| `-p, --prompt <prompt>` | Question to ask                                               |
+| `--server <server>`     | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro attach`
+
+Attach to a running or finished workflow run
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro attach [OPTIONS] <RUN>
+```
+
+#### Arguments
+
+| Name  | Description                    |
+| ----- | ------------------------------ |
+| `RUN` | Run ID prefix or workflow name |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro auth`
+
+Manage CLI authentication state
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro auth [OPTIONS] <COMMAND>
+```
+
+#### Subcommands
+
+| Command             | Description                  |
+| ------------------- | ---------------------------- |
+| `fabro auth login`  | Log in to a Fabro server     |
+| `fabro auth logout` | Log out from a Fabro server  |
+| `fabro auth status` | Show offline CLI auth status |
+
+#### `fabro auth login`
+
+Log in to a Fabro server
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro auth login [OPTIONS]
+```
+
+#### Options
+
+| Option                    | Description                                                                     |
+| ------------------------- | ------------------------------------------------------------------------------- |
+| `--dev-token <dev_token>` | Log in with a dev-token instead of browser OAuth                                |
+| `--no-browser`            | Print the browser URL instead of opening it automatically                       |
+| `--server <server>`       | Fabro server target: http(s) URL or absolute Unix socket path                   |
+| `--timeout <timeout>`     | Timeout in seconds waiting for the browser flow to complete<br />Default: `300` |
+
+#### `fabro auth logout`
+
+Log out from a Fabro server
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro auth logout [OPTIONS]
+```
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--all`             | Log out from every stored server                              |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+#### `fabro auth status`
+
+Show offline CLI auth status
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro auth status [OPTIONS]
+```
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro completion`
+
+Generate shell completions
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro completion [OPTIONS] <SHELL>
+```
+
+#### Arguments
+
+| Name    | Description                                                                                  |
+| ------- | -------------------------------------------------------------------------------------------- |
+| `SHELL` | Shell to generate completions for<br />Values: `bash`, `elvish`, `fish`, `powershell`, `zsh` |
+
+### `fabro create`
+
+Create a workflow run (allocate run dir, persist spec)
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro create [OPTIONS] <WORKFLOW>
+```
+
+#### Arguments
+
+| Name       | Description                                         |
+| ---------- | --------------------------------------------------- |
+| `WORKFLOW` | Path to a .fabro workflow file or .toml task config |
+
+#### Options
+
+| Option                        | Description                                                     |
+| ----------------------------- | --------------------------------------------------------------- |
+| `--auto-approve`              | Auto-approve all human gates                                    |
+| `-d, --detach`                | Run the workflow in the background and print the run ID         |
+| `--dry-run`                   | Execute with simulated LLM backend                              |
+| `--environment <environment>` | Named environment for agent tools                               |
+| `--goal <goal>`               | Override the workflow goal (available as {{ goal }} in prompts) |
+| `--goal-file <goal_file>`     | Read the workflow goal from a file                              |
+| `--label <key=value>`         | Attach a label to this run (repeatable, format: KEY=VALUE)      |
+| `--model <model>`             | Override default LLM model                                      |
+| `--parent <run>`              | Link this run to an existing orchestration parent run           |
+| `--preserve-sandbox`          | Keep the sandbox alive after the run finishes (for debugging)   |
+| `--provider <provider>`       | Override default LLM provider                                   |
+| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path   |
+| `-I, --input <key=value>`     | Override a workflow input value (repeatable, format: KEY=VALUE) |
+| `-v, --verbose`               | Enable verbose output                                           |
+
+### `fabro deny`
+
+Deny pending workflow runs
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro deny [OPTIONS] <RUNS>...
+```
+
+#### Arguments
+
+| Name   | Description                       |
+| ------ | --------------------------------- |
+| `RUNS` | Run IDs or workflow names to deny |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--reason <reason>` | Reason for denying execution                                  |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro discord`
+
+Open the Discord community in the browser
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro discord [OPTIONS]
+```
+
+### `fabro docs`
+
+Open the docs website in the browser
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro docs [OPTIONS]
+```
+
+### `fabro doctor`
+
+Check environment and integration health
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro doctor [OPTIONS]
+```
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `-v, --verbose`     | Show detailed information for each check                      |
+
+### `fabro dump`
+
+Export a run's durable state to a directory
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro dump [OPTIONS] --output <OUTPUT> <RUN>
+```
+
+#### Arguments
+
+| Name  | Description                    |
+| ----- | ------------------------------ |
+| `RUN` | Run ID prefix or workflow name |
+
+#### Options
+
+| Option                  | Description                                                   |
+| ----------------------- | ------------------------------------------------------------- |
+| `-o, --output <output>` | Output directory (must not exist or be empty)                 |
+| `--server <server>`     | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro events`
+
+View the event log of a workflow run
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro events [OPTIONS] <RUN>
+```
+
+#### Arguments
+
+| Name  | Description                                      |
+| ----- | ------------------------------------------------ |
+| `RUN` | Run ID prefix or workflow name (most recent run) |
+
+#### Options
+
+| Option              | Description                                                                   |
+| ------------------- | ----------------------------------------------------------------------------- |
+| `-f, --follow`      | Follow event output                                                           |
+| `-p, --pretty`      | Formatted colored output with rendered assistant text                         |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path                 |
+| `--since <since>`   | Events since timestamp or relative (e.g. "42m", "2h", "2026-01-02T13:00:00Z") |
+| `-n, --tail <tail>` | Lines from end (default: all)                                                 |
+
+### `fabro fork`
+
+Fork a workflow run from an earlier checkpoint into a new run
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro fork [OPTIONS] <RUN_ID> [TARGET]
+```
+
+#### Arguments
+
+| Name     | Description                                                                       |
+| -------- | --------------------------------------------------------------------------------- |
+| `RUN_ID` | Run ID (or unambiguous prefix)                                                    |
+| `TARGET` | Target checkpoint: node name, node\@visit, or @ordinal (omit to fork from latest) |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--list`            | Show the checkpoint timeline instead of forking               |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro graph`
+
+Render a workflow graph as SVG
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro graph [OPTIONS] <WORKFLOW>
+```
+
+#### Arguments
+
+| Name       | Description                                                                   |
+| ---------- | ----------------------------------------------------------------------------- |
+| `WORKFLOW` | Path to the .fabro workflow file, .toml task config, or project workflow name |
+
+#### Options
+
+| Option                        | Description                                                                       |
+| ----------------------------- | --------------------------------------------------------------------------------- |
+| `--allow-invalid`             | Render even when workflow validation reports errors                               |
+| `-d, --direction <direction>` | Graph layout direction (overrides the DOT file's rankdir)<br />Values: `lr`, `tb` |
+| `--format <format>`           | Output format<br />Values: `svg`<br />Default: `svg`                              |
+| `-o, --output <output>`       | Output file path (defaults to stdout)                                             |
+| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path                     |
+
+### `fabro inspect`
+
+Show detailed information about a workflow run
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro inspect [OPTIONS] <RUN>
+```
+
+#### Arguments
+
+| Name  | Description                                      |
+| ----- | ------------------------------------------------ |
+| `RUN` | Run ID prefix or workflow name (most recent run) |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro install`
+
+Set up the Fabro environment (LLMs, certs, GitHub)
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro install [OPTIONS] [COMMAND]
+```
+
+#### Options
+
+| Option                        | Description                                                                                                          |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)                                                                 |
+| `--web-url <web_url>`         | Base URL for the web UI (used for OAuth callback URLs and generated settings)<br />Default: `http://127.0.0.1:32276` |
+
+#### Subcommands
+
+| Command                | Description                                        |
+| ---------------------- | -------------------------------------------------- |
+| `fabro install github` | Configure GitHub integration (token or GitHub App) |
+
+#### `fabro install github`
+
+Configure GitHub integration (token or GitHub App)
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro install github [OPTIONS]
+```
+
+#### Options
+
+| Option                  | Description                                                                             |
+| ----------------------- | --------------------------------------------------------------------------------------- |
+| `--owner <owner>`       | GitHub App owner: `personal` or `org:<slug>` (app only, requires --non-interactive)     |
+| `--strategy <strategy>` | GitHub authentication strategy (requires --non-interactive)<br />Values: `token`, `app` |
+
+### `fabro logs`
+
+View the raw worker tracing log of a workflow run
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro logs [OPTIONS] <RUN>
+```
+
+#### Arguments
+
+| Name  | Description                                      |
+| ----- | ------------------------------------------------ |
+| `RUN` | Run ID prefix or workflow name (most recent run) |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `-n, --tail <tail>` | Lines from end (default: all)                                 |
+
+### `fabro mcp`
+
+Model Context Protocol server
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro mcp [OPTIONS] <COMMAND>
+```
+
+#### Subcommands
+
+| Command            | Description                             |
+| ------------------ | --------------------------------------- |
+| `fabro mcp config` | Print MCP client configuration JSON     |
+| `fabro mcp init`   | Configure an MCP client to launch Fabro |
+| `fabro mcp start`  | Start the Fabro MCP server over stdio   |
+
+#### `fabro mcp config`
+
+Print MCP client configuration JSON
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro mcp config [OPTIONS]
+```
+
+#### Options
+
+| Option                        | Description                                                   |
+| ----------------------------- | ------------------------------------------------------------- |
+| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)          |
+
+#### `fabro mcp init`
+
+Configure an MCP client to launch Fabro
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro mcp init [OPTIONS] <AGENT>
+```
+
+#### Arguments
+
+| Name    | Description                            |
+| ------- | -------------------------------------- |
+| `AGENT` | Values: `claude`, `cursor`, `windsurf` |
+
+#### Options
+
+| Option                        | Description                                                   |
+| ----------------------------- | ------------------------------------------------------------- |
+| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)          |
+
+#### `fabro mcp start`
+
+Start the Fabro MCP server over stdio
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro mcp start [OPTIONS]
+```
+
+#### Options
+
+| Option                        | Description                                                   |
+| ----------------------------- | ------------------------------------------------------------- |
+| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)          |
+
+### `fabro model`
+
+List and test LLM models
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro model [OPTIONS] [COMMAND]
+```
+
+#### Subcommands
+
+| Command            | Description                                        |
+| ------------------ | -------------------------------------------------- |
+| `fabro model list` | List available models                              |
+| `fabro model test` | Test model availability by sending a simple prompt |
+
+#### `fabro model list`
+
+List available models
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro model list [OPTIONS]
+```
+
+#### Options
+
+| Option                      | Description                                                   |
+| --------------------------- | ------------------------------------------------------------- |
+| `-p, --provider <provider>` | Filter by provider                                            |
+| `-q, --query <query>`       | Search for models matching this string                        |
+| `--server <server>`         | Fabro server target: http(s) URL or absolute Unix socket path |
+
+#### `fabro model test`
+
+Test model availability by sending a simple prompt
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro model test [OPTIONS]
+```
+
+#### Options
+
+| Option                      | Description                                                              |
+| --------------------------- | ------------------------------------------------------------------------ |
+| `--deep`                    | Run a multi-turn tool-use test (catches reasoning round-trip bugs)       |
+| `-j, --jobs <jobs>`         | Number of model tests to run concurrently in bulk mode<br />Default: `4` |
+| `-m, --model <model>`       | Test a specific model                                                    |
+| `-p, --provider <provider>` | Filter by provider                                                       |
+| `--server <server>`         | Fabro server target: http(s) URL or absolute Unix socket path            |
+
+### `fabro parent`
+
+Manage run parent links
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro parent [OPTIONS] <COMMAND>
+```
+
+#### Subcommands
+
+| Command               | Description                                  |
+| --------------------- | -------------------------------------------- |
+| `fabro parent link`   | Link or replace a run's orchestration parent |
+| `fabro parent unlink` | Unlink a run from its orchestration parent   |
+
+#### `fabro parent link`
+
+Link or replace a run's orchestration parent
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro parent link [OPTIONS] <CHILD_RUN> <PARENT_RUN>
+```
+
+#### Arguments
+
+| Name         | Description         |
+| ------------ | ------------------- |
+| `CHILD_RUN`  | Child run selector  |
+| `PARENT_RUN` | Parent run selector |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+#### `fabro parent unlink`
+
+Unlink a run from its orchestration parent
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro parent unlink [OPTIONS] <CHILD_RUN>
+```
+
+#### Arguments
+
+| Name        | Description        |
+| ----------- | ------------------ |
+| `CHILD_RUN` | Child run selector |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro pr`
+
+Pull request operations
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro pr [OPTIONS] <COMMAND>
+```
+
+#### Subcommands
+
+| Command           | Description                                                   |
+| ----------------- | ------------------------------------------------------------- |
+| `fabro pr close`  | Close a pull request                                          |
+| `fabro pr create` | Create a pull request from a completed run                    |
+| `fabro pr link`   | Link or replace the GitHub pull request associated with a run |
+| `fabro pr merge`  | Merge a pull request                                          |
+| `fabro pr unlink` | Unlink the pull request associated with a run                 |
+| `fabro pr view`   | View pull request details                                     |
+
+#### `fabro pr close`
+
+Close a pull request
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro pr close [OPTIONS] <RUN_ID>
+```
+
+#### Arguments
+
+| Name     | Description      |
+| -------- | ---------------- |
+| `RUN_ID` | Run ID or prefix |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+#### `fabro pr create`
+
+Create a pull request from a completed run
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro pr create [OPTIONS] <RUN_ID>
+```
+
+#### Arguments
+
+| Name     | Description      |
+| -------- | ---------------- |
+| `RUN_ID` | Run ID or prefix |
+
+#### Options
+
+| Option              | Description                                                            |
+| ------------------- | ---------------------------------------------------------------------- |
+| `-f, --force`       | Create PR even if the run status is not succeeded/partially\_succeeded |
+| `--model <model>`   | LLM model for generating PR description                                |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path          |
+
+#### `fabro pr link`
+
+Link or replace the GitHub pull request associated with a run
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro pr link [OPTIONS] <RUN_ID> <URL>
+```
+
+#### Arguments
+
+| Name     | Description                                       |
+| -------- | ------------------------------------------------- |
+| `RUN_ID` | Run ID or prefix                                  |
+| `URL`    | GitHub pull request URL to associate with the run |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+#### `fabro pr merge`
+
+Merge a pull request
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro pr merge [OPTIONS] <RUN_ID>
+```
+
+#### Arguments
+
+| Name     | Description      |
+| -------- | ---------------- |
+| `RUN_ID` | Run ID or prefix |
+
+#### Options
+
+| Option              | Description                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
+| `--method <method>` | Merge method: merge, squash, or rebase<br />Values: `merge`, `squash`, `rebase`<br />Default: `squash` |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path                                          |
+
+#### `fabro pr unlink`
+
+Unlink the pull request associated with a run
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro pr unlink [OPTIONS] <RUN_ID>
+```
+
+#### Arguments
+
+| Name     | Description      |
+| -------- | ---------------- |
+| `RUN_ID` | Run ID or prefix |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+#### `fabro pr view`
+
+View pull request details
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro pr view [OPTIONS] <RUN_ID>
+```
+
+#### Arguments
+
+| Name     | Description      |
+| -------- | ---------------- |
+| `RUN_ID` | Run ID or prefix |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro preflight`
+
+Validate run configuration without executing
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro preflight [OPTIONS] <WORKFLOW>
+```
+
+#### Arguments
+
+| Name       | Description                                         |
+| ---------- | --------------------------------------------------- |
+| `WORKFLOW` | Path to a .fabro workflow file or .toml task config |
+
+#### Options
+
+| Option                        | Description                                                     |
+| ----------------------------- | --------------------------------------------------------------- |
+| `--environment <environment>` | Named environment for agent tools                               |
+| `--goal <goal>`               | Override the workflow goal (available as {{ goal }} in prompts) |
+| `--goal-file <goal_file>`     | Read the workflow goal from a file                              |
+| `--model <model>`             | Override default LLM model                                      |
+| `--provider <provider>`       | Override default LLM provider                                   |
+| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path   |
+| `-I, --input <key=value>`     | Override a workflow input value (repeatable, format: KEY=VALUE) |
+| `-v, --verbose`               | Enable verbose output                                           |
+
+### `fabro provider`
+
+Provider operations
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro provider [OPTIONS] <COMMAND>
+```
+
+#### Subcommands
+
+| Command                | Description               |
+| ---------------------- | ------------------------- |
+| `fabro provider login` | Log in to an LLM provider |
+
+#### `fabro provider login`
+
+Log in to an LLM provider
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro provider login [OPTIONS] --provider <PROVIDER>
+```
+
+#### Options
+
+| Option                  | Description                                                   |
+| ----------------------- | ------------------------------------------------------------- |
+| `--api-key-stdin`       | Read an API key from stdin instead of prompting               |
+| `--provider <provider>` | LLM provider to authenticate with                             |
+| `--server <server>`     | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro repo`
+
+Repository commands
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro repo [OPTIONS] <COMMAND>
+```
+
+#### Subcommands
+
+| Command             | Description                      |
+| ------------------- | -------------------------------- |
+| `fabro repo deinit` | Remove .fabro/ project directory |
+| `fabro repo init`   | Initialize a new project         |
+
+#### `fabro repo deinit`
+
+Remove .fabro/ project directory
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro repo deinit [OPTIONS]
+```
+
+#### `fabro repo init`
+
+Initialize a new project
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro repo init [OPTIONS]
+```
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro resume`
+
+Resume an interrupted workflow run
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro resume [OPTIONS] <RUN>
+```
+
+#### Arguments
+
+| Name  | Description                  |
+| ----- | ---------------------------- |
+| `RUN` | Run ID or unambiguous prefix |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `-d, --detach`      | Run in the background and print the run ID                    |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro rewind`
+
+Rewind a workflow run to an earlier checkpoint
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro rewind [OPTIONS] <RUN_ID> [TARGET]
+```
+
+#### Arguments
+
+| Name     | Description                                                               |
+| -------- | ------------------------------------------------------------------------- |
+| `RUN_ID` | Run ID (or unambiguous prefix)                                            |
+| `TARGET` | Target checkpoint: node name, node\@visit, or @ordinal (omit with --list) |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--list`            | Show the checkpoint timeline instead of rewinding             |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro rm`
+
+Remove one or more workflow runs
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro rm [OPTIONS] <RUNS>...
+```
+
+#### Arguments
+
+| Name   | Description                         |
+| ------ | ----------------------------------- |
+| `RUNS` | Run IDs or workflow names to remove |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `-f, --force`       | Force removal of active runs                                  |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro run`
+
+Launch a workflow run
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro run [OPTIONS] <WORKFLOW>
+```
+
+#### Arguments
+
+| Name       | Description                                         |
+| ---------- | --------------------------------------------------- |
+| `WORKFLOW` | Path to a .fabro workflow file or .toml task config |
+
+#### Options
+
+| Option                        | Description                                                     |
+| ----------------------------- | --------------------------------------------------------------- |
+| `--auto-approve`              | Auto-approve all human gates                                    |
+| `-d, --detach`                | Run the workflow in the background and print the run ID         |
+| `--dry-run`                   | Execute with simulated LLM backend                              |
+| `--environment <environment>` | Named environment for agent tools                               |
+| `--goal <goal>`               | Override the workflow goal (available as {{ goal }} in prompts) |
+| `--goal-file <goal_file>`     | Read the workflow goal from a file                              |
+| `--label <key=value>`         | Attach a label to this run (repeatable, format: KEY=VALUE)      |
+| `--model <model>`             | Override default LLM model                                      |
+| `--parent <run>`              | Link this run to an existing orchestration parent run           |
+| `--preserve-sandbox`          | Keep the sandbox alive after the run finishes (for debugging)   |
+| `--provider <provider>`       | Override default LLM provider                                   |
+| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path   |
+| `-I, --input <key=value>`     | Override a workflow input value (repeatable, format: KEY=VALUE) |
+| `-v, --verbose`               | Enable verbose output                                           |
+
+### `fabro sandbox`
+
+Sandbox operations (cp, ssh, preview)
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro sandbox [OPTIONS] <COMMAND>
+```
+
+#### Subcommands
+
+| Command                 | Description                                     |
+| ----------------------- | ----------------------------------------------- |
+| `fabro sandbox cp`      | Copy files to/from a run's sandbox              |
+| `fabro sandbox preview` | Get a preview URL for a port on a run's sandbox |
+| `fabro sandbox ssh`     | SSH into a run's sandbox                        |
+
+#### `fabro sandbox cp`
+
+Copy files to/from a run's sandbox
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro sandbox cp [OPTIONS] <SRC> <DST>
+```
+
+#### Arguments
+
+| Name  | Description                                  |
+| ----- | -------------------------------------------- |
+| `SRC` | Source: `<run-id>:<path>` or local path      |
+| `DST` | Destination: `<run-id>:<path>` or local path |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `-r, --recursive`   | Recurse into directories                                      |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+#### `fabro sandbox preview`
+
+Get a preview URL for a port on a run's sandbox
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro sandbox preview [OPTIONS] <RUN> <PORT>
+```
+
+#### Arguments
+
+| Name   | Description      |
+| ------ | ---------------- |
+| `RUN`  | Run ID or prefix |
+| `PORT` | Port number      |
+
+#### Options
+
+| Option              | Description                                                                         |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| `--open`            | Open URL in browser (implies --signed)                                              |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path                       |
+| `--signed`          | Generate a signed URL (embeds auth token, no headers needed)                        |
+| `--ttl <ttl>`       | Signed URL expiry in seconds (default 3600, requires --signed)<br />Default: `3600` |
+
+#### `fabro sandbox ssh`
+
+SSH into a run's sandbox
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro sandbox ssh [OPTIONS] <RUN>
+```
+
+#### Arguments
+
+| Name  | Description      |
+| ----- | ---------------- |
+| `RUN` | Run ID or prefix |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--print`           | Print the SSH command instead of connecting                   |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--ttl <ttl>`       | SSH access expiry in minutes (default 60)<br />Default: `60`  |
+
+### `fabro secret`
+
+Manage server-owned secrets
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro secret [OPTIONS] <COMMAND>
+```
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+#### Subcommands
+
+| Command             | Description        |
+| ------------------- | ------------------ |
+| `fabro secret list` | List secret names  |
+| `fabro secret rm`   | Remove a secret    |
+| `fabro secret set`  | Set a secret value |
+
+#### `fabro secret list`
+
+List secret names
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro secret list [OPTIONS]
+```
+
+#### `fabro secret rm`
+
+Remove a secret
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro secret rm [OPTIONS] <KEY>
+```
+
+#### Arguments
+
+| Name  | Description                  |
+| ----- | ---------------------------- |
+| `KEY` | Name of the secret to remove |
+
+#### `fabro secret set`
+
+Set a secret value
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro secret set [OPTIONS] <KEY> [VALUE]
+```
+
+#### Arguments
+
+| Name    | Description                                  |
+| ------- | -------------------------------------------- |
+| `KEY`   | Name of the secret                           |
+| `VALUE` | Value to store (omit to enter interactively) |
+
+#### Options
+
+| Option                        | Description                                                            |
+| ----------------------------- | ---------------------------------------------------------------------- |
+| `--description <description>` | Optional human-readable description                                    |
+| `--type <type>`               | Secret storage type<br />Values: `token`, `file`<br />Default: `token` |
+| `--value-stdin`               | Read the secret value from stdin                                       |
+
+### `fabro server`
+
+Server operations
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro server [OPTIONS] <COMMAND>
+```
+
+#### Subcommands
+
+| Command                | Description                          |
+| ---------------------- | ------------------------------------ |
+| `fabro server restart` | Stop and restart the HTTP API server |
+| `fabro server start`   | Start the HTTP API server            |
+| `fabro server status`  | Show server status                   |
+| `fabro server stop`    | Stop the HTTP API server             |
+
+#### `fabro server restart`
+
+Stop and restart the HTTP API server
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro server restart [OPTIONS]
+```
+
+#### Options
+
+| Option                                        | Description                                                                      |
+| --------------------------------------------- | -------------------------------------------------------------------------------- |
+| `--bind <bind>`                               | Address to bind to (IP or IP:port for TCP, or path containing / for Unix socket) |
+| `--config <config>`                           | Path to server config file (default: \~/.fabro/settings.toml)                    |
+| `--environment <environment>`                 | Named environment for agent tools                                                |
+| `--foreground`                                | Run in the foreground instead of daemonizing                                     |
+| `--max-concurrent-runs <max_concurrent_runs>` | Maximum number of concurrent run executions                                      |
+| `--model <model>`                             | Override default LLM model                                                       |
+| `--no-web`                                    | Disable the embedded web UI, browser auth routes, and web-only helper endpoints  |
+| `--provider <provider>`                       | Override default LLM provider                                                    |
+| `--storage-dir <storage_dir>`                 | Local storage directory (default: \~/.fabro/storage)                             |
+| `--timeout <timeout>`                         | Seconds to wait for graceful shutdown before SIGKILL<br />Default: `10`          |
+| `--watch-web`                                 | Run `bun run dev` in apps/fabro-web to watch/recompile web assets (debug only)   |
+| `--web`                                       | Enable the embedded web UI and browser auth routes                               |
+
+#### `fabro server start`
+
+Start the HTTP API server
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro server start [OPTIONS]
+```
+
+#### Options
+
+| Option                                        | Description                                                                      |
+| --------------------------------------------- | -------------------------------------------------------------------------------- |
+| `--bind <bind>`                               | Address to bind to (IP or IP:port for TCP, or path containing / for Unix socket) |
+| `--config <config>`                           | Path to server config file (default: \~/.fabro/settings.toml)                    |
+| `--environment <environment>`                 | Named environment for agent tools                                                |
+| `--foreground`                                | Run in the foreground instead of daemonizing                                     |
+| `--max-concurrent-runs <max_concurrent_runs>` | Maximum number of concurrent run executions                                      |
+| `--model <model>`                             | Override default LLM model                                                       |
+| `--no-web`                                    | Disable the embedded web UI, browser auth routes, and web-only helper endpoints  |
+| `--provider <provider>`                       | Override default LLM provider                                                    |
+| `--storage-dir <storage_dir>`                 | Local storage directory (default: \~/.fabro/storage)                             |
+| `--watch-web`                                 | Run `bun run dev` in apps/fabro-web to watch/recompile web assets (debug only)   |
+| `--web`                                       | Enable the embedded web UI and browser auth routes                               |
+
+#### `fabro server status`
+
+Show server status
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro server status [OPTIONS]
+```
+
+#### Options
+
+| Option                        | Description                                          |
+| ----------------------------- | ---------------------------------------------------- |
+| `--json`                      | Output as JSON                                       |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
+
+#### `fabro server stop`
+
+Stop the HTTP API server
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro server stop [OPTIONS]
+```
+
+#### Options
+
+| Option                        | Description                                                             |
+| ----------------------------- | ----------------------------------------------------------------------- |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)                    |
+| `--timeout <timeout>`         | Seconds to wait for graceful shutdown before SIGKILL<br />Default: `10` |
+
+### `fabro settings`
+
+Inspect effective settings
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro settings [OPTIONS]
+```
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro start`
+
+Start a created workflow run on the server
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro start [OPTIONS] <RUN>
+```
+
+#### Arguments
+
+| Name  | Description                    |
+| ----- | ------------------------------ |
+| `RUN` | Run ID prefix or workflow name |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro steer`
+
+Steer a running agent mid-execution
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro steer [OPTIONS] <RUN> [TEXT]
+```
+
+#### Arguments
+
+| Name   | Description                                         |
+| ------ | --------------------------------------------------- |
+| `RUN`  | Run ID prefix to steer                              |
+| `TEXT` | Steer message text (omit when --text-stdin is used) |
+
+#### Options
+
+| Option              | Description                                                                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `--interrupt`       | Cancel the in-flight LLM stream / tool calls and deliver the message as the next user turn (default: append to the steering queue) |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path                                                                      |
+| `--text-stdin`      | Read steer text from stdin instead of a positional arg                                                                             |
+
+### `fabro system`
+
+System maintenance commands
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro system [OPTIONS] <COMMAND>
+```
+
+#### Subcommands
+
+| Command               | Description                            |
+| --------------------- | -------------------------------------- |
+| `fabro system df`     | Show disk usage                        |
+| `fabro system events` | Stream run events from the server      |
+| `fabro system info`   | Show server runtime information        |
+| `fabro system prune`  | Delete old workflow runs               |
+| `fabro system repair` | Inspect and repair durable server data |
+
+#### `fabro system df`
+
+Show disk usage
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro system df [OPTIONS]
+```
+
+#### Options
+
+| Option                        | Description                                                   |
+| ----------------------------- | ------------------------------------------------------------- |
+| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)          |
+| `-v, --verbose`               | Show per-run breakdown                                        |
+
+#### `fabro system events`
+
+Stream run events from the server
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro system events [OPTIONS]
+```
+
+#### Options
+
+| Option                        | Description                                                   |
+| ----------------------------- | ------------------------------------------------------------- |
+| `--run-id <run_ids>`          | Filter by run ID (repeatable)                                 |
+| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)          |
+
+#### `fabro system info`
+
+Show server runtime information
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro system info [OPTIONS]
+```
+
+#### Options
+
+| Option                        | Description                                                   |
+| ----------------------------- | ------------------------------------------------------------- |
+| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)          |
+
+#### `fabro system prune`
+
+Delete old workflow runs
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro system prune [OPTIONS]
+```
+
+#### Options
+
+| Option                        | Description                                                                                            |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `--before <before>`           | Only include runs started before this date (YYYY-MM-DD prefix match)                                   |
+| `--label <key=value>`         | Filter by label (KEY=VALUE, repeatable, AND semantics)                                                 |
+| `--older-than <duration>`     | Only prune runs older than this duration (e.g. 24h, 7d). Default: 24h when no explicit filters are set |
+| `--orphans`                   | Include orphan directories (no matching durable run)                                                   |
+| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path                                          |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)                                                   |
+| `--workflow <workflow>`       | Filter by workflow name (substring match)                                                              |
+| `--yes`                       | Actually delete (default is dry-run)                                                                   |
+
+#### `fabro system repair`
+
+Inspect and repair durable server data
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro system repair [OPTIONS] <COMMAND>
+```
+
+#### Subcommands
+
+| Command                    | Description                                          |
+| -------------------------- | ---------------------------------------------------- |
+| `fabro system repair runs` | List runs that cannot be loaded from durable storage |
+
+##### `fabro system repair runs`
+
+List runs that cannot be loaded from durable storage
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro system repair runs [OPTIONS]
+```
+
+#### Options
+
+| Option                        | Description                                                   |
+| ----------------------------- | ------------------------------------------------------------- |
+| `--delete`                    | Preview deleting unreadable runs                              |
+| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)          |
+| `--yes`                       | Actually delete unreadable runs (default is dry-run)          |
+
+### `fabro unarchive`
+
+Restore archived runs to their prior terminal status
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro unarchive [OPTIONS] <RUNS>...
+```
+
+#### Arguments
+
+| Name   | Description                            |
+| ------ | -------------------------------------- |
+| `RUNS` | Run IDs or workflow names to unarchive |
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro uninstall`
+
+Uninstall Fabro from this machine
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro uninstall [OPTIONS]
+```
+
+#### Options
+
+| Option  | Description              |
+| ------- | ------------------------ |
+| `--yes` | Skip confirmation prompt |
+
+### `fabro upgrade`
+
+Upgrade fabro to the latest version
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro upgrade [OPTIONS]
+```
+
+#### Options
+
+| Option         | Description                                                             |
+| -------------- | ----------------------------------------------------------------------- |
+| `--dry-run`    | Preview what would happen without making changes                        |
+| `--force`      | Upgrade even if already on the target version                           |
+| `--prerelease` | Include prereleases (alpha, beta, rc) when selecting the latest version |
+
+### `fabro validate`
+
+Validate a workflow
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro validate [OPTIONS] <WORKFLOW>
+```
+
+#### Arguments
+
+| Name       | Description                      |
+| ---------- | -------------------------------- |
+| `WORKFLOW` | Path to the .fabro workflow file |
+
+### `fabro variable`
+
+Manage server-owned variables
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro variable [OPTIONS] <COMMAND>
+```
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+#### Subcommands
+
+| Command               | Description          |
+| --------------------- | -------------------- |
+| `fabro variable get`  | Get a variable value |
+| `fabro variable list` | List variables       |
+| `fabro variable rm`   | Remove a variable    |
+| `fabro variable set`  | Set a variable value |
+
+#### `fabro variable get`
+
+Get a variable value
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro variable get [OPTIONS] <NAME>
+```
+
+#### Arguments
+
+| Name   | Description                 |
+| ------ | --------------------------- |
+| `NAME` | Name of the variable to get |
+
+#### `fabro variable list`
+
+List variables
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro variable list [OPTIONS]
+```
+
+#### `fabro variable rm`
+
+Remove a variable
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro variable rm [OPTIONS] <NAME>
+```
+
+#### Arguments
+
+| Name   | Description                    |
+| ------ | ------------------------------ |
+| `NAME` | Name of the variable to remove |
+
+#### `fabro variable set`
+
+Set a variable value
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro variable set [OPTIONS] <NAME> [VALUE]
+```
+
+#### Arguments
+
+| Name    | Description          |
+| ------- | -------------------- |
+| `NAME`  | Name of the variable |
+| `VALUE` | Value to store       |
+
+#### Options
+
+| Option                        | Description                         |
+| ----------------------------- | ----------------------------------- |
+| `--description <description>` | Optional human-readable description |
+| `--value-stdin`               | Read the variable value from stdin  |
+
+### `fabro version`
+
+Show client and server version information
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro version [OPTIONS]
+```
+
+#### Options
+
+| Option              | Description                                                   |
+| ------------------- | ------------------------------------------------------------- |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro wait`
+
+Block until a workflow run completes
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro wait [OPTIONS] <RUN>
+```
+
+#### Arguments
+
+| Name  | Description                                      |
+| ----- | ------------------------------------------------ |
+| `RUN` | Run ID prefix or workflow name (most recent run) |
+
+#### Options
+
+| Option                | Description                                                   |
+| --------------------- | ------------------------------------------------------------- |
+| `--interval <ms>`     | Poll interval in milliseconds<br />Default: `1000`            |
+| `--server <server>`   | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--timeout <seconds>` | Maximum time to wait in seconds                               |
+
+### `fabro workflow`
+
+Workflow operations
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro workflow [OPTIONS] <COMMAND>
+```
+
+#### Subcommands
+
+| Command                 | Description              |
+| ----------------------- | ------------------------ |
+| `fabro workflow create` | Create a new workflow    |
+| `fabro workflow list`   | List available workflows |
+
+#### `fabro workflow create`
+
+Create a new workflow
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro workflow create [OPTIONS] <NAME>
+```
+
+#### Arguments
+
+| Name   | Description          |
+| ------ | -------------------- |
+| `NAME` | Name of the workflow |
+
+#### Options
+
+| Option              | Description                       |
+| ------------------- | --------------------------------- |
+| `-g, --goal <goal>` | Goal description for the workflow |
+
+#### `fabro workflow list`
+
+List available workflows
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro workflow list [OPTIONS]
+```

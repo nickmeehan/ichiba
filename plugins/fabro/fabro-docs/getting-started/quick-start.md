@@ -1,0 +1,108 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Quick Start
+
+> Get up and running with Fabro
+
+<Note>
+  Fabro runs as a server. This quickstart runs everything locally on your laptop — no deployment required. To self-host the server for a team or 24/7 workflows, see [Deployment](/administration/deployment).
+</Note>
+
+## Supported platforms
+
+| OS      | Architecture          | Supported |
+| ------- | --------------------- | --------- |
+| Linux   | x86\_64               | Yes       |
+| Linux   | arm64 (aarch64)       | Yes       |
+| macOS   | arm64 (Apple Silicon) | Yes       |
+| macOS   | x86\_64 (Intel)       | No        |
+| Windows | any                   | No        |
+
+<Note>
+  On Intel Macs, run Fabro in a Linux x86\_64 container or VM. Native Windows isn't supported; use WSL2 with a supported Linux architecture.
+</Note>
+
+## Install
+
+<Tabs>
+  <Tab title="Claude Code">
+    ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+    curl -fsSL https://fabro.sh/install.md | claude
+    ```
+  </Tab>
+
+  <Tab title="Codex">
+    ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+    codex "$(curl -fsSL https://fabro.sh/install.md)"
+    ```
+  </Tab>
+
+  <Tab title="Homebrew">
+    ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+    brew install fabro-sh/tap/fabro-nightly
+    ```
+  </Tab>
+
+  <Tab title="Bash">
+    ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+    curl -fsSL https://fabro.sh/install.sh | bash
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Release binaries and the multi-arch Docker image ship with [SLSA Build Provenance](/reference/verifying-releases) attestations you can verify with `gh attestation verify`.
+</Tip>
+
+<Note>
+  Self-hosting the server? See [Self-host with Docker](/administration/self-host-docker) and [Server Operations](/reference/server-operations) for the install wizard, auth, and CLI-pointing.
+</Note>
+
+## Initialize your project
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+cd my-repo/
+fabro repo init
+```
+
+This creates `.fabro/project.toml` and a starter workflow under `.fabro/workflows/hello/`.
+
+## Configure API keys
+
+For local CLI runs, export at least one LLM provider key in your shell:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+GEMINI_API_KEY=AI...
+```
+
+<Note>
+  You only need one provider key to get started. Add more to enable multi-model workflows.
+
+  For server-backed runs, store provider keys in the server vault instead:
+
+  ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+  fabro secret set ANTHROPIC_API_KEY sk-ant-...
+  ```
+</Note>
+
+## Run your first workflow
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro run hello
+```
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Why Fabro?" icon="lightbulb" href="/getting-started/why-fabro">
+    Understand the problems Fabro solves.
+  </Card>
+
+  <Card title="Workflows" icon="diagram-project" href="/core-concepts/workflows">
+    Learn how to define workflow graphs in Graphviz.
+  </Card>
+</Columns>

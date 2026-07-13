@@ -1,0 +1,311 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Prompts
+
+> How Fabro constructs and delivers prompts to agents
+
+When a workflow reaches an agent or prompt node, Fabro assembles the full prompt from multiple sources: the node's `prompt` attribute, a fidelity-based preamble summarizing prior stages, a system prompt with tool guidance and environment context, project docs, and user instructions. Understanding this assembly helps you write effective prompts and control what context each node receives.
+
+## The prompt attribute
+
+The `prompt` attribute on a node defines the task instructions for that stage. If no `prompt` is set, Fabro falls back to the node's `label`.
+
+### Inline prompts
+
+Short prompts can be written directly in the Graphviz file:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+plan [label="Plan", prompt="Analyze the codebase and write a step-by-step plan."]
+```
+
+Use `\` for multi-line strings:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+review [
+    label="Review",
+    shape=tab,
+    prompt="Review the implementation for correctness and \
+        code quality. If changes are needed, respond with: \
+        {\"preferred_next_label\": \"fix\"}. If everything \
+        looks good, respond with: \
+        {\"preferred_next_label\": \"approve\"}."
+]
+```
+
+### External file references
+
+For longer prompts, use the `@` prefix to load from a Markdown file relative to the Graphviz file:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+plan      [label="Plan Implementation", prompt="@prompts/implement/plan.md"]
+implement [label="Implement",           prompt="@prompts/implement/implement.md"]
+review    [label="Review",              prompt="@prompts/implement/review.md"]
+```
+
+The `@` prefix tells the engine to read the file contents and use them as the prompt text. This keeps Graphviz files concise and lets you version prompts as standalone Markdown.
+
+File references are resolved relative to the Graphviz file's directory first, then fall back to `~/.fabro/`. This lets you keep shared prompts in your user-level config and reference them from any project.
+
+### Variable expansion
+
+Prompts support MiniJinja-style templates. Prompt rendering has access to the workflow goal and typed run inputs:
+
+```dot title="pipeline.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph Pipeline {
+    graph [goal="Add a /health endpoint to the API server"]
+
+    implement [prompt="Implement the following: {{ goal }}"]
+}
+```
+
+Before execution, `{{ goal }}` becomes `Add a /health endpoint to the API server`.
+
+| Expression          | Resolves to                      |
+| ------------------- | -------------------------------- |
+| `{{ goal }}`        | The graph-level `goal` attribute |
+| `{{ inputs.name }}` | A value from `[run.inputs]`      |
+
+Undefined prompt variables render as empty text and produce a `template_undefined_variable` diagnostic. `fabro validate` reports that diagnostic as a warning; run-style commands promote it to an error before proceeding. Environment variables are not available in prompt templates.
+
+Prompt and goal templates can use static MiniJinja includes to share partials:
+
+```md title="prompts/plan.md" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+{% include "partials/context.md" %}
+
+Write a plan for {{ goal }}.
+```
+
+Include names must be literal strings, resolve relative to the file being rendered, and stay under that template root. Dynamic include expressions such as `{% include inputs.partial %}` are rejected during manifest bundling because Fabro must know every template file before a sandbox run starts.
+
+### Fallback to label
+
+If a node has neither a `prompt` attribute nor an empty one, Fabro uses the `label` as the prompt:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+// "Do work" is both the display label and the prompt
+work [label="Do work"]
+```
+
+This is convenient for simple nodes but not recommended for production workflows where you want precise control over agent instructions.
+
+## Prompt assembly
+
+The prompt the agent receives is not just the `prompt` attribute. Fabro prepends a **preamble** (unless fidelity is `full`) that summarizes what happened in prior stages:
+
+```
+[Preamble: goal, completed stages, context values]
+
+[Your prompt attribute text]
+```
+
+The preamble is controlled by the **fidelity** setting. See [Context: Fidelity](/execution/context#fidelity-controlling-agent-context) for the full reference.
+
+<Accordion title="Example assembled prompt">
+  Given a plan-then-implement workflow where the plan stage completed, the `implement` node with `fidelity="compact"` would receive:
+
+  ```markdown theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+  Goal: Add a /health endpoint to the API server
+
+  ## Completed stages
+  - **plan**: success
+    - Model: claude-sonnet-4-5, 12.4k tokens in / 3.2k out
+    - Files: docs/plan.md
+
+  ## Context
+  - tests_passed: false
+
+  Read plan.md and implement every step.
+  ```
+
+  The last line is the node's `prompt` attribute. Everything above it is the preamble.
+</Accordion>
+
+## System prompt
+
+Each agent session has a **system prompt** that provides foundational instructions. The system prompt is built once per session and includes:
+
+| Section               | Contents                                                                       |
+| --------------------- | ------------------------------------------------------------------------------ |
+| Identity and role     | What the agent is and how it should approach tasks                             |
+| Environment context   | Working directory, platform, OS, git branch, model, date                       |
+| Tool guidance         | Per-tool usage instructions (when to use `read_file` vs `shell`, etc.)         |
+| Coding best practices | Guidelines for clean, minimal, focused changes                                 |
+| Project docs          | Contents of `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, or `.codex/instructions.md` |
+| Skills                | Available skill templates the agent can invoke                                 |
+
+The system prompt is **separate** from the preamble. The preamble is prepended to the user-facing prompt message, while the system prompt is set as the LLM's system message.
+
+The system prompt varies by LLM provider. Each provider has its own identity text, tool guidance, and coding conventions tuned to the model's strengths. The assembled prompt follows this structure:
+
+```
+[Core prompt: identity, environment, task guidance, tool reference, coding practices]
+[Project docs: AGENTS.md, CLAUDE.md, etc.]
+[Skills: available skill templates]
+```
+
+<Accordion title="Example system prompt (Anthropic provider)">
+  This is the full system prompt sent to Claude as the LLM system message. The `<environment>` block is filled in at runtime.
+
+  ```
+  You are Claude, an AI coding assistant made by Anthropic. You help users with
+  software engineering tasks including solving bugs, adding new functionality,
+  refactoring code, explaining code, and more.
+
+  You are an interactive agent that helps users with software engineering tasks.
+  Use the instructions below and the tools available to you to assist the user.
+
+  <environment>
+  Working directory: /home/user/project
+  Is git repository: true
+  Git branch: main
+  Platform: linux
+  OS version: Linux 6.1.0
+  Today's date: 2026-03-05
+  Model: claude-sonnet-4-5
+  </environment>
+
+  # Doing Tasks
+
+  - The user will primarily request you to perform software engineering tasks.
+    These may include solving bugs, adding new functionality, refactoring code,
+    explaining code, and more.
+  - In general, do not propose changes to code you have not read. If a user asks
+    about or wants you to modify a file, read it first. Understand existing code
+    before suggesting modifications.
+  - Do not create files unless they are absolutely necessary for achieving your
+    goal. Generally prefer editing an existing file to creating a new one, as
+    this prevents file bloat and builds on existing work more effectively.
+  - If your approach is blocked, do not attempt to brute force your way to the
+    outcome. Consider alternative approaches or other ways you might unblock
+    yourself.
+  - Avoid over-engineering. Only make changes that are directly requested or
+    clearly necessary. Keep solutions simple and focused.
+  - Do not add features, refactor code, or make improvements beyond what was
+    asked.
+  - Do not add error handling, fallbacks, or validation for scenarios that
+    cannot happen. Trust internal code and framework guarantees. Only validate
+    at system boundaries (user input, external APIs).
+  - Avoid backwards-compatibility hacks. If you are certain something is unused,
+    delete it completely.
+
+  # Tools
+
+  Use the provided tools to interact with the codebase and environment. Do NOT
+  use the shell tool to run commands when a relevant dedicated tool is provided:
+  - To read files use read_file instead of cat, head, tail, or sed.
+  - To edit files use edit_file instead of sed or awk.
+  - To create files use write_file instead of cat with heredoc or echo
+    redirection.
+  - To search for files use glob instead of find or ls.
+  - To search the content of files use grep instead of grep or rg.
+
+  ## read_file
+  Read files before editing them. Always read a file before attempting to edit
+  it. Use offset/limit for large files. Reading a file you have not read before
+  is always appropriate.
+
+  ## edit_file
+  Performs exact string replacements in files. The old_string must be an exact
+  match of existing text and must be unique in the file. If old_string matches
+  multiple locations, provide more surrounding context to make it unique. Prefer
+  editing existing files over creating new ones. When editing text, ensure you
+  preserve the exact indentation as it appears in the file.
+
+  ## write_file
+  Use write_file only when creating new files. Prefer edit_file for modifying
+  existing files. Always prefer editing existing files in the codebase over
+  creating new ones.
+
+  ## shell
+  Use for running commands, tests, and builds. Default timeout is 120 seconds.
+  Use timeout_ms parameter for longer-running commands.
+
+  ## grep
+  Search file contents with regex patterns. Supports output modes:
+  content, files_with_matches, count. Use this for searching the content of
+  files rather than using shell grep or rg.
+
+  ## glob
+  Find files by name pattern. Results sorted by modification time (newest
+  first). Use this for finding files rather than using shell find or ls
+  commands.
+
+  ## web_search
+  Search the web using Brave Search. Returns titles, URLs, and descriptions.
+
+  ## web_fetch
+  Fetch content from a URL and optionally summarize it. Pass a prompt to
+  extract specific information instead of returning the full page. URLs must
+  start with http:// or https://.
+
+  # Coding Best Practices
+
+  Write clean, maintainable code. Handle errors appropriately. Follow existing
+  code conventions in the project. Keep changes minimal and focused on the task.
+
+  # Project Docs
+
+  <contents of AGENTS.md and CLAUDE.md from the project>
+
+  # Available Skills
+  When the user's request matches a skill below, call the `use_skill` tool
+  to load its instructions, then follow them.
+  - `commit`: Create a git commit following best practices
+  - `review`: Review code changes for issues and improvements
+  ```
+</Accordion>
+
+<Note>
+  OpenAI and Gemini providers have their own system prompts with different identity text, tool guidance (e.g. `apply_patch` instead of `edit_file` for OpenAI), and coding conventions. The overall structure is the same.
+</Note>
+
+### Project docs
+
+Fabro automatically discovers project instruction files by walking the directory hierarchy from the git root to the working directory. Which files are loaded depends on the provider:
+
+| Provider  | Files                                 |
+| --------- | ------------------------------------- |
+| Anthropic | `AGENTS.md`, `CLAUDE.md`              |
+| OpenAI    | `AGENTS.md`, `.codex/instructions.md` |
+| Gemini    | `AGENTS.md`, `GEMINI.md`              |
+
+Files are loaded in directory order (root first, deepest last) with a total budget of 32KB. If the combined content exceeds this budget, later files are truncated.
+
+### Environment context
+
+The system prompt includes an `<environment>` block with runtime details:
+
+```xml theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+<environment>
+Working directory: /home/user/project
+Is git repository: true
+Git branch: main
+Platform: linux
+OS version: Linux 6.1.0
+Today's date: 2026-03-05
+Model: claude-opus-4-6
+Knowledge cutoff: May 2025
+</environment>
+```
+
+This block also includes `git status --short` and recent commits when available, giving the agent awareness of the current repository state.
+
+## Prompt nodes vs. agent nodes
+
+Both agent nodes (`shape=box`) and prompt nodes (`shape=tab`) go through the same prompt assembly pipeline: variable expansion, preamble prepending, and system prompt construction. The difference is execution:
+
+|                    | Agent node                            | Prompt node                           |
+| ------------------ | ------------------------------------- | ------------------------------------- |
+| Shape              | `box` (default)                       | `tab`                                 |
+| Tool access        | Yes (agentic loop)                    | No (single LLM call)                  |
+| Prompt assembly    | Preamble + prompt                     | Preamble + prompt                     |
+| Routing directives | Extracted from response               | Extracted from response               |
+| Context updates    | `response.{node_id}`, `last_response` | `response.{node_id}`, `last_response` |
+
+Use prompt nodes for analysis, classification, and summarization tasks where tools are not needed.
+
+## Prompt logging
+
+Fabro persists the assembled prompt to `stages/{rank:03}-{node_id}@{visit}/prompt.md` in metadata snapshots and `fabro dump` output for every agent and prompt stage. This includes the preamble (if any) and the expanded prompt text. Use these files for debugging when an agent behaves unexpectedly.

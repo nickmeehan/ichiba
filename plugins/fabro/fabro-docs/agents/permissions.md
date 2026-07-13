@@ -1,0 +1,129 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Permissions
+
+> Controlling which tools agents can use
+
+Permissions control which tools an agent can use without human approval. Fabro uses a three-tier permission model that balances agent autonomy with safety — read-only agents can explore the codebase freely, read-write agents can also edit files, and full-access agents can run arbitrary shell commands.
+
+## Permission levels
+
+| Level        | Auto-approved tools                                                         | Prompted tools                                |
+| ------------ | --------------------------------------------------------------------------- | --------------------------------------------- |
+| `read-only`  | `read_file`, `read_many_files`, `grep`, `glob`, `list_dir`, sub-agent tools | Everything else requires approval             |
+| `read-write` | All read tools + `write_file`, `edit_file`, `apply_patch`, sub-agent tools  | `shell`, `web_search`, `web_fetch`, MCP tools |
+| `full`       | All tools including `shell`, `web_search`, `web_fetch`, MCP tools           | None                                          |
+
+The default permission level is `read-write`.
+
+## Tool categories
+
+Every tool is classified into one of four categories that determine which permission level auto-approves it:
+
+| Category | Tools                                                        | Minimum level |
+| -------- | ------------------------------------------------------------ | ------------- |
+| read     | `read_file`, `read_many_files`, `grep`, `glob`, `list_dir`   | `read-only`   |
+| write    | `write_file`, `edit_file`, `apply_patch`                     | `read-write`  |
+| subagent | `spawn_agent`, `send_input`, `wait`, `close_agent`           | `read-only`   |
+| shell    | `shell`, `web_search`, `web_fetch`, MCP tools, unknown tools | `full`        |
+
+Unknown tools (including MCP tools) default to the `shell` category, requiring `full` permission for auto-approval.
+
+## Setting permissions
+
+### CLI flag
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro exec --permissions read-only
+fabro exec --permissions read-write
+fabro exec --permissions full
+```
+
+### Non-interactive mode
+
+When running non-interactively (no TTY or `--auto-approve` flag), tools outside the permission level are denied outright:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+# In CI: only allow read and write tools, deny shell
+fabro exec --permissions read-write --auto-approve
+```
+
+### Interactive escalation
+
+In interactive mode, when an agent calls a tool outside its current permission level, Fabro prompts the user:
+
+```
+Agent wants to run: shell(command="cargo test")
+Allow? [y]es / [a]lways / [n]o:
+```
+
+* **yes** -- allow this one call
+* **always** -- upgrade the permission level for the rest of the session
+* **no** -- deny the call (the agent receives an error and can try a different approach)
+
+Choosing "always" on a write tool upgrades to `read-write`. Choosing "always" on a shell tool upgrades to `full`.
+
+## How permissions interact with tools
+
+### Read tools are always available
+
+Regardless of permission level, agents can always read files, search with grep, and find files with glob. This means even a `read-only` agent can fully explore a codebase.
+
+### Write tools require read-write or higher
+
+The `write_file`, `edit_file`, and `apply_patch` tools are auto-approved at `read-write` and above. At `read-only`, these tools are either prompted (interactive) or denied (non-interactive).
+
+### Shell requires full
+
+The `shell` tool and web tools (`web_search`, `web_fetch`) are only auto-approved at the `full` level. This is the most permissive setting since shell commands can do anything the sandbox allows.
+
+### Sub-agent tools are always allowed
+
+Sub-agent management tools (`spawn_agent`, `send_input`, `wait`, `close_agent`) are auto-approved at all permission levels. Sub-agents inherit the parent's permission level, so a `read-only` parent spawns `read-only` children.
+
+## Read-before-write guardrail
+
+Independent of the permission system, Fabro enforces a **read-before-write guardrail** that applies to all permission levels. Even with `full` permissions, an agent must read an existing file before modifying or deleting it. See [Tools: Read-before-write guardrail](/agents/tools#read-before-write-guardrail) for details.
+
+This guardrail operates at the sandbox layer and works alongside (not instead of) the permission system. A tool call must pass **both** checks:
+
+1. The tool's category must be allowed by the current permission level
+2. If writing to an existing file, the file must have been previously read
+
+## Permission flow
+
+The following sequence shows how Fabro decides whether to execute a tool call:
+
+<img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/permission-flow.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=46569cbf21aa41f983976f58cb521db4" alt="Permission flow: tool call is checked against current permission level; if auto-approved it executes, otherwise in interactive mode the user is prompted, in non-interactive mode the tool is denied" width="520" height="420" data-path="images/permission-flow.svg" />
+
+## Workflow-level permissions
+
+When agents run inside Fabro workflows, the workflow engine manages tool approval. Workflow agents typically run with full auto-approval since the workflow itself defines the trust boundary -- the sandbox provider (local, Docker, or Daytona) controls what the agent can actually access.
+
+For CLI-backed workflow agents, each provider handles auto-approval differently:
+
+* **Anthropic** (Claude Code) -- uses `--dangerously-skip-permissions` to bypass interactive prompts
+* **OpenAI** (Codex) -- uses `--full-auto` mode
+* **Gemini** -- uses `--yolo` flag
+
+## Further reading
+
+<Columns cols={2}>
+  <Card title="Tools" icon="wrench" href="/agents/tools">
+    Full reference for built-in tools and their parameters.
+  </Card>
+
+  <Card title="Environments" icon="server" href="/execution/environments">
+    Sandbox providers that control execution isolation.
+  </Card>
+
+  <Card title="MCP" icon="plug" href="/agents/mcp">
+    MCP tools follow the same permission model as built-in tools.
+  </Card>
+
+  <Card title="Sub-agents" icon="users" href="/agents/subagents">
+    Sub-agents inherit their parent's permission level.
+  </Card>
+</Columns>

@@ -1,0 +1,25 @@
+{
+  "name": "dark-factory",
+  "private": true,
+  "description": "Tooling-only package for the dark-factory plugin repo; hosts dev dependencies for automated releases and commit linting. No runtime code.",
+  "license": "MIT",
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "release": "semantic-release",
+    "commitlint": "commitlint --from=origin/main --to=HEAD"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.0.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@semantic-release/commit-analyzer": "^13.0.0",
+    "@semantic-release/exec": "^7.0.0",
+    "@semantic-release/git": "^10.0.0",
+    "@semantic-release/github": "^11.0.0",
+    "@semantic-release/release-notes-generator": "^14.0.0",
+    "conventional-changelog-conventionalcommits": "^8.0.0",
+    "semantic-release": "^24.0.0"
+  }
+}

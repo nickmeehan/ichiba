@@ -1,0 +1,17 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Acknowledgements
+
+> Projects and people that inspired Fabro
+
+## Attractor
+
+Fabro was inspired by [Attractor](https://github.com/strongdm/attractor), created by [Justin McCarthy](https://github.com/strongdm) at [StrongDM](https://www.strongdm.com/). Attractor pioneered the idea of orchestrating AI coding agents with graph-based workflows, and its design deeply influenced Fabro's architecture.
+
+[Dan Shapiro](https://github.com/danshapiro)'s [Kilroy](https://github.com/danshapiro/kilroy), an independent implementation of the Attractor concept, was also a helpful reference during Fabro's development.
+
+## AI researchers and labs
+
+Fabro is built on top of the large language models produced by leading AI research labs, including [Anthropic](https://www.anthropic.com/), [OpenAI](https://openai.com/), and [Google DeepMind](https://deepmind.google/). Their foundational work in AI research and model development makes agentic coding workflows possible. Fabro wouldn't exist without the breakthroughs these teams and the broader AI research community have achieved.

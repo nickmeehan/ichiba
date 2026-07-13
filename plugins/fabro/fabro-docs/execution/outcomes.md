@@ -1,0 +1,136 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Node Outcomes
+
+> The four stage outcomes and the attributes that control them
+
+Every node execution produces an **outcome** that drives edge routing, retry logic, and goal gate checks. This page defines the four externally visible outcomes and the attributes that influence them.
+
+## The four outcomes
+
+| Outcome               | Meaning                                                                                                                    |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `succeeded`           | The handler completed normally                                                                                             |
+| `failed`              | The handler encountered an unrecoverable error                                                                             |
+| `partially_succeeded` | The handler did not fully succeed but produced usable results — typically from retries exhausted with `allow_partial=true` |
+| `skipped`             | The node was not executed (e.g. a branch not taken in a parallel fan-out)                                                  |
+
+<Note>
+  Retry intent is internal to the engine. It triggers re-execution inside the retry loop and is never visible in edge `condition` expressions. Retryable failures emit `stage.retrying` events while the node is still active, then finish as one of the four outcomes above.
+</Note>
+
+## How handlers produce outcomes
+
+Each node type has its own rules for which outcomes it can return:
+
+| Handler                 | Produces                                                | Conditions                                                                                                                                                                                                         |
+| ----------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Command**             | `succeeded`, `failed`                                   | `succeeded` when exit code is 0; `failed` otherwise                                                                                                                                                                |
+| **Agent / Prompt**      | `succeeded`, `failed`, `partially_succeeded`, `skipped` | Defaults to `succeeded`. The LLM can set any outcome via a [routing directive](/agents/outputs#routing-directives) JSON object in its response. Backend errors request retry when retryable or finish as `failed`. |
+| **Parallel**            | `succeeded`, `partially_succeeded`, `failed`            | Depends on the `join_policy`. `wait_all`: `succeeded` if no failures, `partially_succeeded` if some branches failed. `first_success`: `succeeded` if threshold met, else `failed`.                                 |
+| **Human**               | `succeeded`                                             | Always succeeds — the user's selection becomes a routing signal via `preferred_label`                                                                                                                              |
+| **Conditional**         | `succeeded`                                             | Always succeeds — routing is handled by the engine's edge selection                                                                                                                                                |
+| **Start / Exit / Wait** | `succeeded`                                             | Always succeed                                                                                                                                                                                                     |
+
+## Retry loop
+
+When a handler returns a retryable failure, the engine enters the retry loop. If retry attempts remain (per the node's [retry policy](/execution/failures#retry-policies)), the handler re-executes after a backoff delay. If attempts are exhausted, the final outcome depends on `allow_partial`:
+
+```
+┌─────────────┐
+│ Run handler  │
+└──────┬──────┘
+       │
+       ▼
+  ┌──────────┐    succeeded / failed /
+  │Outcome?  │─── partially_succeeded / skipped ──▶ Done (use as-is)
+  └────┬─────┘
+       │ retryable failure
+       ▼
+  ┌──────────────┐   yes    ┌──────────────┐
+  │ Attempts     │─────────▶│ Backoff +    │──┐
+  │ remain?      │          │ re-execute   │  │
+  └──────┬───────┘          └──────────────┘  │
+         │ no                                 │
+         ▼                         ┌──────────┘
+  ┌──────────────┐                 │
+  │allow_partial?│                 │ (loops back to
+  └──────┬───┬───┘                 │  "Run handler")
+    yes  │   │ no                  │
+         ▼   ▼
+  partially_succeeded  failed
+```
+
+Handler errors follow the same loop: retryable errors (transient infrastructure) re-execute if attempts remain; non-retryable errors (authentication, bad config) fail immediately without consuming retry attempts.
+
+## `allow_partial`
+
+When `allow_partial=true` and the retry loop exhausts all attempts on a retryable failure, the outcome is promoted to `partially_succeeded` instead of `failed`. This lets the workflow continue past nodes that could not fully succeed.
+
+| Attribute       | Type    | Default |
+| --------------- | ------- | ------- |
+| `allow_partial` | Boolean | `false` |
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+implement [
+    label="Implement",
+    retry_policy="standard",
+    allow_partial=true,
+    prompt="Implement the feature."
+]
+```
+
+In this example, if the agent returns a retryable failure and all 5 standard-policy attempts are used, the node finishes with `partially_succeeded` rather than failing the run.
+
+See [Retry policies](/execution/failures#retry-policies) for the available presets and backoff settings.
+
+## `auto_status`
+
+When `auto_status=true`, any non-`succeeded` and non-`skipped` outcome is silently overridden to `succeeded` after the handler completes. This is applied after the retry loop, so retries still happen normally — only the final outcome is overridden.
+
+| Attribute     | Type    | Default |
+| ------------- | ------- | ------- |
+| `auto_status` | Boolean | `false` |
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+scan [
+    label="Scan",
+    shape=parallelogram,
+    auto_status=true,
+    script="find . -name '*.log' | head -20"
+]
+```
+
+Use `auto_status` for nodes whose failure should never block the workflow — optional scans, best-effort cleanup steps, or informational commands where the output matters more than the exit code.
+
+## Goal gate interaction
+
+Node outcomes and workflow status are separate. A node can finish with `failed`
+and the workflow can still reach `exit` and complete successfully if routing
+handles that outcome. Mark a node with `goal_gate=true` when its failure must
+make the workflow fail.
+
+Nodes marked with `goal_gate=true` are checked when the workflow reaches the exit node. A goal gate is satisfied if its last outcome was `succeeded` **or** `partially_succeeded`. Any other outcome (`failed`, `skipped`) causes the workflow to fail, even though execution reached the exit.
+
+This means `allow_partial=true` on a goal gate node lets the gate pass even if the node exhausted its retries — the promoted `partially_succeeded` outcome counts as passing.
+
+See [Goal gates](/execution/failures#goal-gates) for retry target resolution and failure behavior.
+
+## Outcome in edge conditions
+
+The four externally-visible statuses can be used in edge `condition` expressions via the `outcome` key:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+gate -> deploy  [label="Pass",    condition="outcome=succeeded"]
+gate -> fix     [label="Fix",     condition="outcome=failed"]
+gate -> review  [label="Partial", condition="outcome=partially_succeeded"]
+gate -> skip    [label="Skipped", condition="outcome=skipped"]
+
+// Common pattern: treat partial as passing
+gate -> deploy  [condition="outcome=succeeded || outcome=partially_succeeded"]
+gate -> fix     [condition="outcome=failed"]
+```
+
+See [Transitions](/workflows/transitions) for the full edge selection logic and operator reference.

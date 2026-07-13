@@ -1,0 +1,144 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Observability
+
+> How to monitor, inspect, and analyze workflow runs
+
+Fabro captures a structured event for every significant action during a workflow run. These events cover stage execution, agent tool calls, retries, routing, sandbox lifecycle, git checkpoints, and more.
+
+## Event stream
+
+Every workflow run emits a sequence of canonical **run event envelopes** that are:
+
+* Stored durably in the run store
+* Broadcast over SSE to connected API clients
+* Stored for later analysis
+* Rendered by CLI progress and log tooling
+* Optionally materialized into JSONL by export/debug paths
+
+### Event names
+
+Event names use lowercase dot notation, for example:
+
+* `run.started`
+* `stage.started`
+* `stage.completed`
+* `agent.tool.started`
+* `agent.tool.completed`
+* `sandbox.ready`
+* `todo.updated`
+* `parallel.branch.completed`
+
+### Envelope format
+
+Each serialized event envelope has a stable JSON shape:
+
+```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+{
+  "id": "01960d0c-5d16-7d6e-8f61-9fd6f4a532b5",
+  "ts": "2026-03-30T12:00:01.000Z",
+  "run_id": "01JQ...",
+  "event": "agent.tool.started",
+  "session_id": "ses_child",
+  "parent_session_id": "ses_parent",
+  "node_id": "implement",
+  "node_label": "Implement",
+  "properties": {
+    "tool_name": "shell",
+    "tool_call_id": "call_1",
+    "arguments": {"command": "cargo test"}
+  }
+}
+```
+
+Envelope fields:
+
+| Field               | Description                                         |
+| ------------------- | --------------------------------------------------- |
+| `id`                | Unique event id                                     |
+| `ts`                | UTC timestamp                                       |
+| `run_id`            | Workflow run id                                     |
+| `event`             | Event name                                          |
+| `session_id`        | Session that emitted the event, when applicable     |
+| `parent_session_id` | Immediate parent session for forwarded child events |
+| `node_id`           | Node or branch id, when applicable                  |
+| `node_label`        | Human-facing label for `node_id`, when applicable   |
+| `properties`        | Event-specific payload                              |
+
+Only `id`, `ts`, `run_id`, and `event` are always present. Optional fields are omitted when they do not apply.
+
+## Reading the event stream
+
+Because event payload lives in `properties`, most shell queries should look there.
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+# Count tool calls in a run
+fabro events 01JKXYZ... | jq -r 'select(.event == "agent.tool.started") | .properties.tool_name' | wc -l
+
+# Find stage failures
+fabro events 01JKXYZ... | jq 'select(.event == "stage.failed")'
+
+# See which edges were taken
+jq '{from: .properties.from_node, to: .properties.to_node, label: .properties.label}' \
+  <(fabro events 01JKXYZ...) | head
+```
+
+If you need files on disk for offline analysis, `fabro dump` exports `events.jsonl` plus run-state projections.
+
+## Event categories
+
+Common categories include:
+
+| Category            | Example events                                                              |
+| ------------------- | --------------------------------------------------------------------------- |
+| Run lifecycle       | `run.started`, `run.completed`, `run.failed`, `run.notice`                  |
+| Stage lifecycle     | `stage.started`, `stage.completed`, `stage.failed`, `stage.retrying`        |
+| Agent activity      | `agent.message`, `agent.tool.started`, `agent.warning`, `agent.sub.spawned` |
+| Agent todo state    | `todo.created`, `todo.updated`, `todo.deleted`                              |
+| Routing             | `edge.selected`, `loop.restart`, `parallel.started`                         |
+| Git and checkpoints | `checkpoint.completed`, `git.commit`, `git.push`                            |
+| Setup and sandbox   | `sandbox.initializing`, `sandbox.ready`, `setup.started`                    |
+
+`agent.message` is the canonical post-response event for agent turns. When context-window data is available, it appears on the message payload as `context_window`; there is no separate context-window snapshot event to consume.
+
+## Sub-agent visibility
+
+Sub-agent activity now appears as normal agent events with session linkage:
+
+* `session_id` identifies the child session
+* `parent_session_id` identifies its immediate parent
+
+Lifecycle events such as `agent.sub.spawned` and `agent.sub.completed` are emitted by the parent session. Tool calls and other child activity are forwarded with their original `session_id`.
+
+## Real-time monitoring
+
+### API: Server-Sent Events
+
+When running workflows through the API server, subscribe to the [run events endpoint](/api-reference/runs/stream-run-events). Each SSE payload is a serialized run event envelope in the same shape used by `fabro events` and `events.jsonl` exports.
+
+### Web UI
+
+The web frontend consumes the SSE stream automatically and shows stage progress, tool calls, command output, and human interaction as they happen. Use the stage `Thread` and `Debug` views for per-stage activity, or the run-level `Run Events` page when you need the full event stream with search and category filters. The `Run Events` page also includes a Waterfall view for comparing stage durations and inspecting timing details from hover popovers.
+
+<Frame caption="The Stages tab shows the full agent conversation including tool calls and responses.">
+  <img src="https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/web/run-stages.png?fit=max&auto=format&n=_yTKyxnEAApivGto&q=85&s=783ac5cd8360fba67b2443e2589ef0e2" alt="Fabro web UI run stages showing agent conversation with tool calls" width="2400" height="1558" data-path="images/web/run-stages.png" />
+</Frame>
+
+### CLI progress
+
+The CLI renders live progress from the same envelope format. This is written to stderr so stdout remains pipe-friendly.
+
+## Post-run analysis
+
+Post-run analysis surfaces include:
+
+| Surface                           | Description                                                                  |
+| --------------------------------- | ---------------------------------------------------------------------------- |
+| `fabro events <RUN>`              | Full event envelope stream as NDJSON                                         |
+| `fabro logs <RUN>`                | Raw per-run worker tracing log, when available                               |
+| `fabro inspect <RUN>`             | Current durable run state, including run/start/checkpoint/conclusion records |
+| `fabro dump --output <DIR> <RUN>` | Exported `events.jsonl` plus reconstructed JSON and node files               |
+
+See [stages](/api-reference/run-internals/list-run-stages) and [turns](/api-reference/run-internals/list-stage-turns) for higher-level analysis views built on top of this event stream.

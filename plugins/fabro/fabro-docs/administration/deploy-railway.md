@@ -1,0 +1,88 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Railway
+
+> Deploy Fabro to Railway from the prebuilt GHCR image, with a persistent Volume for state
+
+<Warning>
+  The server interface is in private early access. Contact [bryan@qlty.sh](mailto:bryan@qlty.sh) if you're interested in trying it.
+</Warning>
+
+[Railway](https://railway.com) can host the Fabro server by pulling the pre-built image published to GHCR. A single deploy button spins up a container, and a Railway Volume keeps your runs, checkpoints, and sessions across redeploys.
+
+## One-click deploy
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/UcEy5m?referralCode=E5TucU\&utm_medium=integration\&utm_source=template\&utm_campaign=generic)
+
+The button launches Railway's template flow, which deploys the pre-built `ghcr.io/fabro-sh/fabro:nightly` image directly from GHCR — no Rust compilation on Railway's builder, so deploys complete in seconds.
+
+## First-deploy checklist
+
+The template covers the build; a few pieces still need to be wired up after the first deploy.
+
+### 1. Attach a Volume for `/storage`
+
+Fabro writes all persistent state — run history, checkpoints, sessions, the default token, and JWT keys — under `/storage`. Railway containers have ephemeral filesystems, so without a Volume that directory is wiped on every redeploy.
+
+In the Railway dashboard: **Service → Settings → Volumes → New Volume**, mount path `/storage`. 10 GB is a reasonable starting size; grow as needed.
+
+### 2. Confirm the target port
+
+Railway sets `$PORT` automatically and expects the container to bind to it. The Fabro image honors `$PORT` and falls back to `32276`, and it exposes `32276`, so Railway's default HTTP routing works without any manual port configuration.
+
+If you override the port in **Service → Settings → Networking → Target Port**, match the value to `$PORT`.
+
+### 3. Set bootstrap environment variables
+
+Add variables in **Service → Variables** as needed. The [Server Configuration](/administration/server-configuration) reference has the full list. Railway process env is for bootstrap values only:
+
+| Variable                                                          | Purpose                                                                                         |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `FABRO_DEV_TOKEN`                                                 | Optional — pre-set the dev token instead of reading the one written to `/storage` on first boot |
+| `SESSION_SECRET`                                                  | 64-character hex string; required when the web UI is enabled                                    |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Optional static S3 object-store credentials                                                     |
+
+Do not put optional integration secrets in Railway variables for server runtime. After the server is running, add LLM provider keys, Slack, Daytona, Brave Search, `GITHUB_TOKEN`, and GitHub App secrets to the server vault with `fabro secret set`, `fabro provider login`, or `fabro install`.
+
+No `.env` file is auto-loaded inside the container; bootstrap variables come from Railway's environment.
+
+## Accessing your Fabro server
+
+Once the deploy is healthy, Railway exposes a `*.up.railway.app` URL (or your custom domain). Two things to grab:
+
+1. **The dev token** — on first boot, Fabro writes one to `/var/fabro/dev-token` and logs it. Find it in the Railway deploy logs or run `railway run cat /var/fabro/dev-token` from the Railway CLI.
+2. **Point your local CLI at the server** — add the Railway URL to `~/.fabro/settings.toml`:
+
+   ```toml title="~/.fabro/settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+   [cli.target]
+   type = "http"
+   url = "https://<your-service>.up.railway.app/api/v1"
+   ```
+
+   Then commands like `fabro model list --server <url>` will hit your Railway instance.
+
+See [Server Operations](/reference/server-operations) for the full auth and CLI-pointing story.
+
+## Redeploys and updates
+
+Railway re-pulls the GHCR image on every deploy. The template uses the `:nightly` tag by default, so redeploying picks up the latest nightly automatically. To pin a specific version, change the image in **Service → Settings → Source** to `ghcr.io/fabro-sh/fabro:<version>` and redeploy. The `/storage` Volume survives redeploys, so runs and checkpoints persist.
+
+## Caveats
+
+* **Volume is load-bearing.** Without a Volume mounted at `/storage`, a redeploy silently wipes all state — including the dev token and JWT signing keys. Attach it before submitting any real runs.
+* **Single replica.** Fabro's server currently assumes one process owns `/storage`. Don't scale the service to multiple replicas.
+* **Architecture.** Railway runs x86\_64 (amd64) containers by default. The `:nightly` tag is multi-arch, but the arm64 variant is not currently usable — stay on amd64, which is Railway's default.
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Server Operations" icon="server" href="/reference/server-operations">
+    Auth, dev tokens, submitting runs, and pointing the CLI at your deployment.
+  </Card>
+
+  <Card title="Server Configuration" icon="gear" href="/administration/server-configuration">
+    Full `settings.toml` reference — reverse-proxy TLS, auth methods, concurrency, and more.
+  </Card>
+</Columns>
