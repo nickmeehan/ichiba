@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Public Claude Code plugin marketplace for sharing useful development plugins and demonstrating best practices",
-    "version": "1.7.8",
+    "version": "1.8.0",
     "pluginRoot": "plugins"
   },
   "plugins": [
