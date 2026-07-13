@@ -1,0 +1,58 @@
+name: Sync fabro plugin
+
+on:
+  schedule:
+    - cron: '23 6 * * *'
+  workflow_dispatch:
+
+# Share the release concurrency group so a sync never races a
+# semantic-release or finalize run — all of them push to main.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
+          persist-credentials: true
+
+      - name: Sync from nickmeehan/dark-factory
+        id: sync
+        run: bash bin/sync-vendored-plugin.sh fabro nickmeehan/dark-factory
+
+      - name: Install Claude Code
+        if: steps.sync.outputs.synced == 'true'
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Validate
+        if: steps.sync.outputs.synced == 'true'
+        run: |
+          claude plugin validate .
+          claude plugin validate plugins/fabro
+
+      # Content only — no tag, no marketplace bump, no GitHub Release, and
+      # deliberately no [skip ci]: the push (made with RELEASE_TOKEN)
+      # triggers release.yml, whose finalize-vendored job cuts the release.
+      - name: Commit and push
+        if: steps.sync.outputs.synced == 'true'
+        env:
+          VERSION: ${{ steps.sync.outputs.version }}
+          UPSTREAM_TAG: ${{ steps.sync.outputs.upstream_tag }}
+          UPSTREAM_SHA: ${{ steps.sync.outputs.upstream_sha }}
+        run: |
+          git config user.name ichiba-release-bot
+          git config user.email ichiba-release-bot@users.noreply.github.com
+          git add plugins/fabro .claude-plugin/marketplace.json
+          git commit \
+            -m "chore(vendor): fabro ${VERSION}" \
+            -m "Synced from nickmeehan/dark-factory ${UPSTREAM_TAG} (${UPSTREAM_SHA})."
+          git push origin HEAD:main

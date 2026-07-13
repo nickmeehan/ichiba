@@ -1,0 +1,16 @@
+# Vendored plugins: developed in their own upstream repo and synced into
+# plugins/<name>/ by a scheduled workflow. The upstream repo owns the plugin
+# version; this marketplace adopts it verbatim and never computes its own
+# bump for these plugins.
+#
+# Format: <plugin-name> <github-owner/repo>
+#
+# Consumed by:
+#   - bin/list-releasable-plugins.sh (release.yml discover step): vendored
+#     plugins are excluded from the semantic-release matrix
+#   - bin/finalize-vendored-releases.sh (release.yml finalize-vendored
+#     job): cuts the marketplace release for freshly synced versions
+#   - commitlint.config.js: vendored plugin names are not valid commit
+#     scopes (changes to a vendored plugin belong upstream)
+#   - .github/workflows/sync-<plugin>.yml: the sync workflow itself
+fabro nickmeehan/dark-factory

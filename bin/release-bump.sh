@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Set a native plugin's version in both manifests (plugin.json and the
+# marketplace.json entry), then bump the top-level marketplace version via
+# bin/marketplace-bump.sh. Called by semantic-release's prepare step
+# (release.config.js). Vendored plugins never come through here — their
+# version is adopted by bin/sync-vendored-plugin.sh and the marketplace
+# bump happens in bin/finalize-vendored-releases.sh.
+
 if [[ $# -ne 2 ]]; then
   echo "Usage: $0 <plugin-name> <new-version>" >&2
   exit 64
@@ -39,29 +46,6 @@ jq --arg name "$plugin" --arg v "$new_version" \
   '(.plugins[] | select(.name == $name) | .version) = $v' \
   "$marketplace_json" | write_json "$marketplace_json"
 
-if git tag -l "${plugin}-v*" | grep -q .; then
-  marketplace_bump="patch"
-else
-  marketplace_bump="minor"
-fi
+echo "release-bump: ${plugin} -> ${new_version}"
 
-current_marketplace="$(jq -r '.metadata.version' "$marketplace_json")"
-if [[ ! "$current_marketplace" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-  echo "release-bump: invalid current marketplace version: $current_marketplace" >&2
-  exit 1
-fi
-major="${BASH_REMATCH[1]}"
-minor="${BASH_REMATCH[2]}"
-patch="${BASH_REMATCH[3]}"
-
-case "$marketplace_bump" in
-  major) major=$((major + 1)); minor=0; patch=0 ;;
-  minor) minor=$((minor + 1)); patch=0 ;;
-  patch) patch=$((patch + 1)) ;;
-esac
-new_marketplace="${major}.${minor}.${patch}"
-
-jq --arg v "$new_marketplace" '.metadata.version = $v' "$marketplace_json" \
-  | write_json "$marketplace_json"
-
-echo "release-bump: ${plugin} ${new_version}; marketplace ${current_marketplace} -> ${new_marketplace} (${marketplace_bump})"
+bash "${repo_root}/bin/marketplace-bump.sh" "$plugin"
