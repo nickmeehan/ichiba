@@ -141,6 +141,55 @@ The `~/.claude/plugin-race-workaround.log` records every session; lines with
 If `race_fired=no` for 3+ consecutive fresh containers after a Claude Code
 upgrade, run the removal procedure below.
 
+## Upstream issue status
+
+Checked 2026-08-18: **no issue authored by nickmeehan exists** in
+`anthropics/claude-code` (`author:nickmeehan` search returns zero results).
+The `docs/known-issues/plugin-install-race-upstream-issue.md` file that
+earlier notes on this investigation assumed existed was never actually
+committed to this repo — the upstream report described here was drafted
+but, as far as this repo's history shows, never filed. Nothing to link or
+follow up on from our side.
+
+Closest matches found by searching `anthropics/claude-code` issues for our
+symptoms (`installPluginsForHeadless`, `enabledPlugins`, `extraKnownMarketplaces`,
+`"not found in any marketplace, skipping"`), none filed by us:
+
+- **[#87497](https://github.com/anthropics/claude-code/issues/87497)**
+  (open, filed 2026-08-18 by a third party, labels `area:plugins` `bug`
+  `documentation` `platform:web`) — **closest match to what we're seeing.**
+  Reports the exact log lines we get (`Skipping orphaned enabledPlugins
+  entry … marketplace not registered`, `installPluginsForHeadless: no
+  marketplaces declared`) for `extraKnownMarketplaces` entries in cloud/web
+  sessions, and claims this is **deliberate as of v2.1.195+**: the CLI
+  intentionally skips installing plugins from external (non-official)
+  marketplace sources in cloud sessions on personal Pro/Max plans, not just
+  racing them. That would explain why, in our 2026-08-18 session on 2.1.234,
+  `claude-plugins-official` (the built-in marketplace) registered fine while
+  `ichiba` (our `extraKnownMarketplaces` entry) never registered at all —
+  it may not be a timing race for `ichiba` specifically so much as a policy
+  gate. No maintainer response yet. Re-check this issue before doing more
+  timing-based debugging on the `ichiba`-never-registers half of the
+  symptom.
+- **[#83034](https://github.com/anthropics/claude-code/issues/83034)**
+  (open, no labels) — a different root cause (the `enabledPlugins` →
+  `installed_plugins.json` sync is gated on plugin-key presence instead of
+  `(key, projectPath)`, starving every project after the first one that
+  installs a given plugin). Not our symptom, but same subsystem.
+- **[#64497](https://github.com/anthropics/claude-code/issues/64497)**
+  (closed, not planned/stale) — "Enterprise-managed marketplaces in project
+  `enabledPlugins` are orphaned on first run; only install after a
+  restart." Same shape as our original race, filed by someone else,
+  closed without a fix.
+- **[#19275](https://github.com/anthropics/claude-code/issues/19275)**
+  (closed, not planned/stale) — the original race-condition report this
+  investigation started from citing; unrelated author, no fix landed.
+
+None of these carry a `fixed-in-X.Y.Z` label or a linked merged PR. If we
+want upstream traction, filing our own issue — or a comment on #87497 with
+our `ichiba`-marketplace-never-registers evidence, since it's the freshest
+and most specific — is probably the highest-leverage next step.
+
 ## Removal procedure (when upstream is fixed)
 
 1. Delete the second hook entry in `.claude/settings.json` →
