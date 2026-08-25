@@ -27,18 +27,17 @@ _version = 1
 enabled = true
 base_url = "http://localhost:4000/v1"
 
-[llm.models."litellm-gpt-5"]
-provider = "litellm"
+[llm.providers.litellm.models."litellm-gpt-5"]
 api_id = "gpt-5"
 display_name = "LiteLLM GPT-5"
 family = "litellm"
 default = true
 
-[llm.models."litellm-gpt-5".limits]
+[llm.providers.litellm.models."litellm-gpt-5".limits]
 context_window = 128000
 max_output = 8192
 
-[llm.models."litellm-gpt-5".features]
+[llm.providers.litellm.models."litellm-gpt-5".features]
 tools = true
 vision = false
 reasoning = false
@@ -56,7 +55,7 @@ For a server-owned secret:
 fabro secret set LITELLM_API_KEY sk-proxy-key
 ```
 
-Standalone local SDK/CLI runs can still use an env-backed credential source explicitly:
+`fabro exec` and direct `fabro-llm` SDK usage can use an env-backed credential source explicitly:
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 export LITELLM_API_KEY=sk-proxy-key
@@ -97,18 +96,17 @@ digraph Example {
 Declare each LiteLLM-routed model explicitly so Fabro knows its provider, context window, tool support, and routing defaults:
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[llm.models."litellm-fast"]
-provider = "litellm"
+[llm.providers.litellm.models."litellm-fast"]
 api_id = "fast-model"
 display_name = "LiteLLM Fast"
 family = "litellm"
 aliases = ["fast"]
 
-[llm.models."litellm-fast".limits]
+[llm.providers.litellm.models."litellm-fast".limits]
 context_window = 64000
 max_output = 4096
 
-[llm.models."litellm-fast".features]
+[llm.providers.litellm.models."litellm-fast".features]
 tools = true
 vision = false
 reasoning = false
@@ -118,7 +116,7 @@ Only one model for a provider should set `default = true`. You may also mark one
 
 ## Troubleshooting
 
-**"No API key configured"** — For server-backed runs, set `vault:LITELLM_API_KEY` with `fabro secret set LITELLM_API_KEY ...`. For standalone local usage, export `LITELLM_API_KEY` in the invoking shell and use an env-backed credential source.
+**"No API key configured"** — For runs, set `vault:LITELLM_API_KEY` with `fabro secret set LITELLM_API_KEY ...`. Exporting it in the server's shell has no effect on runs: workers start from a cleared environment and provider keys are not inherited. For `fabro exec` or direct SDK usage, export `LITELLM_API_KEY` in the invoking shell and use an env-backed credential source.
 
 **Connection refused** — Confirm the LiteLLM proxy is running and that `base_url` is reachable from the Fabro process. For Docker deployments, `localhost` means the Fabro container unless you point it at a host or service name.
 
@@ -132,6 +130,6 @@ Only one model for a provider should set `default = true`. You may also mark one
   </Card>
 
   <Card title="Settings Configuration" icon="gear" href="/reference/user-configuration">
-    Full reference for `[llm.providers.<id>]` and `[llm.models.<id>]`.
+    Full reference for provider settings and provider-scoped model offerings.
   </Card>
 </Columns>

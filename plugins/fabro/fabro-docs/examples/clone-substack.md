@@ -156,8 +156,8 @@ Write to .workflow/plan_b.md."
             label="Debate & Consolidate",
             prompt="Synthesize the two implementation plans into a single best-of-breed \
 final plan.\n\n\
-Read branch outputs via parallel_results.json. If parallel_results.json is missing, \
-fall back to reading .workflow/plan_a.md and .workflow/plan_b.md.\n\n\
+Review every branch result in parallel.results from the prompt context, then read \
+.workflow/plan_a.md and .workflow/plan_b.md from the shared checkout.\n\n\
 If .workflow/postmortem_latest.md exists, read it FIRST. The postmortem contains \
 root-cause analysis and concrete fixes from the previous iteration. The final plan \
 MUST be adjusted to address every issue identified in the postmortem — add new \
@@ -484,8 +484,8 @@ Write to .workflow/review_b.md."
             goal_gate=true,
             retry_target="postmortem",
             prompt="Synthesize the two reviews into a consensus verdict.\n\n\
-Read branch outputs via parallel_results.json. If parallel_results.json is \
-missing, fall back to reading .workflow/review_a.md and .workflow/review_b.md.\n\n\
+Review every branch result in parallel.results from the prompt context, then read \
+.workflow/review_a.md and .workflow/review_b.md from the shared checkout.\n\n\
 Read .workflow/definition_of_done.md for acceptance criteria reference.\n\n\
 Consensus rules:\n\
 - Both APPROVED with no critical gaps: the implementation passes\n\
@@ -516,7 +516,7 @@ Read (if they exist):\n\
 - .workflow/test-evidence/latest/manifest.json\n\
 - Evidence files referenced by manifest entries for failed or suspicious IT \
 scenarios\n\
-- Branch review outputs via parallel_results.json (if available)\n\n\
+- Parallel branch review status and context updates from parallel.results (if available)\n\n\
 Output to .workflow/postmortem_latest.md (overwrite previous):\n\
 - Root causes of failure\n\
 - What works and must be preserved\n\

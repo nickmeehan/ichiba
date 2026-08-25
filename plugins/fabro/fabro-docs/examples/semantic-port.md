@@ -217,25 +217,29 @@ The stylesheet assigns three tiers of models:
 Pair the workflow with a run config TOML for repeatable execution:
 
 ```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-version = 1
-goal = "Port semantic changes from upstream openai-agents-python to our Go SDK"
+_version = 1
+
+[workflow]
 graph = "semport.fabro"
 
-[llm]
-model = "claude-sonnet-4-5"
+[run]
+goal = "Port semantic changes from upstream openai-agents-python to our Go SDK"
+
+[run.model]
+name = "claude-sonnet-4-5"
 provider = "anthropic"
 
-[llm.fallbacks]
-anthropic = ["openai"]
-gemini = ["anthropic"]
+[run.model.fallbacks]
+"claude-sonnet-4-5" = ["openai"]
+"gemini-3.1-pro-preview" = ["anthropic"]
 
-[setup]
-commands = [
-    "git clone https://github.com/openai/openai-agents-python upstream || (cd upstream && git pull)",
-    "pip install -r ledger/requirements.txt"
-]
+[[run.prepare.steps]]
+script = "git clone https://github.com/openai/openai-agents-python upstream || (cd upstream && git pull)"
 
-[vars]
+[[run.prepare.steps]]
+script = "pip install -r ledger/requirements.txt"
+
+[run.inputs]
 upstream_repo = "openai/openai-agents-python"
 downstream_lang = "go"
 ```

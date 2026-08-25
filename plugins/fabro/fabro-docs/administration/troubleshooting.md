@@ -20,7 +20,7 @@ It checks:
 
 * Local user config and storage directory health
 * Server-reported LLM provider connectivity, with configured providers probed concurrently
-* GitHub App, sandbox, and Brave Search credentials
+* GitHub App, sandbox, and web search credentials (Brave or Venice), plus Docker daemon reachability when the Docker sandbox provider is enabled
 * Server authentication and crypto configuration
 
 LLM provider probe failures are reported as errors. Use `--verbose` to see the underlying provider error chain when a key, network route, or model endpoint fails.
@@ -31,11 +31,11 @@ LLM provider probe failures are reported as errors. Use `--verbose` to see the u
 
 **Server exited after I finished the install wizard** — Expected. The server writes `~/.fabro/settings.toml` and exits cleanly at the end of the wizard. Start it again with `fabro server start` to boot in configured mode, or run it under a supervisor with a restart policy (for example docker-compose `restart: unless-stopped`, systemd, or Railway's restart-on-exit) so the second start happens automatically.
 
-**"No API key configured"** — For server-backed runs, set at least one provider key in the server vault with `fabro provider login` or `fabro secret set`. Standalone local CLI/library runs can use env-backed credential sources explicitly. Run `fabro doctor` to verify server connectivity.
+**"No API key configured"** — For runs, set at least one provider key in the server vault with `fabro provider login` or `fabro secret set`; workers start from a cleared environment, so exporting a provider key in the server's shell has no effect on runs. `fabro exec` and direct library usage can use env-backed credential sources explicitly. Run `fabro doctor` to verify server connectivity.
 
 **Stall watchdog timeouts** — If runs are cancelled unexpectedly, the agent may be stuck or the LLM provider may be slow. Check `FABRO_LOG=debug` output for `Agent.LlmRetry` events. Increase `stall_timeout` in the graph if needed, or add [fallback providers](/core-concepts/models) to handle outages.
 
-**Sandbox creation failures** — For Docker: ensure the Docker daemon is running and the configured image exists. For Daytona: verify `DAYTONA_API_KEY` is stored in the server vault, includes `write:snapshots`, `delete:snapshots`, `write:sandboxes`, and `delete:sandboxes`, and that GitHub access is configured. For Exe: verify your SSH keys are configured for `exe.dev` and that `ssh exe.dev` connects successfully.
+**Sandbox creation failures** — For Docker: run `fabro doctor`; when Docker is enabled, it pings the daemon and reports whether to start Docker, fix socket permissions, or disable the provider. Also ensure the configured image exists. For Daytona: verify `DAYTONA_API_KEY` is stored in the server vault, includes `write:snapshots`, `delete:snapshots`, `write:sandboxes`, and `delete:sandboxes`, and that GitHub access is configured. For Exe: verify your SSH keys are configured for `exe.dev` and that `ssh exe.dev` connects successfully.
 
 **Port already in use** — Change the port with `fabro server start --port 3001` or stop the conflicting process.
 

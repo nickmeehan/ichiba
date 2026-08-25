@@ -14,7 +14,7 @@
 openapi: 3.1.0
 info:
   title: Fabro Run API
-  version: 0.1.0
+  version: 0.2.0
   description: HTTP API for managing Fabro workflow run executions.
 servers: []
 security:
@@ -51,6 +51,8 @@ tags:
     description: Internal run details (stages, turns, context, configuration)
   - name: Workflows
     description: Workflow definitions and execution
+  - name: Workflow Versions
+    description: Immutable, content-addressed workflow packages
   - name: Billing
     description: Token counts and billed totals
   - name: Insights
@@ -455,9 +457,16 @@ components:
         Timing rollup for an entire run. Active fields sum work across stage
         visits, so `active_time_ms` can exceed `wall_time_ms` when parallel
         branches run concurrently.
+
+        For a running run, stages still in flight contribute a live estimate
+        rather than nothing, so wall and active both advance continuously.
+        Unlike `StageTiming`, active is not clamped to wall here — concurrent
+        branches can legitimately sum past run wall time.
       type: object
       required:
         - wall_time_ms
+        - inference_time_ms
+        - tool_time_ms
         - active_time_ms
       properties:
         wall_time_ms:
@@ -1078,6 +1087,7 @@ components:
       type: string
       enum:
         - workflow_error
+        - publish_failed
         - cancelled
         - approval_denied
         - terminated

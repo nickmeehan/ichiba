@@ -126,7 +126,7 @@ Do not rewrite working code. Make targeted fixes to the specific failures.
 
 ### Max visits as a safety valve
 
-`max_visits=5` on the `fix` node prevents infinite loops. If the agent can't pass in 5 iterations, the workflow moves on with the best result so far. Tune this based on spec complexity: a 30-line spec might need 2 iterations, a 2,000-line spec might need 10.
+`max_visits=5` on the `fix` node prevents infinite loops. The node can execute up to 5 times; a sixth visit fails the run rather than looping forever. Tune this based on spec complexity: a 30-line spec might need 2 iterations, a 2,000-line spec might need 10.
 
 ### Goal gate on full conformance
 

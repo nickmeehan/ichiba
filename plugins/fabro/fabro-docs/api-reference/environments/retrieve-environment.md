@@ -14,7 +14,7 @@
 openapi: 3.1.0
 info:
   title: Fabro Run API
-  version: 0.1.0
+  version: 0.2.0
   description: HTTP API for managing Fabro workflow run executions.
 servers: []
 security:
@@ -51,6 +51,8 @@ tags:
     description: Internal run details (stages, turns, context, configuration)
   - name: Workflows
     description: Workflow definitions and execution
+  - name: Workflow Versions
+    description: Immutable, content-addressed workflow packages
   - name: Billing
     description: Token counts and billed totals
   - name: Insights
@@ -296,7 +298,7 @@ components:
       additionalProperties:
         type: string
     InterpString:
-      description: Resolved config string that may contain env interpolation tokens.
+      description: Config string that can contain typed interpolation tokens.
       type: string
     ErrorResponseEntry:
       description: A single error entry in an error response.

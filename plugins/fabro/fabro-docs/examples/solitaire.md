@@ -270,7 +270,9 @@ goal = "Build a terminal-based solitaire (Klondike) game in Python"
 [run.model]
 name = "claude-sonnet-4-5"
 provider = "anthropic"
-fallbacks = ["openai", "gemini"]
+
+[run.model.fallbacks]
+"claude-sonnet-4-5" = ["openai", "gemini"]
 
 [[run.prepare.steps]]
 script = "python3 -m venv .venv && . .venv/bin/activate && pip install pytest curses"

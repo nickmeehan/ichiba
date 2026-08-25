@@ -14,7 +14,7 @@
 openapi: 3.1.0
 info:
   title: Fabro Run API
-  version: 0.1.0
+  version: 0.2.0
   description: HTTP API for managing Fabro workflow run executions.
 servers: []
 security:
@@ -51,6 +51,8 @@ tags:
     description: Internal run details (stages, turns, context, configuration)
   - name: Workflows
     description: Workflow definitions and execution
+  - name: Workflow Versions
+    description: Immutable, content-addressed workflow packages
   - name: Billing
     description: Token counts and billed totals
   - name: Insights
@@ -222,6 +224,13 @@ components:
             - 'null'
           description: Optional contextual text shown alongside the question.
           example: Latest draft
+        review_target:
+          description: >-
+            Optional validated external resource that is the primary subject of
+            this review question.
+          oneOf:
+            - $ref: '#/components/schemas/ReviewTarget'
+            - type: 'null'
     PaginationMeta:
       description: Pagination metadata included in every paginated response.
       type: object
@@ -305,6 +314,36 @@ components:
           description: >-
             Optional untrusted model-authored option preview captured for
             clients.
+    ReviewTarget:
+      description: >-
+        A validated external resource presented as the primary subject of a
+        human review question.
+      type: object
+      required:
+        - label
+        - url
+        - kind
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Human-readable link label.
+          example: Quarry review exercise
+        url:
+          type: string
+          format: uri
+          minLength: 1
+          maxLength: 2048
+          description: Absolute HTTP or HTTPS URL opened by the reviewer.
+          example: https://quarry.lithos.computer/tmp/0123456789abcdef0123456789abcdef
+        kind:
+          $ref: '#/components/schemas/ReviewTargetKind'
+    ReviewTargetKind:
+      description: The type of resource presented for human review.
+      type: string
+      enum:
+        - document
   headers:
     XRequestId:
       description: >

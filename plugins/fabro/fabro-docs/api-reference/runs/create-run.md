@@ -4,7 +4,9 @@
 
 # Create Run
 
-> Creates a new workflow run in `submitted` status from a self-contained manifest.
+> Creates a new workflow run in `submitted` status from either a self-contained legacy manifest or an immutable workflow-version intent. Creation does not start or schedule the run.
+
+Failures return the standard error body. The intent lane responds `404` (`workflow_version_not_found`, `environment_not_found`), `422` (`run_intent_invalid`, `target_invalid`, `target_environment_unsupported`, `workflow_version_unusable`, `run_compile_invalid`), `503` (`integration_unavailable`), or `500` (`workflow_version_store_error`, `credential_store_error`, `variable_store_error`, `run_persistence_failed`).
 
 
 
@@ -14,7 +16,7 @@
 openapi: 3.1.0
 info:
   title: Fabro Run API
-  version: 0.1.0
+  version: 0.2.0
   description: HTTP API for managing Fabro workflow run executions.
 servers: []
 security:
@@ -51,6 +53,8 @@ tags:
     description: Internal run details (stages, turns, context, configuration)
   - name: Workflows
     description: Workflow definitions and execution
+  - name: Workflow Versions
+    description: Immutable, content-addressed workflow packages
   - name: Billing
     description: Token counts and billed totals
   - name: Insights
@@ -70,15 +74,25 @@ paths:
         - Runs
       summary: Create Run
       description: >-
-        Creates a new workflow run in `submitted` status from a self-contained
-        manifest.
+        Creates a new workflow run in `submitted` status from either a
+        self-contained legacy manifest or an immutable workflow-version intent.
+        Creation does not start or schedule the run.
+
+
+        Failures return the standard error body. The intent lane responds `404`
+        (`workflow_version_not_found`, `environment_not_found`), `422`
+        (`run_intent_invalid`, `target_invalid`,
+        `target_environment_unsupported`, `workflow_version_unusable`,
+        `run_compile_invalid`), `503` (`integration_unavailable`), or `500`
+        (`workflow_version_store_error`, `credential_store_error`,
+        `variable_store_error`, `run_persistence_failed`).
       operationId: createRun
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RunManifest'
+              $ref: '#/components/schemas/CreateRunRequest'
       responses:
         '201':
           description: Run created
@@ -87,7 +101,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Run'
         '400':
-          description: Invalid Graphviz source
+          description: Invalid JSON or legacy manifest
           headers:
             x-request-id:
               $ref: '#/components/headers/XRequestId'
@@ -97,65 +111,13 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    RunManifest:
-      description: Self-contained workflow run manifest.
-      type: object
-      required:
-        - version
-        - cwd
-        - target
-        - workflows
-      properties:
-        version:
-          type: integer
-          description: Manifest schema version.
-          example: 1
-        run_id:
-          type:
-            - string
-            - 'null'
-          description: >-
-            Optional pre-generated run ID to use instead of allocating a new
-            ULID.
-          example: 01HV6D7S5YF4Z4B2M7K4N0Q6T9
-        parent_id:
-          type:
-            - string
-            - 'null'
-          description: >-
-            Optional orchestration parent run ID. Fork and rewind lineage use
-            separate fields and should not set this value.
-          example: 01HV6D7S5YF4Z4B2M7K4N0Q6T8
-        title:
-          type:
-            - string
-            - 'null'
-          maxLength: 100
-          description: >-
-            Optional explicit run title. The server trims leading/trailing
-            whitespace, rejects blank values, rejects control characters and
-            newline characters, and requires at most 100 characters.
-          example: Add rate limiting to auth endpoints
-        cwd:
-          type: string
-          description: CLI working directory at invocation time.
-          example: /tmp/project
-        git:
-          $ref: '#/components/schemas/GitContext'
-        goal:
-          $ref: '#/components/schemas/ManifestGoal'
-        args:
-          $ref: '#/components/schemas/ManifestArgs'
-        target:
-          $ref: '#/components/schemas/ManifestTarget'
-        configs:
-          type: array
-          items:
-            $ref: '#/components/schemas/ManifestConfig'
-        workflows:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/ManifestWorkflow'
+    CreateRunRequest:
+      description: >-
+        Transitional create body used while callers migrate independently from
+        self-contained manifests to immutable workflow-version intents.
+      oneOf:
+        - $ref: '#/components/schemas/RunManifest'
+        - $ref: '#/components/schemas/RunIntent'
     Run:
       description: Canonical public run shape.
       type: object
@@ -310,130 +272,87 @@ components:
             failure responses only.
           items:
             type: string
-    GitContext:
-      description: Observable git state captured before the run starts.
+    RunManifest:
+      description: Self-contained workflow run manifest.
       type: object
       required:
-        - origin_url
-        - branch
-        - dirty
-        - push_outcome
+        - version
+        - cwd
+        - target
+        - workflows
       properties:
-        origin_url:
-          type: string
-          description: Remote origin URL with any embedded credentials removed.
-          example: https://github.com/acme/my-app.git
-        branch:
-          type: string
-          description: Current branch name.
-          example: feature/foo
-        sha:
+        version:
+          type: integer
+          description: Manifest schema version.
+          example: 1
+        parent_id:
           type:
             - string
             - 'null'
-          description: Current commit SHA, when known.
-          example: abc123def
-        dirty:
-          $ref: '#/components/schemas/DirtyStatus'
-        push_outcome:
-          $ref: '#/components/schemas/PreRunPushOutcome'
-    ManifestGoal:
-      description: Resolved goal with provenance.
-      type: object
-      required:
-        - type
-        - text
-      properties:
-        type:
-          type: string
-          enum:
-            - value
-            - file
-            - graph
-        text:
-          type: string
-          description: Resolved goal content.
-        path:
+          description: >-
+            Optional orchestration parent run ID. Fork and rewind lineage use
+            separate fields and should not set this value.
+          example: 01HV6D7S5YF4Z4B2M7K4N0Q6T8
+        title:
           type:
             - string
             - 'null'
-          description: Original goal file path when the goal came from a file.
-    ManifestArgs:
-      description: Sparse command-local args that affect run settings.
-      type: object
-      properties:
-        model:
+          maxLength: 100
+          description: >-
+            Optional explicit run title. The server trims leading/trailing
+            whitespace, rejects blank values, rejects control characters and
+            newline characters, and requires at most 100 characters.
+          example: Add rate limiting to auth endpoints
+        cwd:
           type: string
-        provider:
-          type: string
-        environment:
-          type: string
-          description: Named environment slug to select for the run.
-        docker_image:
-          type: string
-          description: Per-run environment image override.
-        verbose:
-          type: boolean
-        dry_run:
-          type: boolean
-        auto_approve:
-          type: boolean
-        preserve_sandbox:
-          type: boolean
-        label:
+          description: CLI working directory at invocation time.
+          example: /tmp/project
+        git:
+          $ref: '#/components/schemas/GitContext'
+        goal:
+          $ref: '#/components/schemas/ManifestGoal'
+        args:
+          $ref: '#/components/schemas/ManifestArgs'
+        target:
+          $ref: '#/components/schemas/ManifestTarget'
+        configs:
           type: array
           items:
-            type: string
-        input:
-          type: array
-          description: Raw repeated CLI input overrides, each in `KEY=VALUE` form.
-          items:
-            type: string
-    ManifestTarget:
-      type: object
-      required:
-        - identifier
-        - path
-      properties:
-        identifier:
-          type: string
-          description: What the user typed.
-          example: smoke
-        path:
-          type: string
-          description: Resolved path that keys into the workflows map.
-          example: .fabro/workflows/smoke/workflow.fabro
-    ManifestConfig:
-      type: object
-      required:
-        - type
-      properties:
-        type:
-          type: string
-          enum:
-            - project
-            - user
-        path:
-          type:
-            - string
-            - 'null'
-        source:
-          type:
-            - string
-            - 'null'
-    ManifestWorkflow:
-      type: object
-      required:
-        - source
-      properties:
-        source:
-          type: string
-        config:
-          $ref: '#/components/schemas/ManifestWorkflowConfig'
-        files:
+            $ref: '#/components/schemas/ManifestConfig'
+        workflows:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/ManifestFileEntry'
+            $ref: '#/components/schemas/ManifestWorkflow'
+    RunIntent:
+      description: >-
+        A request to create, but not start, one run from an immutable workflow
+        version and an explicit workspace target.
+      type: object
+      additionalProperties: false
+      required:
+        - workflow_version_id
+        - target
+        - args
+      properties:
+        workflow_version_id:
+          $ref: '#/components/schemas/WorkflowVersionId'
+        target:
+          $ref: '#/components/schemas/RunTarget'
+        args:
+          $ref: '#/components/schemas/RunIntentArgs'
+        environment_id:
+          type: string
+          description: Server environment catalog ID. Omission selects `default`.
+        parent_id:
+          type: string
+          description: Optional orchestration parent run ID.
+        title:
+          type: string
+          maxLength: 100
+          description: Optional explicit run title, normalized by the server.
+        goal:
+          type: string
+          description: Optional inline goal override.
     WorkflowRef:
       type: object
       required:
@@ -635,9 +554,16 @@ components:
         Timing rollup for an entire run. Active fields sum work across stage
         visits, so `active_time_ms` can exceed `wall_time_ms` when parallel
         branches run concurrently.
+
+        For a running run, stages still in flight contribute a live estimate
+        rather than nothing, so wall and active both advance continuously.
+        Unlike `StageTiming`, active is not clamped to wall here — concurrent
+        branches can legitimately sum past run wall time.
       type: object
       required:
         - wall_time_ms
+        - inference_time_ms
+        - tool_time_ms
         - active_time_ms
       properties:
         wall_time_ms:
@@ -798,54 +724,152 @@ components:
           description: >-
             Server-generated request identifier; matches the x-request-id
             response header.
-    DirtyStatus:
-      type: string
-      enum:
-        - clean
+    GitContext:
+      description: Observable git state captured before the run starts.
+      type: object
+      required:
+        - origin_url
+        - branch
         - dirty
-        - unknown
-    PreRunPushOutcome:
-      description: Outcome of the CLI's best-effort pre-run push.
-      oneOf:
-        - $ref: '#/components/schemas/PreRunPushOutcomeNotAttempted'
-        - $ref: '#/components/schemas/PreRunPushOutcomeSucceeded'
-        - $ref: '#/components/schemas/PreRunPushOutcomeFailed'
-        - $ref: '#/components/schemas/PreRunPushOutcomeSkippedNoRemote'
-        - $ref: '#/components/schemas/PreRunPushOutcomeSkippedRemoteMismatch'
-      discriminator:
-        propertyName: type
-        mapping:
-          not_attempted:
-            $ref: '#/components/schemas/PreRunPushOutcomeNotAttempted'
-          succeeded:
-            $ref: '#/components/schemas/PreRunPushOutcomeSucceeded'
-          failed:
-            $ref: '#/components/schemas/PreRunPushOutcomeFailed'
-          skipped_no_remote:
-            $ref: '#/components/schemas/PreRunPushOutcomeSkippedNoRemote'
-          skipped_remote_mismatch:
-            $ref: '#/components/schemas/PreRunPushOutcomeSkippedRemoteMismatch'
-    ManifestWorkflowConfig:
+      properties:
+        origin_url:
+          type: string
+          description: Remote origin URL with any embedded credentials removed.
+          example: https://github.com/acme/my-app.git
+        branch:
+          type: string
+          description: Current branch name.
+          example: feature/foo
+        sha:
+          type:
+            - string
+            - 'null'
+          description: Current commit SHA, when known.
+          example: abc123def
+        dirty:
+          $ref: '#/components/schemas/DirtyStatus'
+    ManifestGoal:
+      description: Resolved goal kind and content.
+      type: object
+      required:
+        - type
+        - text
+      properties:
+        type:
+          type: string
+          enum:
+            - value
+            - file
+            - graph
+        text:
+          type: string
+          description: Resolved goal content.
+    ManifestArgs:
+      description: Sparse command-local args that affect run settings.
+      type: object
+      properties:
+        model:
+          type: string
+        provider:
+          type: string
+        environment:
+          type: string
+          description: Named environment slug to select for the run.
+        verbose:
+          type: boolean
+        dry_run:
+          type: boolean
+        auto_approve:
+          type: boolean
+        preserve_sandbox:
+          type: boolean
+        label:
+          type: array
+          items:
+            type: string
+        input:
+          type: array
+          description: Raw repeated CLI input overrides, each in `KEY=VALUE` form.
+          items:
+            type: string
+    ManifestTarget:
       type: object
       required:
         - path
-        - source
       properties:
         path:
           type: string
-        source:
-          type: string
-    ManifestFileEntry:
-      description: A bundled file with discovery metadata.
+          description: Resolved path that keys into the workflows map.
+          example: .fabro/workflows/smoke/workflow.fabro
+    ManifestConfig:
       type: object
       required:
-        - content
-        - ref
+        - type
       properties:
-        content:
+        type:
           type: string
-        ref:
-          $ref: '#/components/schemas/ManifestFileRef'
+          enum:
+            - project
+            - user
+        path:
+          type:
+            - string
+            - 'null'
+        source:
+          type:
+            - string
+            - 'null'
+    ManifestWorkflow:
+      type: object
+      required:
+        - source
+      properties:
+        source:
+          type: string
+        config:
+          $ref: '#/components/schemas/ManifestWorkflowConfig'
+        files:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ManifestFileEntry'
+    WorkflowVersionId:
+      description: >-
+        SHA-256 identity of validated canonical workflow-version bytes. Hex
+        input is case-insensitive; Fabro emits the canonical lowercase form.
+      type: string
+      pattern: ^[0-9A-Fa-f]{64}$
+      example: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+    RunTarget:
+      description: Workspace content and location requested for a run.
+      oneOf:
+        - $ref: '#/components/schemas/GitRunTarget'
+      discriminator:
+        propertyName: kind
+        mapping:
+          git:
+            $ref: '#/components/schemas/GitRunTarget'
+    RunIntentArgs:
+      description: Structured run overrides accepted by workflow-version creation.
+      type: object
+      additionalProperties: false
+      properties:
+        model:
+          type: string
+        provider:
+          type: string
+          description: LLM provider; this does not select the sandbox environment.
+        inputs:
+          type: object
+          additionalProperties:
+            anyOf:
+              - type: string
+              - type: number
+              - type: integer
+              - type: boolean
+        labels:
+          type: object
+          additionalProperties:
+            type: string
     PrincipalUser:
       type: object
       required:
@@ -1092,90 +1116,60 @@ components:
           type: integer
           format: uint64
           minimum: 0
-    PreRunPushOutcomeNotAttempted:
+    DirtyStatus:
+      type: string
+      enum:
+        - clean
+        - dirty
+        - unknown
+    ManifestWorkflowConfig:
       type: object
       required:
-        - type
+        - path
+        - source
       properties:
-        type:
+        path:
           type: string
-          enum:
-            - not_attempted
-    PreRunPushOutcomeSucceeded:
+        source:
+          type: string
+    ManifestFileEntry:
+      description: A bundled file with discovery metadata.
       type: object
       required:
-        - type
-        - remote
+        - content
+        - ref
+      properties:
+        content:
+          type: string
+        ref:
+          $ref: '#/components/schemas/ManifestFileRef'
+    GitRunTarget:
+      description: Public github.com repository target.
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - repo
         - branch
       properties:
-        type:
+        kind:
           type: string
           enum:
-            - succeeded
-        remote:
+            - git
+        repo:
           type: string
+          description: GitHub repository slug in `owner/name` form.
+          example: acme/my-app
         branch:
           type: string
-    PreRunPushOutcomeFailed:
-      type: object
-      required:
-        - type
-        - remote
-        - branch
-        - message
-      properties:
-        type:
+          description: Required branch name, preserved exactly.
+          example: feature/foo
+        sha:
           type: string
-          enum:
-            - failed
-        remote:
-          type: string
-        branch:
-          type: string
-        message:
-          type: string
-    PreRunPushOutcomeSkippedNoRemote:
-      type: object
-      required:
-        - type
-      properties:
-        type:
-          type: string
-          enum:
-            - skipped_no_remote
-    PreRunPushOutcomeSkippedRemoteMismatch:
-      type: object
-      required:
-        - type
-        - remote
-        - repo_origin_url
-      properties:
-        type:
-          type: string
-          enum:
-            - skipped_remote_mismatch
-        remote:
-          type: string
-        repo_origin_url:
-          type: string
-    ManifestFileRef:
-      type: object
-      required:
-        - type
-        - original
-      properties:
-        type:
-          type: string
-          enum:
-            - file_inline
-            - import
-            - dockerfile
-        original:
-          type: string
-        from:
-          type:
-            - string
-            - 'null'
+          pattern: ^[0-9A-Fa-f]{40}$
+          description: >-
+            Optional exact commit. The server lowercase-normalizes its syntax
+            but does not resolve it or prove branch ancestry.
     IdpIdentity:
       type: object
       required:
@@ -1369,6 +1363,24 @@ components:
           type:
             - string
             - 'null'
+    ManifestFileRef:
+      type: object
+      required:
+        - type
+        - original
+      properties:
+        type:
+          type: string
+          enum:
+            - file_inline
+            - import
+            - dockerfile
+        original:
+          type: string
+        from:
+          type:
+            - string
+            - 'null'
     PendingReason:
       description: Reason a pre-execution run is pending instead of runnable.
       type: string
@@ -1390,6 +1402,7 @@ components:
       type: string
       enum:
         - workflow_error
+        - publish_failed
         - cancelled
         - approval_denied
         - terminated

@@ -10,7 +10,7 @@ MCP ([Model Context Protocol](https://modelcontextprotocol.io/)) lets you connec
 
 Fabro can also run as an MCP server. MCP clients can use Fabro's run-management tools to create, inspect, control, wait for, and read events from workflow runs through the authenticated `fabro` CLI.
 
-Workflow agents can opt in to that same run-management tool catalog with `[run.agent] fabro_tools = true`. This is not the same as configuring external MCP servers for the agent, and it does not change the agent's normal workspace permissions. When a workflow agent calls `fabro_run_create`, created runs are always [child runs](/execution/child-runs) of the current run; an explicit `parent_id` must match the current run ID.
+Workflow agents can opt in to that same run-management tool catalog with `[run.agent] fabro_tools = true`. This is not the same as configuring external MCP servers for the agent. When a workflow agent calls `fabro_run_create`, created runs are always [child runs](/execution/child-runs) of the current run; an explicit `parent_id` must match the current run ID.
 
 ## Fabro as an MCP server
 
@@ -122,6 +122,42 @@ MCP servers available to Fabro agents can be configured in two places:
 
 Each server entry specifies a transport type and optional timeouts. The server name is the TOML table key and is used in qualified tool names.
 
+### Server-managed catalog
+
+Fabro servers can also manage a shared MCP catalog from **Settings → MCP servers** in the web UI or through the MCP servers REST API. Workflows reference a catalog definition by id instead of repeating its transport configuration:
+
+```toml theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.agent.mcps.sentry]
+id = "sentry"
+```
+
+Server-managed definitions are stored in the server's shared SQLite database. Read APIs return configured env/header names but never their values.
+
+When upgrading an installation that stored definitions as `mcps/*.toml` next to the active `settings.toml`, Fabro validates and imports the directory during startup. Existing SQLite rows win on id conflicts. After a successful transaction, Fabro renames the source directory to a timestamped backup such as `mcps.imported-20260711T120000000000Z.bak`.
+
+Transport env/header values preserve their existing plaintext-at-rest behavior in SQLite. Prefer `{{ secrets.NAME }}` interpolation over literal credentials where possible.
+
+Set `enabled = false` to keep an inline server or catalog reference in configuration without connecting to it:
+
+```toml theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.agent.mcps.sentry]
+id = "sentry"
+enabled = false
+```
+
+## Runtime interpolation
+
+Inline transport fields can interpolate values at the run boundary:
+
+| Syntax               | Resolution time                                                                        |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| `{{ vars.NAME }}`    | When the server creates the run, using that run's variable snapshot                    |
+| `{{ secrets.NAME }}` | When the worker launches the MCP transport, using a token secret from the server vault |
+
+Interpolation applies to stdio and sandbox commands and env values, plus HTTP URLs and headers. Variable tokens are replaced in the created run configuration. Secret expressions remain in persisted configuration, while resolved secret values do not. A missing or non-token secret fails MCP startup instead of passing an unresolved token to the transport. `{{ env.* }}` is unsupported and also fails before launch.
+
+Standalone `fabro exec` has no server vault, so a `{{ secrets.* }}` reference fails with an explicit error in standalone execution.
+
 ## Transports
 
 ### Stdio
@@ -139,14 +175,15 @@ tool_timeout = "90s"
 NODE_ENV = "production"
 ```
 
-| Field             | Description                                             | Default |
-| ----------------- | ------------------------------------------------------- | ------- |
-| `type`            | Must be `"stdio"`.                                      | —       |
-| `command`         | Array: the executable followed by its arguments.        | —       |
-| `script`          | Shell script alternative to `command`.                  | —       |
-| `env`             | Additional environment variables for the child process. | `{}`    |
-| `startup_timeout` | Max duration to wait for the MCP handshake.             | `"10s"` |
-| `tool_timeout`    | Max duration for a single tool call.                    | `"60s"` |
+| Field             | Description                                                              | Default |
+| ----------------- | ------------------------------------------------------------------------ | ------- |
+| `enabled`         | Whether to connect to this server.                                       | `true`  |
+| `type`            | Must be `"stdio"`.                                                       | —       |
+| `command`         | Array: the executable followed by its arguments.                         | —       |
+| `script`          | Shell script alternative to `command`. Runs on the host through `sh -c`. | —       |
+| `env`             | Additional environment variables for the child process.                  | `{}`    |
+| `startup_timeout` | Max duration to wait for the MCP handshake.                              | `"10s"` |
+| `tool_timeout`    | Max duration for a single tool call.                                     | `"60s"` |
 
 ### HTTP
 
@@ -163,6 +200,7 @@ Authorization = "Bearer sk-xxx"
 
 | Field             | Description                                               | Default             |
 | ----------------- | --------------------------------------------------------- | ------------------- |
+| `enabled`         | Whether to connect to this server.                        | `true`              |
 | `type`            | Must be `"http"`.                                         | —                   |
 | `protocol`        | HTTP MCP protocol: `"streamable_http"` or legacy `"sse"`. | `"streamable_http"` |
 | `url`             | The MCP server endpoint URL.                              | —                   |
@@ -184,20 +222,21 @@ startup_timeout = "60s"
 tool_timeout = "2m"
 ```
 
-| Field             | Description                                                                                               | Default             |
-| ----------------- | --------------------------------------------------------------------------------------------------------- | ------------------- |
-| `type`            | Must be `"sandbox"`.                                                                                      | —                   |
-| `protocol`        | HTTP MCP protocol exposed by the sandbox server: `"streamable_http"` or legacy `"sse"`.                   | `"streamable_http"` |
-| `command`         | Array: the command to run inside the sandbox. Must include a flag that makes the server listen on `port`. | —                   |
-| `script`          | Shell script alternative to `command`.                                                                    | —                   |
-| `port`            | The port the MCP server listens on inside the sandbox.                                                    | —                   |
-| `env`             | Additional environment variables for the server process.                                                  | `{}`                |
-| `startup_timeout` | Max duration to wait for the server to start listening and complete the MCP handshake.                    | `"10s"`             |
-| `tool_timeout`    | Max duration for a single tool call.                                                                      | `"60s"`             |
+| Field             | Description                                                                                                                          | Default             |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------- |
+| `enabled`         | Whether to connect to this server.                                                                                                   | `true`              |
+| `type`            | Must be `"sandbox"`.                                                                                                                 | —                   |
+| `protocol`        | HTTP MCP protocol exposed by the sandbox server: `"streamable_http"` or legacy `"sse"`.                                              | `"streamable_http"` |
+| `command`         | Array: the command to run inside the sandbox. Must include a flag that makes the server listen on `port`.                            | —                   |
+| `script`          | Shell script alternative to `command`. Evaluated inside the sandbox by non-login Bash (`bash -c`), like every other sandbox command. | —                   |
+| `port`            | The port the MCP server listens on inside the sandbox.                                                                               | —                   |
+| `env`             | Additional environment variables for the server process.                                                                             | `{}`                |
+| `startup_timeout` | Max duration to wait for the server to start listening and complete the MCP handshake.                                               | `"10s"`             |
+| `tool_timeout`    | Max duration for a single tool call.                                                                                                 | `"60s"`             |
 
 The sandbox transport requires a remote sandbox provider (Daytona) that supports preview URLs. During session initialization, Fabro:
 
-1. Launches the server inside the sandbox using `setsid` to fully detach the process
+1. Launches the server inside the sandbox with `setsid "$BASH" -c` to fully detach the process while reusing the provider-selected Bash
 2. Polls until the server is listening on the configured port (up to 30 seconds)
 3. Obtains an authenticated preview URL from the sandbox provider
 4. Connects to the server over HTTP using the preview URL
@@ -279,7 +318,7 @@ After startup, the agent sees 22 Playwright tools including:
 * `mcp__playwright__browser_type`
 * `mcp__playwright__browser_fill_form`
 
-The agent uses `browser_snapshot` (accessibility tree) for structured page understanding and `browser_take_screenshot` to save visual captures. Screenshots saved to `screenshots/` are automatically collected as [artifacts](/execution/run-configuration#assets).
+The agent uses `browser_snapshot` (accessibility tree) for structured page understanding and `browser_take_screenshot` to save visual captures. Screenshots saved to `screenshots/` can be collected as [artifacts](/execution/run-configuration#runartifacts) by including `screenshots/**`.
 
 <Note>
   When using Playwright MCP with the sandbox transport, call the `browser_install` tool first to ensure the Playwright browser binaries are available inside the sandbox.

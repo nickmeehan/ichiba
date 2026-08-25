@@ -81,7 +81,7 @@ Agents have access to a set of built-in tools for interacting with the codebase 
 
 | Tool         | Description                                       |
 | ------------ | ------------------------------------------------- |
-| `shell`      | Run shell commands (bash)                         |
+| `shell`      | Run commands as Bash source via `bash -c`         |
 | `read_file`  | Read file contents with optional offset and limit |
 | `write_file` | Create or overwrite a file                        |
 | `edit_file`  | Make targeted edits to an existing file           |

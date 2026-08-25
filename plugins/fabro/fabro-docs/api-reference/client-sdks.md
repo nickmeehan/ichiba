@@ -46,7 +46,7 @@ The `fabro-api` crate generates Rust structs, enums, and a `reqwest`-based HTTP 
 A `build.rs` script reads `docs/public/api-reference/fabro-api.yaml`, patches it from OpenAPI 3.1 to 3.0 for progenitor compatibility, and generates both types and a client. The generated code is written to `OUT_DIR` and included via:
 
 ```rust theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-// lib/crates/fabro-api/src/lib.rs
+// lib/foundation/fabro-api/src/lib.rs
 include!(concat!(env!("OUT_DIR"), "/codegen.rs"));
 ```
 

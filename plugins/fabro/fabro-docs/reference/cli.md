@@ -188,7 +188,8 @@ fabro artifact cp [OPTIONS] <SOURCE> [DEST]
 | `--node <node>`     | Filter to artifacts from a specific node                      |
 | `--retry <retry>`   | Filter to artifacts from a specific retry attempt             |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
-| `--tree`            | Preserve {node_slug}/retry\_{N}/ directory structure          |
+| `--stage <stage>`   | Filter to artifacts from a specific stage visit (node\@visit) |
+| `--tree`            | Preserve node\[/visit\_{N}]/retry\_{N}/ directory structure   |
 
 #### `fabro artifact list`
 
@@ -211,6 +212,7 @@ fabro artifact list [OPTIONS] <RUN_ID>
 | `--node <node>`     | Filter to artifacts from a specific node                      |
 | `--retry <retry>`   | Filter to artifacts from a specific retry attempt             |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--stage <stage>`   | Filter to artifacts from a specific stage visit (node\@visit) |
 
 ### `fabro ask`
 

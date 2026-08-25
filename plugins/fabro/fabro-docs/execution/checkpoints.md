@@ -112,6 +112,12 @@ Fabro resolves the run by ID prefix, validates that durable state contains a che
   7. Continues execution from `next_node_id`
 </Accordion>
 
+### Resuming an in-flight stage
+
+If the latest checkpoint captured a stage that was still running, resume allocates a new stage execution ID instead of rewriting the original history. For example, a resumed `work@1` stage continues as `work@2`, and the new record sets `resumed_from_stage_id = "work@1"`. The earlier stage remains immutable.
+
+The number after `@` is the stage execution ordinal. It is separate from the graph visit count and from a handler's retry attempt, so loops, retries, and resume ancestry can be inspected independently.
+
 ## The checkpoint cycle
 
 Here's the full sequence that runs after every node completes:

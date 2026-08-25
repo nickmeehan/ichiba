@@ -20,7 +20,7 @@ Start → Plan → Implement → Test → Exit
          └─ sets response.plan, last_response
 ```
 
-Context is thread-safe and shared across the entire run. Parallel branches receive an isolated **deep copy** of the context at the point of fan-out, so branches can't interfere with each other. When branches merge, the fan-in handler records the results under `parallel.fan_in.*` keys.
+Context is thread-safe and shared across the entire run. Parallel branches receive an isolated **deep copy** of the context at the point of fan-out, so branches can't interfere with each other. The parallel handler gathers their results under `parallel.results`.
 
 ## How agents access context
 
@@ -43,6 +43,11 @@ Each handler type writes specific keys into the context after execution:
 
 Agents can also emit arbitrary context updates by including a JSON object with a `context_updates` field in their response. See [Transitions](/workflows/transitions#agent-transitions).
 
+The `review_target` key has an optional typed convention for human review
+workflows. A human gate with `review_target=true` reads this exact flat key and
+presents its document URL as the primary question link. See
+[Review targets](/workflows/human-in-the-loop#review-targets).
+
 ### Command nodes
 
 | Key              | Value                                                                                                                                                                  |
@@ -60,13 +65,33 @@ Agents can also emit arbitrary context updates by including a JSON object with a
 | `human.gate.<node>.answer`   | The answer text for a specific human gate node                     |
 | `human.gate.<node>.label`    | The selected label for a specific human gate node, when applicable |
 
-### Parallel merge (fan-in)
+### Parallel fan-out and fan-in
 
-| Key                             | Value                                        |
-| ------------------------------- | -------------------------------------------- |
-| `parallel.fan_in.best_id`       | Node ID of the best-performing branch        |
-| `parallel.fan_in.best_outcome`  | Status of the best branch                    |
-| `parallel.fan_in.best_head_sha` | Git SHA from the best branch (if applicable) |
+| Key                     | Value                                                                                                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `parallel.results`      | Ordered branch results. Each entry contains `id`, `index`, optional `item_label`, `status`, and the branch's isolated `context_updates`. Legacy results may omit `index`. |
+| `parallel.branch_count` | Number of branches dispatched. For `for_each`, this is the runtime array length.                                                                                          |
+
+Branch updates remain nested inside `parallel.results`; they are not merged into top-level context. Prompted fan-in nodes can synthesize the complete result array, while promptless fan-in nodes act as barriers.
+
+### Runtime arrays with `for_each`
+
+A parallel node can read a flat context key and run one agent or prompt target
+per array item:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+batch [shape=component, for_each="context.candidates"]
+batch -> reviewer
+```
+
+`context.candidates` first checks the exact key and then falls back to
+`candidates`. The source must be a JSON array, either inline or stored behind a
+Fabro-managed `blob://` or `file://` reference. General nested lookup such as
+`output.scan.candidates` is not supported; have the producing node write the
+array to a flat context key such as `candidates`.
+
+Each item receives a separate context fork, while `(id, index)` identifies its
+result. The item itself is not copied into `parallel.results`.
 
 ### Engine-managed keys
 
@@ -142,6 +167,16 @@ Fidelity can be set at three levels. The first match wins:
 
 If none of these are set, fidelity defaults to `compact`.
 
+### Parallel branch fidelity
+
+The first node in each parallel branch uses this precedence:
+
+1. `fidelity` on the fork-to-branch edge
+2. `fidelity` on the branch node
+3. Otherwise, inherit the fork's preamble unchanged
+
+Fabro renders any branch-specific preambles before fan-out from the fork's context snapshot, then places them into the isolated branch contexts. An explicit branch-level `full` degrades to `summary:high` because concurrent branches cannot share conversation sessions. `thread_id` on a branch node or fork-to-branch edge is inert.
+
 ### Full fidelity and threads
 
 `full` fidelity is typically used with `thread_id` to create a shared conversation across multiple nodes. Nodes with the same `thread_id` share a single LLM session, preserving full context continuity:
@@ -200,6 +235,12 @@ The preamble includes:
 
 Internal keys (prefixed with `internal.`, `current`, `graph.`, `thread.`, `response.`) are excluded from preambles to avoid noise.
 
+### Large preamble values
+
+In fidelity modes that render context or completed-stage output, one value can contribute at most 8 KiB of serialized JSON inline. Fabro stores larger values as content-addressed blobs, materializes them as readable files, and puts the size, file path, and a 300-character preview in the preamble. The agent can read the file when it needs the full value.
+
+This prompt limit is separate from durable artifact offloading. If Fabro cannot demote a value, it logs a warning and keeps that value inline so the stage can continue.
+
 ## Artifact offloading
 
 When a stage produces a large output (over 100KB of serialized JSON), Fabro stores the serialized bytes in a global content-addressed blob store and replaces the context value with a durable blob ref. Command output is always finalized into a blob ref after command completion, even when it is small or empty:
@@ -213,8 +254,8 @@ Checkpoints and checkpoint-completed events persist these `blob://` refs, not ho
 
 Before Fabro builds a preamble or starts the next stage, it resolves any blob refs into execution-local files so handlers and agents still see normal `file://` references:
 
-* Local execution materializes blobs under `{run_dir}/runtime/blobs/{blob_id}.json`
-* Remote sandboxes materialize blobs under `{working_directory}/.fabro/blobs/{blob_id}.json`
+* Local execution materializes blobs under `{run_dir}/runtime/blobs/{blob_hash}.json`
+* Remote sandboxes materialize blobs under `{working_directory}/.fabro/blobs/{blob_hash}.json`
 
 These materialized `file://` paths are runtime-only. They are not written back into durable context snapshots.
 

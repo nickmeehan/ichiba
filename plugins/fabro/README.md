@@ -13,8 +13,15 @@ in this repo or injected into any other project.
 ## What's here
 
 - **`fabro-docs/`** — full mirror of [docs.fabro.sh](https://docs.fabro.sh)
-  as raw markdown (~110 pages: concepts, language spec, CLI, API, tutorials).
-  Refresh with `bin/sync-docs.sh`; `git diff` shows upstream changes.
+  as raw markdown (~240 pages: concepts, language spec, CLI, API, tutorials).
+  The weekly `Docs Sync` workflow re-runs `bin/sync-docs.sh` and commits any
+  upstream drift to `main`, which cuts a patch release so the refreshed
+  mirror ships with the plugin. `llms.txt` decides what the mirror holds: a
+  page it no longer lists is pruned, a page it lists that won't fetch keeps its
+  existing copy. Both have a tolerance — `FAIL_LIMIT` (5%) and `PRUNE_LIMIT`
+  (10%) — above which the run aborts leaving `fabro-docs/` untouched, since at
+  that scale it's an upstream outage rather than a docs change. Run the script
+  by hand to refresh off-schedule; `git diff` shows upstream changes.
 - **`skills/`** — Agent Skills (`SKILL.md` format) that make agents fluent in
   Fabro. Works in both Claude Code (`.claude/skills/` symlinks) and Fabro
   itself (`{git_root}/skills/` is a native Fabro skill directory).

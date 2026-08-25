@@ -25,7 +25,7 @@ On a same-machine setup, the CLI and server share one `settings.toml`. On a remo
 
 The CLI-only `[cli.*]` sections (including `[cli.target]`) belong in the client machine's `settings.toml`. They tell CLI commands how to reach a server. The server process does not read `[cli.*]` for its own binding or routing.
 
-Fabro does not terminate inbound TLS directly. Bind `[server.listen]` to a Unix socket or plain TCP port, and terminate HTTPS or mTLS at a reverse proxy, load balancer, or platform ingress in front of Fabro. Use `[server.api].url` and `[server.web].url` for those external HTTPS URLs.
+Fabro does not terminate inbound TLS directly. Bind `[server.listen]` to a Unix socket or plain TCP port, and terminate HTTPS or mTLS at a reverse proxy, load balancer, Tailscale Service, or platform ingress in front of Fabro. Use `[server.api].url` and `[server.web].url` for those external HTTPS URLs.
 
 ### Full reference
 
@@ -95,7 +95,9 @@ level = "info"
 [run.model]
 name = "claude-sonnet-4-5"
 provider = "anthropic"
-fallbacks = ["gemini", "openai"]
+
+[run.model.fallbacks]
+"claude-sonnet-4-5" = ["gemini", "openai"]
 
 [[run.prepare.steps]]
 script = "npm install"
@@ -115,6 +117,7 @@ team = "platform"
 [run.checkpoint]
 exclude_globs = ["**/node_modules/**", "**/.cache/**"]
 skip_git_hooks = false
+commit_timeout = "30s"
 
 [run.inputs]
 default_branch = "main"
@@ -154,6 +157,8 @@ Control the embedded SPA and browser-oriented routes.
 When `enabled = false`, the server still exposes the machine API and `/health`, but `/`, `/auth/*`, SPA client routes, `/api/v1/auth/me`, and `/api/v1/setup/*` all return `404`.
 
 `server.web.url` is not a secondary web host. Fabro supports a single public origin for API and web traffic. In local development that can be plain HTTP such as `http://localhost:3000` or `http://127.0.0.1:3000`. In production, operators are responsible for terminating HTTPS upstream.
+
+When the external origin is assigned at deployment time, set `FABRO_WEB_URL` in the server process environment. It overrides `server.web.url` for the canonical browser/API origin and is the recommended control for Tailscale Services deployments.
 
 ### `[server.auth]` section
 
@@ -218,7 +223,7 @@ provider = "s3"
 disk_cache = true
 
 [server.slatedb.s3]
-bucket = "{{ env.SLATEDB_BUCKET }}"
+bucket = "fabro-production"
 region = "us-east-1"
 ```
 
@@ -252,6 +257,18 @@ Advanced S3-compatible settings such as custom `endpoint` or `path_style` remain
 configuration path. If you need MinIO, R2, or another S3-compatible backend, configure
 `[server.slatedb]` and `[server.artifacts]` directly in `settings.toml`. The runtime still
 honors those hand-edited values even though the browser wizard does not manage them.
+
+### SQLite state and migration backups
+
+Shared relational state, including vault entries, server-managed definitions, and CLI auth sessions, lives at `<storage_root>/db/fabro.sqlite3`. Run events continue to use the `[server.slatedb]` object store.
+
+CLI auth sessions are stored as an `auth_sessions` row per signed-in CLI, with the rotating refresh tokens for that session in `refresh_tokens`. Revoking a session from **Settings → Sessions**, or with `DELETE /api/v1/auth/sessions/{id}`, deletes the session row and its tokens together.
+
+Before applying pending SQLite migrations, Fabro creates `<storage_root>/db/fabro.sqlite3.pre-migration.bak` with SQLite's `VACUUM INTO`. Each migration run replaces the previous snapshot, so only the most recent pre-migration backup is retained.
+
+On the first compatible startup after upgrading from the file-backed vault, Fabro imports `<storage_root>/vaults/default/secrets.json` into SQLite. Existing SQLite rows win on name conflicts. After a successful import, the source file is renamed to `secrets.json.imported-<timestamp>.bak`. This temporary compatibility importer is scheduled for removal after 2026-10-11.
+
+Vault values and their migration backups retain Fabro's plaintext-at-rest behavior. Protect the storage volume and backup file with the same access controls as the secrets they contain.
 
 ### Run defaults
 
@@ -318,6 +335,8 @@ Fabro always serves the GitHub webhook handler at `POST /api/v1/webhooks/github`
 * `strategy = "tailscale_funnel"`: opt-in for Tailscale-hosted machines without a stable public URL. Fabro runs `tailscale funnel <server-port>`, exposes the main server on that Funnel URL, and best-effort updates the GitHub App webhook URL to `<funnel-url>/api/v1/webhooks/github`. Requires a TCP listener and `GITHUB_APP_WEBHOOK_SECRET`.
 * `strategy` unset: Fabro still accepts signed webhook deliveries on `/api/v1/webhooks/github` when the secret is present, but it does not run `tailscale funnel` and does not update the GitHub App webhook URL.
 
+Tailscale Services and Tailscale Funnel are different ingress features. Services are private to the tailnet and work well for Fabro's web UI and CLI API access, but github.com cannot deliver webhooks to a private Service URL. Use `tailscale_funnel`, `server_url`, or another public relay when GitHub webhook delivery is required.
+
 Incoming webhooks are authenticated only by GitHub's `X-Hub-Signature-256` HMAC signature, not by Fabro's bearer/session auth.
 
 ### `[run.checkpoint]` section
@@ -328,15 +347,16 @@ Configure checkpoint behavior for all runs.
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `exclude_globs`  | Glob patterns for files to exclude from checkpoint commits (for example, `["**/node_modules/**"]`)                                                                                        |
 | `skip_git_hooks` | When `true`, Fabro-managed run-branch checkpoint commits bypass local Git commit hooks. Defaults to `false`. Does not affect Fabro workflow `[[run.hooks]]` or metadata-branch snapshots. |
+| `commit_timeout` | Max duration for the per-node run-branch checkpoint commit (e.g. `"30s"`, `"10m"`). This commit runs repository commit hooks unless `skip_git_hooks` is `true`. Defaults to `"30s"`.      |
 
-`exclude_globs` replaces across layers — the highest-precedence layer wins wholesale. `skip_git_hooks` uses normal override semantics. See [Run Configuration — Checkpoint](/execution/run-configuration#runcheckpoint) for per-run configuration.
+`exclude_globs` replaces across layers — the highest-precedence layer wins wholesale. `skip_git_hooks` and `commit_timeout` use normal override semantics. See [Run Configuration — Checkpoint](/execution/run-configuration#runcheckpoint) for per-run configuration.
 
 ## Secrets and environment variables
 
 Fabro splits server-runtime secrets into two scopes:
 
 * Bootstrap secrets live in process env or `<data_dir>/server.env` and resolve with precedence `process env -> server.env`.
-* Optional integration secrets live in `<data_dir>/vaults/default/secrets.json` (the vault). Anything stored in the vault may be used by workflows.
+* Optional integration secrets live in the server vault in the shared SQLite database. Anything stored in the vault may be used by workflows.
 
 `server.env` is only for bootstrap/runtime values the server may need before optional integrations are loaded:
 
@@ -345,7 +365,7 @@ Fabro splits server-runtime secrets into two scopes:
 * `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_SESSION_TOKEN` when a manual config uses
   static S3 object-store credentials
 
-`server.env` is not used for Slack, Daytona, Brave Search, LLM provider keys, `GITHUB_TOKEN`, or GitHub App private key/client secret/webhook secret. Configure those optional integrations with `fabro secret set`, `fabro provider login`, or `fabro install`.
+`server.env` is not used for Slack, Daytona, Brave Search, Venice Search, LLM provider keys, `GITHUB_TOKEN`, or GitHub App private key/client secret/webhook secret. Configure those optional integrations with `fabro secret set`, `fabro provider login`, or `fabro install`.
 
 During startup, Fabro temporarily migrates recognized legacy optional integration secrets from process env or `server.env` into the vault. When a matching `server.env` entry can be safely removed, Fabro writes a hidden backup beside `server.env` first. Process env values cannot be cleaned up automatically, so remove those from your deployment environment after the vault contains the secret.
 
@@ -361,17 +381,24 @@ fabro secret set OPENAI_API_KEY sk-...
 fabro secret set GEMINI_API_KEY AI...
 ```
 
-Standalone CLI/library usage can still opt into env-backed credential sources explicitly, but the Fabro server runtime reads provider keys from the vault after the temporary startup migration.
+`fabro exec` and direct library usage can opt into env-backed credential sources explicitly. Runs cannot: the Fabro server reads provider keys from the vault after the temporary startup migration, and workers start from a cleared environment that does not inherit provider keys.
 
-| Variable            | Provider            |
-| ------------------- | ------------------- |
-| `ANTHROPIC_API_KEY` | Anthropic (Claude)  |
-| `OPENAI_API_KEY`    | OpenAI (GPT)        |
-| `GEMINI_API_KEY`    | Google (Gemini)     |
-| `KIMI_API_KEY`      | Kimi                |
-| `ZAI_API_KEY`       | Zai (GLM)           |
-| `MINIMAX_API_KEY`   | Minimax             |
-| `INCEPTION_API_KEY` | Inception (Mercury) |
+| Variable                                  | Provider                                         |
+| ----------------------------------------- | ------------------------------------------------ |
+| `ANTHROPIC_API_KEY`                       | Anthropic (Claude)                               |
+| `OPENAI_API_KEY`                          | OpenAI (GPT)                                     |
+| `GEMINI_API_KEY`                          | Google (Gemini)                                  |
+| `MOONSHOT_API_KEY` or `KIMI_API_KEY`      | Moonshot AI; `MOONSHOT_API_KEY` takes precedence |
+| `ZAI_API_KEY`                             | Zai (GLM)                                        |
+| `MINIMAX_API_KEY`                         | Minimax                                          |
+| `INCEPTION_API_KEY`                       | Inception (Mercury)                              |
+| `POOLSIDE_API_KEY`                        | Poolside (Laguna)                                |
+| `DEEPSEEK_API_KEY`                        | DeepSeek                                         |
+| `OPENROUTER_API_KEY`                      | OpenRouter (when enabled)                        |
+| `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` | Modal (when enabled)                             |
+| `FIREWORKS_API_KEY`                       | Fireworks AI (when enabled)                      |
+
+Modal requires both vault tokens. Its provider definition resolves them into the `Modal-Key` and `Modal-Secret` request headers.
 
 ### Sandbox and tools
 
@@ -380,12 +407,16 @@ These optional server integrations are vault-only:
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro secret set DAYTONA_API_KEY dtn_...
 fabro secret set BRAVE_SEARCH_API_KEY BSA...
+fabro secret set VENICE_API_KEY venice-...
 ```
 
-| Variable               | Description                                      |
-| ---------------------- | ------------------------------------------------ |
-| `DAYTONA_API_KEY`      | Daytona cloud sandbox API key                    |
-| `BRAVE_SEARCH_API_KEY` | Brave Search API key (for the `web_search` tool) |
+The built-in [`web_search`](/agents/tools#web_search) tool selects its backend from these credentials. It uses direct Brave Search when `BRAVE_SEARCH_API_KEY` exists. Otherwise it uses Venice Search when `VENICE_API_KEY` exists. When neither exists, the tool is not registered.
+
+| Variable               | Description                                                                                  |
+| ---------------------- | -------------------------------------------------------------------------------------------- |
+| `DAYTONA_API_KEY`      | Daytona cloud sandbox API key                                                                |
+| `BRAVE_SEARCH_API_KEY` | Brave Search API key; the preferred `web_search` backend when present                        |
+| `VENICE_API_KEY`       | Venice API key; used by the Venice LLM provider and by `web_search` when no Brave key exists |
 
 ### Server authentication
 
@@ -447,7 +478,7 @@ GitHub App mode stores these secrets in the vault. `fabro install` writes them a
 
 ### Slack integration (optional)
 
-Slack credentials are server-level secrets. Add `[server.integrations.slack]` to enable one Slack connection that is shared by human interview prompts and run lifecycle notifications. `server.integrations.slack.default_channel` is optional and is used only as the default destination for interview prompts; lifecycle notifications use `[run.notifications.<name>.slack].channel` in run or workflow configuration.
+Slack credentials are server-level secrets. Add `[server.integrations.slack]` to enable one Slack connection that is shared by human interview prompts and run lifecycle notifications. `server.integrations.slack.default_channel` is an optional literal channel name used only as the default destination for interview prompts; it does not interpolate. Lifecycle notifications use `[run.notifications.<name>.slack].channel` in run or workflow configuration.
 
 Fabro resolves these from the vault only. When `[server.integrations.slack]` is present and both credentials are present, startup logs `Slack integration enabled` and then the Slack Socket Mode connection status. If the Slack config table is absent or `enabled = false`, startup logs `Slack integration disabled by server configuration`. If the table is present but either credential is missing or empty, startup logs `Slack integration disabled; missing credentials` with the missing variable names.
 

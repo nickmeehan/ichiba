@@ -14,7 +14,7 @@
 openapi: 3.1.0
 info:
   title: Fabro Run API
-  version: 0.1.0
+  version: 0.2.0
   description: HTTP API for managing Fabro workflow run executions.
 servers: []
 security:
@@ -51,6 +51,8 @@ tags:
     description: Internal run details (stages, turns, context, configuration)
   - name: Workflows
     description: Workflow definitions and execution
+  - name: Workflow Versions
+    description: Immutable, content-addressed workflow packages
   - name: Billing
     description: Token counts and billed totals
   - name: Insights
@@ -410,7 +412,7 @@ components:
             - string
             - 'null'
     InterpString:
-      description: Resolved config string that may contain env interpolation tokens.
+      description: Config string that can contain typed interpolation tokens.
       type: string
     RunGoal:
       oneOf:
@@ -434,9 +436,17 @@ components:
             - string
             - 'null'
         fallbacks:
-          type: array
-          items:
-            $ref: '#/components/schemas/ModelRef'
+          type: object
+          description: >
+            Ordered fallback targets keyed by the originally requested model.
+            Each chain is independent; selecting a fallback target does not
+            activate that target model's own chain.
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/ModelRef'
+        controls:
+          $ref: '#/components/schemas/RunModelControls'
     RunGitSettings:
       type: object
       required:
@@ -493,6 +503,12 @@ components:
       properties:
         enabled:
           type: boolean
+        depth:
+          type: integer
+          format: int32
+          minimum: 0
+          default: 100
+          description: Git history depth. Set to 0 to clone full history.
     RunBranchSettings:
       type: object
       required:
@@ -590,13 +606,11 @@ components:
     RunAgentSettings:
       type: object
       required:
-        - permissions
+        - fabro_tools
         - mcps
       properties:
-        permissions:
-          oneOf:
-            - $ref: '#/components/schemas/AgentPermissions'
-            - type: 'null'
+        fabro_tools:
+          type: boolean
         mcps:
           type: object
           additionalProperties:
@@ -641,18 +655,9 @@ components:
             - $ref: '#/components/schemas/StringMap'
             - type: 'null'
           description: >-
-            Optional HTTP headers for an http hook. Values support `{{ env.NAME
-            }}` interpolation, scoped to the names listed in `allowed_env_vars`;
-            a token for any other env var fails to resolve and the hook blocks
-            (fail-closed).
-        allowed_env_vars:
-          type: array
-          items:
-            type: string
-          description: >-
-            Allowlist of environment variable names that an http hook header may
-            read via `{{ env.NAME }}`. An empty list (the default) permits no
-            env vars in headers.
+            Optional HTTP headers for an http hook. Values support `{{ vars.NAME
+            }}` interpolation, substituted when the run is created; a token left
+            unresolved at fire time blocks the hook (fail-closed).
         tls:
           $ref: '#/components/schemas/TlsMode'
         prompt:
@@ -777,6 +782,33 @@ components:
           $ref: '#/components/schemas/InterpString'
     ModelRef:
       type: string
+      description: |
+        A fallback model reference. Bare values name a provider, canonical
+        model ID, or alias. Provider-qualified values use
+        `provider:selector`; the selector may be a canonical model ID, alias,
+        or provider API ID and may contain `/` or additional colons. A value
+        is treated as qualified only when the text before the first `:` names
+        a known provider, so model IDs that contain a colon — ollama
+        `name:tag` values, Bedrock inference-profile IDs — stay whole. Legacy
+        `provider/model` references remain accepted.
+      example: openrouter:moonshotai/kimi-k3
+    RunModelControls:
+      type: object
+      description: >
+        Run-level default values for typed model controls. Node and style
+        attributes still win over these defaults.
+      required:
+        - reasoning_effort
+        - speed
+      properties:
+        reasoning_effort:
+          type:
+            - string
+            - 'null'
+        speed:
+          type:
+            - string
+            - 'null'
     GitAuthorSettings:
       type: object
       required:
@@ -792,12 +824,18 @@ components:
             - string
             - 'null'
     PreparedStep:
-      description: |
+      description: >
         A single resolved prepare step. The runnable part preserves the
+
         script-vs-argv distinction via the `type` discriminator: a `script`
+
         is a raw shell snippet kept verbatim, while a `command` is an argv
+
         whose elements are shell-quoted and joined at the run boundary (after
-        `{{ env.* }}` resolution) so an interpolated value cannot inject shell
+
+        `{{ secrets.* }}` resolution) so an interpolated value cannot inject
+        shell
+
         syntax. Optional per-step `env` is shared by both shapes.
       type: object
       required:
@@ -840,12 +878,6 @@ components:
           type:
             - string
             - 'null'
-    AgentPermissions:
-      type: string
-      enum:
-        - read-only
-        - read-write
-        - full
     McpServerSettings:
       type: object
       required:
@@ -907,6 +939,17 @@ components:
           type: object
           additionalProperties:
             type: string
+        additional_repositories:
+          type: array
+          description: |
+            Additional GitHub repositories, beyond the implicit run origin,
+            that the minted GITHUB_TOKEN must cover. Each entry is a full
+            `owner/repository` slug; every repository must share one owner
+            with the run origin. Omitted when empty; settings persisted
+            before this field existed deserialize to an empty set.
+          items:
+            type: string
+          uniqueItems: true
     DockerfileSourceInline:
       type: object
       required:

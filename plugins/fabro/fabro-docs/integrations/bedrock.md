@@ -46,9 +46,9 @@ Two auth modes, tried in order:
 fabro secret set AWS_BEARER_TOKEN_BEDROCK bedrock-api-key-...
 # or, equivalently
 fabro secret set BEDROCK_API_KEY bedrock-api-key-...
-# or for standalone local runs
-export AWS_BEARER_TOKEN_BEDROCK=bedrock-api-key-...
 ```
+
+Runs read the bearer token from the vault only. Workers start from a cleared environment and the bearer token is not on the inherited allowlist, so exporting it in the server's shell has no effect on runs. `fabro exec` and direct `fabro-llm` SDK usage do read it from process env.
 
 **AWS SigV4** (IAM-scoped): with no API key configured, Fabro signs each request using the AWS default credential chain — environment keys, shared profile, EC2/ECS instance roles, IRSA/web identity, SSO. Expiring session credentials refresh automatically. The catalog declares this as the `aws_sigv4` credential source:
 
@@ -161,6 +161,6 @@ Bedrock-specific request fields pass through verbatim via `provider_options.bedr
   </Card>
 
   <Card title="Settings Configuration" icon="gear" href="/reference/user-configuration">
-    Full reference for `[llm.providers.<id>]` and `[llm.models.<id>]`.
+    Full reference for provider settings and provider-scoped model offerings.
   </Card>
 </Columns>

@@ -31,18 +31,18 @@ POST the event context as JSON to an HTTP endpoint. Useful for webhooks, externa
 event = "run_complete"
 type = "http"
 url = "https://hooks.example.com/done"
-allowed_env_vars = ["API_KEY"]
 
 [hooks.headers]
-Authorization = "Bearer {{ env.API_KEY }}"
+X-Deployment-Environment = "{{ vars.DEPLOY_ENV }}"
 ```
 
-| Field              | Description                                                                                                                                                                                        |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `url`              | The endpoint to POST to. Must use `https://` unless `tls = "off"`. Supports `{{ env.NAME }}` interpolation.                                                                                        |
-| `headers`          | Optional HTTP headers. Values support `{{ env.NAME }}` interpolation, scoped to the names in `allowed_env_vars`. A token for any other env var fails to resolve and the hook blocks (fail-closed). |
-| `allowed_env_vars` | Allowlist of environment variable names a header may read via `{{ env.NAME }}`. Empty (the default) means no env vars may be interpolated into headers.                                            |
-| `tls`              | TLS mode: `"verify"` (default), `"no_verify"`, or `"off"`.                                                                                                                                         |
+| Field     | Description                                                                                                                                                                                   |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `url`     | The endpoint to POST to. Must use `https://` unless `tls = "off"`. Supports `{{ vars.NAME }}` interpolation.                                                                                  |
+| `headers` | Optional HTTP headers. Values support `{{ vars.NAME }}` interpolation. A token that is still unresolved when the hook fires blocks it (fail-closed), so a header is never sent half-rendered. |
+| `tls`     | TLS mode: `"verify"` (default), `"no_verify"`, or `"off"`.                                                                                                                                    |
+
+`{{ vars.NAME }}` is substituted when the run is created. Use variables only for non-sensitive metadata. Do not store tokens, API keys, or other credentials in variables or literal hook configuration. `{{ env.NAME }}` and `{{ secrets.NAME }}` are not available in hooks.
 
 ### Prompt
 

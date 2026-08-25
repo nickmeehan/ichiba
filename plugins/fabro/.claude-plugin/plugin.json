@@ -1,6 +1,6 @@
 {
   "name": "fabro",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Fabro dark-factory fluency for Claude Code: a workflow-author skill, the full docs.fabro.sh mirror for offline deep reference, and dot2mermaid for rendering workflow graphs in PRs.",
   "author": {
     "name": "Nick Meehan",

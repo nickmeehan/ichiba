@@ -115,16 +115,28 @@ When a handler reports a retryable failure, retries always proceed if attempts r
 
 ## Model fallbacks
 
-When a model provider fails with a transient error or quota exhaustion, Fabro can automatically switch to a different provider. Configure fallback chains in your [run configuration](/execution/run-configuration):
+When a model provider fails with a provider-local error, Fabro can automatically switch to another target. Configure one fixed chain for each requested model in your [run configuration](/execution/run-configuration):
 
 ```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [run.model]
 name = "claude-opus-4-6"
 provider = "anthropic"
-fallbacks = ["gemini", "openai"]
+
+[run.model.fallbacks]
+"claude-opus-4-6" = ["gemini", "openai"]
 ```
 
-When Anthropic is unavailable, Fabro tries Gemini first, then OpenAI. Each fallback entry may be a bare provider token (like `"gemini"`), a bare model alias (like `"gpt-5.4"`), or a qualified `"provider/model"` reference. For each fallback provider, Fabro selects the closest model by matching required capabilities (tool use, vision, reasoning) and minimizing cost difference.
+When Anthropic fails, Fabro tries Gemini first, then OpenAI. Fallback resolution is provider-aware:
+
+* A bare provider token such as `"gemini"` selects that provider's closest compatible model.
+* A qualified selector such as `"openrouter:gpt-56-sol"` resolves only within that provider. The selector may be a canonical model ID, alias, or provider API ID such as `"openrouter:moonshotai/kimi-k3"`.
+* A bare model slug or alias considers ready providers and uses provider priority.
+
+Qualified fallback references always remain provider pins. For example, `"openai:gpt-5.6-sol"` pins the direct OpenAI offering. Legacy `provider/model` fallback references remain accepted for compatibility.
+
+Fabro selects the chain by the original requested model. A target in that chain never activates the target model's own chain. The same chain position is retained across structured-output repairs and cached agent sessions.
+
+The primary provider and model were already resolved and persisted when the run was created; resuming does not re-run primary selection. Fallbacks are only considered after an eligible runtime failure. If the fallback model does not support the requested reasoning level, Fabro uses the nearest supported level and rounds equal-distance choices up.
 
 ### What triggers failover
 
@@ -136,7 +148,10 @@ Failover is a superset of LLM retry eligibility:
 | Server error (5xx)    | Yes       | Yes               |
 | Timeout / network     | Yes       | Yes               |
 | Quota exceeded        | No        | Yes               |
-| Authentication (401)  | No        | No                |
+| Authentication (401)  | No        | Yes               |
+| Access denied (403)   | No        | Yes               |
+| Model not found (404) | No        | Yes               |
+| Model refusal         | No        | Yes               |
 | Invalid request (400) | No        | No                |
 | Context length (413)  | No        | No                |
 | Content filter        | No        | No                |
@@ -227,7 +242,11 @@ Only `deterministic` and `structural` failures are tracked — transient failure
 
 ### Loop restart edges
 
-Edges marked with `loop_restart=true` trigger a special restart of the workflow from the target node. These have an additional guard: only `transient_infra` failures may cross a `loop_restart` edge. If the failure class is anything else, the run is terminated:
+Taking an edge marked with `loop_restart=true` restarts the workflow from the edge's target node. A restart is more than a jump: the completed-stage history, per-node outcomes, and retry counts are cleared, and the run context is replaced with a **fresh, empty context** — the target node starts over as if the run had just begun there, with no preamble of prior stages. Node visit counts are the one thing preserved, so `max_visits` and `max_node_visits` still bound how many times a restart loop can run.
+
+A **successful** outcome may take a `loop_restart` edge freely. This is the "start another round from a clean slate" pattern — for example, a self-loop that begins a fresh batch of work and re-derives its remaining work from the repository state rather than from accumulated context.
+
+A **failed** outcome faces an additional guard: only `transient_infra` failures may cross a `loop_restart` edge. If the failure class is anything else, the run is terminated:
 
 ```
 loop_restart blocked: failure_class=deterministic (requires transient_infra)

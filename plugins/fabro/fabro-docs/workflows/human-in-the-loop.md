@@ -63,6 +63,68 @@ confirm -> exit [label="[N] No"]
 
 Supported values are `yes_no`, `confirmation`, `multiple_choice`, `multi_select`, and `freeform`.
 
+### Review targets
+
+A human gate can present one external document as the primary review link. Set
+`review_target=true` on the gate:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+review [
+  shape=hexagon,
+  review_target=true
+]
+
+review -> sync     [label="[S] Review complete; sync the current Markdown"]
+review -> address  [label="[A] Ask the agent to address human feedback"]
+review -> review   [label="[C] Continue reviewing"]
+```
+
+Before the workflow reaches the gate, an agent, prompt, or command node must set
+the flat `review_target` context key. A routing response can do this directly:
+
+```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+{
+  "outcome": "succeeded",
+  "context_updates": {
+    "review_target": {
+      "label": "Quarry review exercise",
+      "url": "https://quarry.lithos.computer/tmp/0123456789abcdef0123456789abcdef",
+      "kind": "document"
+    }
+  }
+}
+```
+
+Fabro then presents this question:
+
+> Review the [Quarry review exercise](https://quarry.lithos.computer/tmp/0123456789abcdef0123456789abcdef) document, then choose the next action.
+
+The link uses the target URL from context. The example uses a placeholder
+secret, not a live Quarry document.
+
+Fabro generates this question text from the target. A `label` on the gate is
+not used while `review_target=true`.
+
+The target object has three required fields:
+
+| Field   | Meaning                                                                                                                       |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `label` | The link text. It must contain 1 to 200 characters and no control characters.                                                 |
+| `url`   | An absolute HTTP or HTTPS URL. It must contain a host, must not contain URL credentials, and must be at most 2048 characters. |
+| `kind`  | The resource type. The supported value is `document`.                                                                         |
+
+Fabro validates the target before it starts the interview. A missing or invalid
+target fails the gate deterministically. A gate without `review_target=true`
+ignores this context key and keeps its normal label.
+
+The context value remains available after the human answers. A feedback loop
+can return to the same gate without recreating the target. A later stage can
+replace the target by writing a new value to the same context key.
+
+Fabro does not fetch the URL. Web and Slack clients open it as an external link.
+Treat bearer-capability links as secrets and only provide them to people who
+can access the run.
+
 ### Default choice on timeout
 
 If a human gate has a timeout configured, you can specify a default choice using the `human.default_choice` attribute:

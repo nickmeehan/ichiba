@@ -47,33 +47,34 @@ export OPENROUTER_API_KEY=sk-or-v1-...
 
 ## Included models
 
-The built-in catalog curates frontier and open-weights models under vendor-namespaced IDs:
+The built-in catalog gives OpenRouter offerings the same human-facing model slugs used by direct providers. Vendor-namespaced OpenRouter IDs remain opaque `api_id` values:
 
-| Fabro model ID                                                   | Notes                                                |
-| ---------------------------------------------------------------- | ---------------------------------------------------- |
-| `anthropic/claude-opus-4-7`                                      | Claude via OpenRouter, Anthropic-style cache billing |
-| `anthropic/claude-sonnet-4-6`                                    | Provider default                                     |
-| `anthropic/claude-haiku-4-5`                                     | Provider small default                               |
-| `openai/gpt-5.4`, `openai/gpt-5.5`                               |                                                      |
-| `google/gemini-3.1-pro-preview`, `google/gemini-3.5-flash`       |                                                      |
-| `deepseek/deepseek-v4-pro`, `deepseek/deepseek-v4-flash`         |                                                      |
-| `moonshotai/kimi-k2.6`, `qwen/qwen3-coder`, `qwen/qwen3.6-flash` |                                                      |
-| `z-ai/glm-4.6`, `minimax/minimax-m2.7`, `xiaomi/mimo-v2.5-pro`   |                                                      |
-| `nvidia/nemotron-3-super-120b-a12b`, `mistralai/devstral-2512`   |                                                      |
+| Fabro model slug                                                                     | OpenRouter API ID / notes                                               |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| `claude-fable-5`, `claude-opus-5`, `claude-opus-4-8`, `claude-opus-4-7`              | Matching `anthropic/...` API IDs; Anthropic-style cache billing         |
+| `claude-sonnet-4-6`                                                                  | `anthropic/claude-sonnet-4.6`; provider default                         |
+| `claude-haiku-4-5`                                                                   | `anthropic/claude-haiku-4.5`; provider small default                    |
+| `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.4`, `gpt-5.5`                 | Matching `openai/...` API IDs                                           |
+| `gemini-3.1-pro-preview`, `gemini-3.5-flash`                                         | `google/...` API IDs                                                    |
+| `deepseek-v4-pro`, `deepseek-v4-flash` (`deepseek`, `deepseek-v4`, `deepseek-flash`) | `deepseek/...` API IDs; Flash uses the `deepseek-v4-flash-0731` release |
+| `kimi-k3`, `kimi-k2.6`, `qwen3-coder`, `qwen3.6-flash`                               | Vendor-prefixed API IDs                                                 |
+| `laguna-s-2.1`, `laguna-xs-2.1`                                                      | `poolside/...`; native reasoning and tool use                           |
+| `glm-5.2` (`glm`, `glm5`, `glm52`, `glm5.2`), `glm-4.6`                              | `z-ai/...` API IDs                                                      |
+| `minimax-m2.7`, `mimo-v2.5-pro`                                                      | Vendor-prefixed API IDs                                                 |
+| `nemotron-3-super-120b-a12b`, `devstral-2512`                                        | Vendor-prefixed API IDs                                                 |
 
-Any other OpenRouter model can be added as a settings model entry with `provider = "openrouter"` and the OpenRouter slug as `api_id`:
+Any other OpenRouter model can be added under the provider. Choose a stable Fabro model slug as the table key and put OpenRouter's exact vendor/model string in `api_id`:
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[llm.models."meta-llama/llama-4-maverick"]
-provider = "openrouter"
+[llm.providers.openrouter.models."llama-4-maverick"]
 api_id = "meta-llama/llama-4-maverick"
 display_name = "Llama 4 Maverick"
 family = "llama-4"
 
-[llm.models."meta-llama/llama-4-maverick".limits]
+[llm.providers.openrouter.models."llama-4-maverick".limits]
 context_window = 1000000
 
-[llm.models."meta-llama/llama-4-maverick".features]
+[llm.providers.openrouter.models."llama-4-maverick".features]
 tools = true
 vision = false
 reasoning = false
@@ -83,8 +84,8 @@ reasoning = false
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro model list --provider openrouter
-fabro model test --model anthropic/claude-sonnet-4-6
-fabro run workflow.fabro --model deepseek/deepseek-v4-flash
+fabro model test --provider openrouter --model claude-sonnet-4-6
+fabro run workflow.fabro --provider openrouter --model deepseek-v4-flash
 ```
 
 When targeting a non-default remote server, pass the same `--server` value to verification commands:
@@ -136,12 +137,12 @@ OpenRouter's [provider routing preferences](https://openrouter.ai/docs/guides/ro
 
 ## Attribution headers
 
-Fabro does not send OpenRouter's optional attribution headers (`HTTP-Referer`, `X-Title`) by default, so self-hosted installations stay anonymous on OpenRouter's public app leaderboard. To opt in:
+Fabro does not send OpenRouter's optional attribution headers (`HTTP-Referer`, `X-Title`) by default, so self-hosted installations stay anonymous on OpenRouter's public app leaderboard. Workflow runs do send `x-session-id: <run-id>` for request grouping; an explicit provider `extra_headers` value for that header takes precedence. To opt in to attribution:
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [llm.providers.openrouter.extra_headers]
-"HTTP-Referer" = { literal = "https://your-site.example" }
-"X-Title" = { literal = "Your App" }
+"HTTP-Referer" = "https://your-site.example"
+"X-Title" = "Your App"
 ```
 
 ## Troubleshooting
@@ -162,6 +163,6 @@ Fabro does not send OpenRouter's optional attribution headers (`HTTP-Referer`, `
   </Card>
 
   <Card title="Settings Configuration" icon="gear" href="/reference/user-configuration">
-    Full reference for `[llm.providers.<id>]` and `[llm.models.<id>]`.
+    Full reference for provider settings and provider-scoped model offerings.
   </Card>
 </Columns>

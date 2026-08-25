@@ -54,7 +54,7 @@ Each rule starts with a selector that determines which nodes it applies to:
 
 ### Assigning classes
 
-Set the `class` attribute on a node to target it with class selectors. Multiple classes are space-separated:
+Set the `class` attribute on a node to target it with class selectors. Separate multiple classes with spaces:
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 implement [label="Implement", class="coding critical"]
@@ -118,11 +118,14 @@ selector { property: value; property: value; }
 * Properties and values are separated by `:`
 * Declarations are separated by `;`
 * Whitespace is flexible — newlines and indentation are ignored
-* CSS comments (`/* ... */`) are not supported
+* CSS block comments (`/* ... */`) can appear between tokens and are ignored
+* Comments close at the first `*/` and do not nest; an unterminated comment is a syntax error
+* `//` starts a comment in the surrounding workflow file, but not inside a stylesheet
 
 ### Full example
 
 ```
+/* Use a fast model by default. */
 *            { model: claude-haiku-4-5;reasoning_effort: low; }
 box          { reasoning_effort: high; }
 tab          { reasoning_effort: low; }

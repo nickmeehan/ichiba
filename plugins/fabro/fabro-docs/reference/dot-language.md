@@ -116,7 +116,7 @@ plan [label="Plan", prompt="Create an implementation plan."]
 
 **Node identifiers** must start with a letter or underscore, followed by letters, digits, or underscores (e.g. `run_tests`, `gate_1`, `_private`).
 
-Nodes referenced in edges are auto-created if not explicitly declared.
+Every node used by an edge needs its own declaration. Validation fails when an edge names a node the workflow never declares, because that is nearly always a typo or a rename that missed an edge. The declaration can come before or after the edges that use it, and it can live in a subgraph.
 
 ### Edge declarations
 
@@ -156,25 +156,38 @@ Node and edge defaults declared inside a subgraph are scoped — they don't leak
 
 ## Node types
 
-Each node's `shape` attribute determines its execution behavior. See [Nodes & Stages](/workflows/stages-and-nodes) for detailed documentation of each type.
+Fabro uses an explicit `type` attribute to select a node's handler. Without `type`, the `shape` attribute selects the handler. See [Nodes & Stages](/workflows/stages-and-nodes) for detailed documentation of each type.
 
-| Shape           | Handler             | Purpose                                     |
-| --------------- | ------------------- | ------------------------------------------- |
-| `Mdiamond`      | start               | Workflow entry point (exactly one required) |
-| `Msquare`       | exit                | Workflow terminal (exactly one required)    |
-| `box` (default) | agent               | Multi-turn LLM with tool access             |
-| `tab`           | prompt              | Single LLM call, no tools                   |
-| `parallelogram` | command             | Execute a shell script                      |
-| `hexagon`       | human               | Human-in-the-loop decision gate             |
-| `diamond`       | conditional         | Route based on conditions                   |
-| `component`     | parallel            | Fan-out to concurrent branches              |
-| `tripleoctagon` | parallel.fan\_in    | Merge parallel branch results               |
-| `insulator`     | wait                | Pause for a duration                        |
-| `house`         | stack.manager\_loop | Sub-workflow orchestration                  |
+| Shape                                                                        | Handler             | Purpose                                     |
+| ---------------------------------------------------------------------------- | ------------------- | ------------------------------------------- |
+| `Mdiamond`                                                                   | start               | Workflow entry point (exactly one required) |
+| `Msquare`                                                                    | exit                | Workflow terminal (exactly one required)    |
+| `box` (default)                                                              | agent               | Multi-turn LLM with tool access             |
+| `tab`                                                                        | prompt              | Single LLM call, no tools                   |
+| `parallelogram` (inferred from `script` when `shape` and `type` are omitted) | command             | Execute a shell script                      |
+| `hexagon`                                                                    | human               | Human-in-the-loop decision gate             |
+| `diamond`                                                                    | conditional         | Route based on conditions                   |
+| `component`                                                                  | parallel            | Fan-out to concurrent branches              |
+| `tripleoctagon`                                                              | parallel.fan\_in    | Merge parallel branch results               |
+| `insulator`                                                                  | wait                | Pause for a duration                        |
+| `house`                                                                      | stack.manager\_loop | Sub-workflow orchestration                  |
 
-The `type` attribute can also be set explicitly to override the shape-based mapping.
+The `type` attribute can be set explicitly to override the shape-based mapping and attribute inference.
 
 Start nodes can also be identified by ID (`start` or `Start`). Exit nodes can be identified by ID (`exit`, `Exit`, `end`, or `End`).
+
+### Omitting the shape
+
+The two most common node types don't need a `shape` or `type`. When both are omitted, a node that sets `script` is a command node. Every other node defaults to an agent node:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+plan  [prompt="Plan the work"]      // agent
+build [script="cargo build"]        // command
+```
+
+An explicit `shape` or `type` always wins. For example, `shape=box` with a `script` is still an agent node, and the `script` has no effect. Setting both `script` and `prompt` on one node is an error because command handlers consume `script`, while LLM handlers consume `prompt`.
+
+Other node types still need their shape, because their attributes don't identify them uniquely. In particular, agent and prompt nodes take the same attributes, so a prompt node needs `shape=tab`.
 
 ## Node attributes
 
@@ -185,8 +198,8 @@ Start nodes can also be identified by ID (`start` or `Start`). Exit nodes can be
 | `label`                 | String     | Display name in the graph visualization                                                                                                                                                                          |
 | `shape`                 | Identifier | Graphviz shape — determines handler type (see table above)                                                                                                                                                       |
 | `type`                  | String     | Explicit handler type (overrides shape)                                                                                                                                                                          |
-| `class`                 | String     | Comma-separated classes for [stylesheet](/workflows/stylesheets) targeting                                                                                                                                       |
-| `timeout`               | Duration   | Execution timeout (e.g. `900s`)                                                                                                                                                                                  |
+| `class`                 | String     | Classes for [stylesheet](/workflows/stylesheets) targeting. Separate multiple classes with spaces. Commas are also accepted for compatibility.                                                                   |
+| `timeout`               | Duration   | Execution timeout (e.g. `900s`). An agent's wait for human input does not consume this budget. On a human node, this is the response deadline.                                                                   |
 | `max_visits`            | Integer    | Max times this node can execute in a run. Overrides the graph-level `max_node_visits` for this node.                                                                                                             |
 | `max_retries`           | Integer    | Override default retry count                                                                                                                                                                                     |
 | `retry_policy`          | String     | Named preset: `none`, `standard`, `aggressive`, `linear`, `patient`                                                                                                                                              |
@@ -204,12 +217,12 @@ Start nodes can also be identified by ID (`start` or `Start`). Exit nodes can be
 | `prompt`           | String  | Task instructions for the LLM. Supports file references with `@path/to/file.md`                                                                                                                                                                                       |
 | `reasoning_effort` | String  | `low`, `medium`, or `high` (default: `high`)                                                                                                                                                                                                                          |
 | `max_tokens`       | Integer | Maximum output tokens                                                                                                                                                                                                                                                 |
-| `fidelity`         | String  | How much prior context is passed: `compact`, `full`, `summary:high`, `summary:medium`, `summary:low`, `truncate`                                                                                                                                                      |
-| `thread_id`        | String  | Groups nodes into a shared conversation thread                                                                                                                                                                                                                        |
+| `fidelity`         | String  | How much prior context is passed: `compact`, `full`, `summary:high`, `summary:medium`, `summary:low`, `truncate`. On a node entered directly from a parallel fork, this is overridden by the fork-to-branch edge; explicit `full` degrades to `summary:high`.         |
+| `thread_id`        | String  | Groups nodes into a shared conversation thread. Inert when the node is entered directly from a parallel fork.                                                                                                                                                         |
 | `model`            | String  | Explicit model ID (overrides stylesheet)                                                                                                                                                                                                                              |
 | `provider`         | String  | Explicit provider name (overrides stylesheet). Auto-inferred from the model catalog when omitted.                                                                                                                                                                     |
 | `project_memory`   | Boolean | When `true` (default), prompt nodes discover and include project docs (`AGENTS.md`, `CLAUDE.md`, etc.) as a system prompt. Set to `false` to disable.                                                                                                                 |
-| `output_schema`    | String  | Optional structured output validation. Use `routing` for Fabro's built-in routing directive schema, `@path/to/schema.json` for a JSON Schema file, or an inline JSON Schema object string. Supported on agent and prompt nodes.                                       |
+| `output_schema`    | String  | Optional structured output validation. Use `routing` for Fabro's built-in routing directive schema, `@path/to/schema.json` for a JSON Schema file, or an inline JSON Schema object string. Supported on agent, prompt, and command nodes.                             |
 | `output_retries`   | Integer | Corrective structured-output turns inside the same prompt conversation or agent session. Default `2`; `0` validates once and fails without repair; negative values are treated as `0`. Separate from `max_retries`.                                                   |
 | `backend`          | String  | Agent execution backend: `api` (default) or `acp`. `api` runs Fabro's tool loop through provider APIs; `acp` runs an Agent Client Protocol stdio agent inside the active sandbox. Prompt nodes are API-only. See [Agents — Backends](/core-concepts/agents#backends). |
 | `acp.command`      | String  | Shell command for nodes with `backend="acp"`. Mutually exclusive with `acp.config`. The value is always parsed as a command string, not JSON.                                                                                                                         |
@@ -217,7 +230,7 @@ Start nodes can also be identified by ID (`start` or `Start`). Exit nodes can be
 
 #### Structured output validation
 
-`output_schema` opts an agent or prompt node into strict JSON validation:
+`output_schema` opts an agent, prompt, or command node into strict JSON validation:
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 review [
@@ -235,25 +248,53 @@ audit [
 
 * `output_schema="routing"` requires a JSON object with at least one recognized routing field: `preferred_next_label`, `outcome`, `failure_reason`, `suggested_next_ids`, or `context_updates`.
 * `output_schema="@schemas/audit-result.schema.json"` loads a JSON Schema file using workflow file-reference rules and validates the final JSON object in the response text. Inline JSON Schema object strings are also accepted, but file references are usually easier to read.
+* API-backed agent nodes receive the resolved output contract in their task instructions. The contract applies only to the final response, so the agent can still use tools and send intermediate progress while it works.
 * On validation failure, Fabro sends validation feedback to the same active context before failing: prompt nodes keep the prior assistant response in the message list, and API-backed agent nodes repair in the same live session.
 * `output_retries` defaults to `2` and controls only these corrective structured-output turns. Negative values are treated as `0`. It is not the same as `max_retries` and does not consume workflow retry attempts.
 * Custom schema output is stored in context at `output.{node_id}`. Routing schema output updates routing fields and any `context_updates`.
-* Agent routing fallbacks still apply to `output_schema="routing"`: response text first, then `status.json`, then the last file touched by the agent. Custom schemas and prompt nodes validate response text only.
+* Agent routing fallbacks still apply to `output_schema="routing"`: response text first, then `status.json`, then the last file touched by the agent. The last-file fallback only accepts `.json` and `.md` files (case-insensitive) whose final JSON object contains the routing directive; only whitespace may follow it. Custom schemas and prompt nodes validate response text only.
+* Command nodes validate merged stdout and stderr only after the script exits with code `0`, using the same object selection as agents and prompts: custom schemas validate the last JSON object, and `routing` validates the last JSON object containing a recognized routing field. Print the intended JSON object last. A validation error is a deterministic, non-retryable failure with no repair turn or `status.json` fallback. `output_retries`, `retry_policy`, and `max_retries` do not retry it. Nonzero exits retain normal command failure behavior without schema validation.
+* For commands, custom schema output is stored at `output.{node_id}`; edge conditions cannot traverse into its fields. The `routing` schema applies routing fields and merges `context_updates` into flat context keys, which conditions can read (for example, `context.kept_count`).
 * `backend="acp"` with `output_schema` is unsupported in this release.
 
 ### Command nodes
 
-| Attribute  | Type   | Description                       |
-| ---------- | ------ | --------------------------------- |
-| `script`   | String | Shell command to execute          |
-| `language` | String | `"shell"` (default) or `"python"` |
+| Attribute       | Type   | Description                                                                                                                                                                                                  |
+| --------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `script`        | String | Shell command to execute (required). Its presence infers a command node when `shape` and `type` are omitted.                                                                                                 |
+| `language`      | String | `"shell"` (default) or `"python"`                                                                                                                                                                            |
+| `stdin_source`  | String | Flat runtime context key to pass to standard input. `context.NAME` first checks that exact key, then falls back to `NAME`. Strings are passed unchanged; other values use compact JSON. No newline is added. |
+| `output_schema` | String | Optional structured output validation. Accepts `routing`, `@path/to/schema.json`, or an inline JSON Schema object string. See [Structured output validation](#structured-output-validation).                 |
 
 ### Parallel (fan-out) nodes
 
-| Attribute      | Type    | Description                                                       |
-| -------------- | ------- | ----------------------------------------------------------------- |
-| `join_policy`  | String  | When the merge can proceed: `wait_all` (default), `first_success` |
-| `max_parallel` | Integer | Maximum concurrent branches (default: 4)                          |
+| Attribute      | Type    | Description                                                                                                                                                                             |
+| -------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `max_parallel` | Integer | Maximum concurrent branches (default: 4). The node always waits for every branch.                                                                                                       |
+| `for_each`     | String  | Flat runtime context key containing a JSON array. Runs the node's single agent or prompt target once per item. `context.items` first checks that exact key, then falls back to `items`. |
+
+For the first node in each branch, `fidelity` resolves from the fork-to-branch edge, then the branch node; without either, the fork preamble is inherited unchanged. Branch-specific preambles are rendered before fan-out from the fork's context snapshot. Concurrent branches cannot share sessions, so explicit branch `full` becomes `summary:high`, and branch-level `thread_id` is inert.
+
+When `for_each` is set, the parallel node must have exactly one outgoing edge,
+and its target must be an agent or prompt node. Fabro resolves the source as an
+inline array or a managed `blob://` or `file://` JSON artifact, then clones the
+target once per item. Nested `for_each` is not supported.
+
+Each clone receives the target's normal prompt followed by the item as pretty
+JSON inside a fresh `<untrusted-{16 lowercase hex}>` fence with a matching
+closing tag, plus a fixed notice that the content is data, not instructions.
+There is no item interpolation syntax. The fence prevents an item from closing
+its own data block, but it does not restrict an agent's tools; workflow authors
+must give the target only the tool access appropriate for untrusted item data.
+
+A source array above 1000 items fails the parallel stage before any branch
+starts. Filter the array in the node that produces it, or split the work across
+runs.
+
+Dynamic results retain input order. Each result uses the template target ID and
+adds a zero-based `index` plus `item_label`, derived from the item's `name`,
+then `label`, then its index. An empty array succeeds and proceeds directly to
+the target's fan-in node without executing the unparameterized target.
 
 ### Wait nodes
 
@@ -263,10 +304,11 @@ audit [
 
 ### Human nodes
 
-| Attribute              | Type   | Description                                                                                                                                                                                                                    |
-| ---------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `question_type`        | String | Optional interview question type override: `yes_no`, `confirmation`, `multiple_choice`, `multi_select`, or `freeform`. Defaults to `freeform` when the gate only has a freeform edge; otherwise defaults to `multiple_choice`. |
-| `human.default_choice` | String | Target node to use when the question times out.                                                                                                                                                                                |
+| Attribute              | Type    | Description                                                                                                                                                                                                                                                           |
+| ---------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `question_type`        | String  | Optional interview question type override: `yes_no`, `confirmation`, `multiple_choice`, `multi_select`, or `freeform`. Defaults to `freeform` when the gate only has a freeform edge; otherwise defaults to `multiple_choice`.                                        |
+| `review_target`        | Boolean | When `true`, read and validate the typed `review_target` context value, then present it as the primary link in the question. Fabro generates the question text, so the node's `label` is not used. See [Review targets](/workflows/human-in-the-loop#review-targets). |
+| `human.default_choice` | String  | Target node to use when the question times out.                                                                                                                                                                                                                       |
 
 ### Manager loop (sub-workflow) nodes
 
@@ -280,15 +322,15 @@ audit [
 
 ## Edge attributes
 
-| Attribute      | Type    | Description                                                                       |
-| -------------- | ------- | --------------------------------------------------------------------------------- |
-| `label`        | String  | Display text; also used for human gate option matching                            |
-| `condition`    | String  | Boolean expression for conditional routing (see below)                            |
-| `weight`       | Integer | Priority for tiebreaking (higher wins, default: 0)                                |
-| `fidelity`     | String  | Override fidelity level for this transition                                       |
-| `thread_id`    | String  | Override thread ID for this transition                                            |
-| `loop_restart` | Boolean | Mark this edge as a loop restart point                                            |
-| `freeform`     | Boolean | When `true` on a human-gate edge, accept free-text input instead of fixed choices |
+| Attribute      | Type    | Description                                                                                                                                                                                                                                                                     |
+| -------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`        | String  | Display text; also used for human gate option matching                                                                                                                                                                                                                          |
+| `condition`    | String  | Boolean expression for conditional routing (see below)                                                                                                                                                                                                                          |
+| `weight`       | Integer | Priority for tiebreaking (higher wins, default: 0)                                                                                                                                                                                                                              |
+| `fidelity`     | String  | Override fidelity level for this transition. On a fork-to-branch edge, takes precedence over the branch node; explicit `full` degrades to `summary:high`.                                                                                                                       |
+| `thread_id`    | String  | Override thread ID for this transition. Inert on fork-to-branch edges.                                                                                                                                                                                                          |
+| `loop_restart` | Boolean | Restart the workflow from this edge's target when taken: stage history and retry counts clear and the context resets to empty (visit counts are kept). Failed outcomes may only take it for `transient_infra` failures — see [Failures](/execution/failures#loop-restart-edges) |
+| `freeform`     | Boolean | When `true` on a human-gate edge, accept free-text input instead of fixed choices                                                                                                                                                                                               |
 
 ## Condition expressions
 

@@ -69,6 +69,13 @@ Envelope fields:
 
 Only `id`, `ts`, `run_id`, and `event` are always present. Optional fields are omitted when they do not apply.
 
+For runtime `for_each` branches, `parallel.branch.started` and
+`parallel.branch.completed` include the zero-based `index` and an optional
+`item_label`. They do not include the raw item. The final prompt is recorded by
+the existing `stage.prompt` event, including the fenced item data, so event
+streams, run dumps, and retained logs are source-bearing data. Apply the same
+access controls and retention policy you use for workflow inputs.
+
 ## Reading the event stream
 
 Because event payload lives in `properties`, most shell queries should look there.
@@ -120,7 +127,7 @@ When running workflows through the API server, subscribe to the [run events endp
 
 ### Web UI
 
-The web frontend consumes the SSE stream automatically and shows stage progress, tool calls, command output, and human interaction as they happen. Use the stage `Thread` and `Debug` views for per-stage activity, or the run-level `Run Events` page when you need the full event stream with search and category filters. The `Run Events` page also includes a Waterfall view for comparing stage durations and inspecting timing details from hover popovers.
+The web frontend consumes the SSE stream automatically and shows stage progress, tool calls, command output, and human interaction as they happen. Use the stage `Chat` view for a readable conversation, `Thread` for the detailed agent transcript and disclosed provider reasoning, and `Debug` for raw stage events. Use the run-level `Run Events` page when you need the full event stream with search and category filters. The `Run Events` page also includes a Waterfall view for comparing stage durations and inspecting timing details from hover popovers.
 
 <Frame caption="The Stages tab shows the full agent conversation including tool calls and responses.">
   <img src="https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/web/run-stages.png?fit=max&auto=format&n=_yTKyxnEAApivGto&q=85&s=783ac5cd8360fba67b2443e2589ef0e2" alt="Fabro web UI run stages showing agent conversation with tool calls" width="2400" height="1558" data-path="images/web/run-stages.png" />

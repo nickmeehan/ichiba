@@ -120,7 +120,7 @@ enabled = true
 default_channel = "#fabro-reviews"
 ```
 
-`default_channel` is used only for human-in-the-loop interview prompts. Run lifecycle notifications use per-run or per-workflow `[run.notifications]` routes instead.
+`default_channel` is a literal channel name used only for human-in-the-loop interview prompts; Fabro does not interpolate it. Run lifecycle notifications use per-run or per-workflow `[run.notifications]` routes instead, whose channel values support `{{ vars.NAME }}` interpolation.
 
 ### 8. Invite the bot
 
@@ -185,7 +185,7 @@ Each enabled route posts one message when a matching event is emitted. Lifecycle
 
 `run.failed` is a terminal run event. A stage can fail and still be followed by another graph edge that lets the run complete; in that case a route listening for `run.completed` fires, not `run.failed`.
 
-The route-level Slack channel is required for lifecycle notifications. The channel may be a literal (`"#deploys"`) or an environment interpolation (`"{{ env.DEPLOYS_SLACK_CHANNEL }}"`). If the channel is missing, empty, or cannot be resolved, Fabro logs a warning and skips that route without affecting the run or other notification routes.
+The route-level Slack channel is required for lifecycle notifications. The channel may be a literal (`"#deploys"`) or a server variable (`"{{ vars.DEPLOYS_SLACK_CHANNEL }}"`). If the channel is missing, empty, or cannot be resolved, Fabro logs a warning and skips that route without affecting the run or other notification routes.
 
 Lifecycle notifications are one-way and fire-and-forget. They never accept answers, register reply threads, update prior messages, or interact with interview state.
 

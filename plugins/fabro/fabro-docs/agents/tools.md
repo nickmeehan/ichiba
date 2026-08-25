@@ -18,12 +18,12 @@ These tools are registered for every provider profile:
 
 | Tool         | Category | Description                                       |
 | ------------ | -------- | ------------------------------------------------- |
-| `shell`      | shell    | Run shell commands via `/bin/bash -c`             |
+| `shell`      | shell    | Run commands as Bash source via `bash -c`         |
 | `read_file`  | read     | Read file contents with optional offset and limit |
 | `write_file` | write    | Create or overwrite a file                        |
 | `grep`       | read     | Search file contents with regex patterns          |
 | `glob`       | read     | Find files by name pattern                        |
-| `web_search` | shell    | Search the web via Brave Search                   |
+| `web_search` | shell    | Search the web via Brave or Venice                |
 | `web_fetch`  | shell    | Fetch and optionally summarize a URL              |
 
 ## Provider-specific tools
@@ -43,11 +43,13 @@ Some tools are only available with certain LLM providers:
 
 ### shell
 
-Executes a shell command via `/bin/bash -c` in the sandbox's working directory.
+Executes the command as Bash source in the sandbox's working directory, equivalent to `bash -c <command>`. The shell is not a login shell, and Fabro adds no shell options of its own — no `errexit`, no `pipefail`. Docker and Daytona sandboxes require `/bin/bash`; local sandboxes resolve `bash` through the worker's `PATH`.
+
+To run something under a different interpreter, say so in the command itself (`sh -c ...`, a script with a `#!/bin/sh` shebang, or an explicit `set -o pipefail`); those run beneath Fabro's Bash boundary.
 
 | Parameter     | Type    | Required | Description                          |
 | ------------- | ------- | -------- | ------------------------------------ |
-| `command`     | string  | yes      | The shell command to execute         |
+| `command`     | string  | yes      | Bash source to evaluate              |
 | `timeout_ms`  | integer | no       | Timeout in milliseconds              |
 | `description` | string  | no       | Description of what the command does |
 
@@ -77,7 +79,7 @@ Creates or overwrites a file.
 | `content`   | string | yes      | Content to write          |
 
 <Note>
-  The [read-before-write guardrail](#read-before-write-guardrail) prevents writing to existing files that haven't been read first. Writing to new files is always allowed.
+  `write_file` replaces the entire file. For changes to an existing file, prefer `edit_file`, which only replaces the string you name.
 </Note>
 
 ### edit\_file
@@ -93,11 +95,11 @@ Replaces a string in an existing file. Available for Anthropic and Gemini provid
 
 If `old_string` is not found, the tool returns an error. If multiple occurrences exist and `replace_all` is false, the tool returns an error asking for more context or to set `replace_all`.
 
-The tool reads the file internally before writing, so it satisfies the read-before-write guardrail automatically.
+Because `old_string` must match the file exactly, an edit built from a stale or remembered version of the file fails rather than silently applying somewhere unintended.
 
 ### grep
 
-Searches file contents with a regex pattern, powered by ripgrep in the sandbox.
+Searches file contents with a regex pattern. The sandbox uses ripgrep when `rg` is on the path and falls back to POSIX `grep` otherwise, detected once and cached per sandbox. Keep patterns portable across both rather than relying on ripgrep-only syntax.
 
 | Parameter          | Type    | Required | Description                                     |
 | ------------------ | ------- | -------- | ----------------------------------------------- |
@@ -107,7 +109,7 @@ Searches file contents with a regex pattern, powered by ripgrep in the sandbox.
 | `case_insensitive` | boolean | no       | Case-insensitive search (default: false)        |
 | `max_results`      | integer | no       | Maximum number of results                       |
 
-Results are returned as `file:line:content` lines. Files that appear in grep results are marked as "read" for the [read-before-write guardrail](#read-before-write-guardrail).
+Results are returned as `file:line:content` lines.
 
 ### glob
 
@@ -118,22 +120,24 @@ Finds files matching a glob pattern.
 | `pattern` | string | yes      | Glob pattern to match files (e.g. `**/*.rs`)        |
 | `path`    | string | no       | Directory to search in (default: working directory) |
 
-Returns matching file paths, one per line.
+Returns matching file paths, one per line, sorted lexicographically by their path relative to the search root.
 
-<Note>
-  Unlike `grep`, `glob` does **not** mark files as read for the read-before-write guardrail. To modify a file found via glob, the agent must read it first.
-</Note>
+Patterns are case-sensitive and relative to `path`: `*` and `?` stay within one path segment, bracket expressions such as `[abc]` match one character, and `**` crosses directories when used as a complete segment. Leading dots are matched normally. For example, `*.rs` searches only the root of `path`, and `**/*.rs` searches recursively. Patterns must use `/`, be relative, and cannot contain a backslash or `..` segment.
 
 ### web\_search
 
-Searches the web using the Brave Search API.
+Searches the web using Brave Search or Venice Search. Fabro selects the backend automatically from the available credentials.
 
-| Parameter     | Type    | Required | Description                           |
-| ------------- | ------- | -------- | ------------------------------------- |
-| `query`       | string  | yes      | Search query                          |
-| `max_results` | integer | no       | Maximum results (default: 5, max: 20) |
+| Parameter     | Type    | Required | Description                                                                           |
+| ------------- | ------- | -------- | ------------------------------------------------------------------------------------- |
+| `query`       | string  | yes      | Search query. Venice rejects queries longer than 400 characters before the HTTP call. |
+| `max_results` | integer | no       | Maximum results (default: 5, max: 20)                                                 |
 
-Requires `BRAVE_SEARCH_API_KEY` to be configured for the current runtime. Server-backed sessions read it from the server vault (`fabro secret set BRAVE_SEARCH_API_KEY <key>`); standalone local agent runs can pass it from the invoking shell. Returns numbered results with title, URL, and description.
+Fabro uses direct [Brave Search](/integrations/brave-search) when `BRAVE_SEARCH_API_KEY` is present. Otherwise it uses [Venice Search](/integrations/venice-search) when `VENICE_API_KEY` is present. If both credentials are present, Brave wins. Venice always uses its Brave search engine.
+
+Runs read both keys from the server vault. Workers start from a cleared environment, so exporting a key in the server's shell has no effect. The standalone agent CLI reads the keys from the invoking shell instead.
+
+The tool is registered when either credential is available. Once Fabro selects a backend, a failed call returns an error; it does not retry through the other backend. Results contain numbered titles, URLs, and descriptions. Venice includes `date` on a fourth line when present.
 
 ### web\_fetch
 
@@ -201,23 +205,6 @@ Like `update_plan`, task changes are persisted as `todo.created`, `todo.updated`
 
 When an Anthropic session has not used `TaskCreate` or `TaskUpdate` for ten assistant turns, Fabro may inject a system reminder asking the agent to keep task state current. The reminder is only added when both tools are available and resets after the agent uses either tool.
 
-## Read-before-write guardrail
-
-Fabro wraps every sandbox in a `ReadBeforeWriteSandbox` decorator that tracks which files the agent has seen. The rules are:
-
-1. **Writing to a new file** (one that doesn't exist yet) is always allowed
-2. **Writing to an existing file** requires that the agent has previously read it via `read_file` or seen it in `grep` results
-3. **Deleting an existing file** follows the same rule as writing
-
-If an agent attempts to write to an existing file it hasn't read, the tool returns an error:
-
-```
-Cannot write to 'src/main.rs': file exists but has not been read.
-Use read_file to read the file before writing to it.
-```
-
-This prevents agents from blindly overwriting files they haven't inspected. The guardrail normalizes paths so that reading `src/main.rs` (relative) and `/workspace/src/main.rs` (absolute) both satisfy the check.
-
 ## Tool execution
 
 ### Parallel execution
@@ -249,13 +236,13 @@ When a tool call fails, the error is returned to the agent as a tool result with
 
 Common error cases:
 
-| Error                       | Cause                                                                                             |
-| --------------------------- | ------------------------------------------------------------------------------------------------- |
-| Unknown tool                | The agent called a tool that doesn't exist                                                        |
-| Argument validation failure | Arguments don't match the tool's JSON Schema                                                      |
-| File not found              | The target file doesn't exist                                                                     |
-| Command timeout             | A shell command exceeded its timeout                                                              |
-| Read-before-write           | The agent tried to write to a file it hasn't read (see [guardrail](#read-before-write-guardrail)) |
+| Error                       | Cause                                                          |
+| --------------------------- | -------------------------------------------------------------- |
+| Unknown tool                | The agent called a tool that doesn't exist                     |
+| Argument validation failure | Arguments don't match the tool's JSON Schema                   |
+| File not found              | The target file doesn't exist                                  |
+| Command timeout             | A shell command exceeded its timeout                           |
+| `old_string` not found      | An `edit_file` anchor didn't match the file's current contents |
 
 ### Timeouts
 

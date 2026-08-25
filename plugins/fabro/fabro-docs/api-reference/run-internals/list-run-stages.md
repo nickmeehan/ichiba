@@ -14,7 +14,7 @@
 openapi: 3.1.0
 info:
   title: Fabro Run API
-  version: 0.1.0
+  version: 0.2.0
   description: HTTP API for managing Fabro workflow run executions.
 servers: []
 security:
@@ -51,6 +51,8 @@ tags:
     description: Internal run details (stages, turns, context, configuration)
   - name: Workflows
     description: Workflow definitions and execution
+  - name: Workflow Versions
+    description: Immutable, content-addressed workflow packages
   - name: Billing
     description: Token counts and billed totals
   - name: Insights
@@ -182,11 +184,10 @@ components:
         - status
         - node_id
         - visit
+        - billing
       properties:
         id:
-          type: string
-          description: StageId in "node_id@visit" form, e.g. verify@2.
-          example: verify@2
+          $ref: '#/components/schemas/StageId'
         name:
           type: string
           description: Human-readable stage name.
@@ -214,9 +215,47 @@ components:
           format: uint32
           minimum: 1
           description: >-
-            1-based visit count; bumped each time the workflow re-enters this
-            node.
+            1-based stage execution ordinal, the numeric component of `id`. It
+            increments each time the node produces a new observable execution:
+            graph re-entry (loops) and replay of post-checkpoint work after
+            resume. Automatic in-place retries do not increment it.
           example: 2
+        graph_visit:
+          type:
+            - integer
+            - 'null'
+          format: uint32
+          minimum: 1
+          description: >-
+            1-based count of how many times workflow control entered this node
+            (drives `max_visits`). Differs from `visit` when a post-checkpoint
+            execution is replayed after resume. Absent for stages recorded
+            before execution identity was tracked.
+          example: 1
+        resumed_from_stage_id:
+          oneOf:
+            - $ref: '#/components/schemas/StageId'
+            - type: 'null'
+          description: >-
+            StageId of the prior post-checkpoint execution superseded by this
+            replay after the run was resumed.
+          example: verify@1
+        parallel_group_id:
+          allOf:
+            - $ref: '#/components/schemas/StageId'
+          description: >-
+            Exact StageId of the parent parallel execution. Clients can compare
+            this directly with the `id` of a parallel stage. Omitted for stages
+            that are not parallel branches.
+          example: review_fork@1
+        parallel_branch_index:
+          type: integer
+          format: uint32
+          minimum: 0
+          description: >-
+            Zero-based outgoing-edge index within the parent parallel execution.
+            Omitted for stages that are not parallel branches.
+          example: 1
         provider_used:
           oneOf:
             - $ref: '#/components/schemas/StageModelUsage'
@@ -231,6 +270,15 @@ components:
           format: date-time
           description: Wall-clock time the latest attempt of this stage started, if known.
           example: '2026-04-29T12:34:56Z'
+        billing:
+          $ref: '#/components/schemas/BilledTokenCounts'
+          description: >-
+            Token counts for this stage execution alone. `total_usd_micros` is
+            the provider-reported cost when there is one, otherwise the server
+            catalog's price for these tokens — the same pricing the
+            `/runs/{id}/billing` rows use. All-zero counts mean the stage made
+            no model calls. Unlike the billing rows, which sum every visit of a
+            node, this covers only this visit.
     PaginationMeta:
       description: Pagination metadata included in every paginated response.
       type: object
@@ -280,6 +328,10 @@ components:
           description: >-
             Server-generated request identifier; matches the x-request-id
             response header.
+    StageId:
+      description: Canonical stage execution identifier in `node_id@visit` form.
+      type: string
+      example: verify@2
     StageHandler:
       description: Canonical workflow stage handler kind.
       type: string
@@ -337,6 +389,54 @@ components:
           oneOf:
             - $ref: '#/components/schemas/BillingSpeed'
             - type: 'null'
+    BilledTokenCounts:
+      description: Token counts with optional billed USD micros totals.
+      type: object
+      required:
+        - input_tokens
+        - output_tokens
+        - total_tokens
+        - reasoning_tokens
+        - cache_read_tokens
+        - cache_write_tokens
+      properties:
+        input_tokens:
+          type: integer
+          format: int64
+          description: Number of input tokens consumed.
+          example: 28640
+        output_tokens:
+          type: integer
+          format: int64
+          description: Number of output tokens generated.
+          example: 8750
+        total_tokens:
+          type: integer
+          format: int64
+          description: Total billable tokens aggregated across categories.
+          example: 37390
+        reasoning_tokens:
+          type: integer
+          format: int64
+          description: Number of reasoning tokens.
+          example: 1200
+        cache_read_tokens:
+          type: integer
+          format: int64
+          description: Number of cache read tokens.
+          example: 4800
+        cache_write_tokens:
+          type: integer
+          format: int64
+          description: Number of cache write tokens.
+          example: 1500
+        total_usd_micros:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Billed USD amount in micros.
+          example: 720000
     ReasoningEffort:
       description: Native reasoning-effort level requested for an LLM call.
       type: string

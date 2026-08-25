@@ -14,7 +14,7 @@
 openapi: 3.1.0
 info:
   title: Fabro Run API
-  version: 0.1.0
+  version: 0.2.0
   description: HTTP API for managing Fabro workflow run executions.
 servers: []
 security:
@@ -51,6 +51,8 @@ tags:
     description: Internal run details (stages, turns, context, configuration)
   - name: Workflows
     description: Workflow definitions and execution
+  - name: Workflow Versions
+    description: Immutable, content-addressed workflow packages
   - name: Billing
     description: Token counts and billed totals
   - name: Insights
@@ -288,12 +290,9 @@ components:
             Durable identity of one execution of a parallel node, formatted as
             "{node_id}@{visit}".
         parallel_branch_id:
-          type:
-            - string
-            - 'null'
-          description: >
-            Durable identity of one branch within a parallel execution,
-            formatted as "{parallel_group_id}:{index}".
+          oneOf:
+            - $ref: '#/components/schemas/ParallelBranchId'
+            - type: 'null'
         session_id:
           type:
             - string
@@ -321,6 +320,12 @@ components:
           type: object
           additionalProperties: true
       additionalProperties: true
+    ParallelBranchId:
+      description: >-
+        Durable identity of one branch within a parallel execution, in
+        `{parallel_group_id}:{index}` form.
+      type: string
+      example: review_fork@3:1
     Principal:
       oneOf:
         - $ref: '#/components/schemas/PrincipalUser'

@@ -4,7 +4,9 @@
 
 # List Models
 
-> Returns a paginated list of available LLM models from the built-in catalog.
+> Returns one row per provider/model offering from the catalog. Model IDs
+are unique within a provider; `(provider, id)` is the resource identity.
+
 
 
 
@@ -14,7 +16,7 @@
 openapi: 3.1.0
 info:
   title: Fabro Run API
-  version: 0.1.0
+  version: 0.2.0
   description: HTTP API for managing Fabro workflow run executions.
 servers: []
 security:
@@ -51,6 +53,8 @@ tags:
     description: Internal run details (stages, turns, context, configuration)
   - name: Workflows
     description: Workflow definitions and execution
+  - name: Workflow Versions
+    description: Immutable, content-addressed workflow packages
   - name: Billing
     description: Token counts and billed totals
   - name: Insights
@@ -69,9 +73,9 @@ paths:
       tags:
         - Models
       summary: List Models
-      description: >-
-        Returns a paginated list of available LLM models from the built-in
-        catalog.
+      description: |
+        Returns one row per provider/model offering from the catalog. Model IDs
+        are unique within a provider; `(provider, id)` is the resource identity.
       operationId: listModels
       parameters:
         - $ref: '#/components/parameters/ModelProviderFilter'
@@ -189,7 +193,9 @@ components:
       type: string
       example: anthropic
     Model:
-      description: An available LLM model from the built-in catalog.
+      description: |
+        One provider's offering of an LLM model. The `id` is unique within
+        `provider`; `(provider, id)` is the stable resource identity.
       type: object
       required:
         - id
@@ -200,6 +206,7 @@ components:
         - training
         - knowledge_cutoff
         - features
+        - controls
         - costs
         - estimated_output_tps
         - aliases
@@ -209,7 +216,7 @@ components:
       properties:
         id:
           type: string
-          description: Unique model identifier.
+          description: Canonical human-facing model ID, unique within the provider.
           example: claude-opus-4-6
         provider:
           $ref: '#/components/schemas/ProviderId'
@@ -237,6 +244,8 @@ components:
           example: May 2025
         features:
           $ref: '#/components/schemas/ModelFeatures'
+        controls:
+          $ref: '#/components/schemas/ModelControls'
         costs:
           $ref: '#/components/schemas/ModelCosts'
         estimated_output_tps:
@@ -346,6 +355,7 @@ components:
         - reasoning
         - reasoning_effort
         - prompt_cache
+        - cache_control_breakpoints
         - sampling_params
       properties:
         tools:
@@ -362,11 +372,30 @@ components:
         prompt_cache:
           type: boolean
           description: Whether the model endpoint supports prompt caching.
+        cache_control_breakpoints:
+          type: boolean
+          description: >-
+            Whether the endpoint only caches when the request marks the
+            cacheable prefix with Anthropic-style cache_control breakpoints
+            (e.g. Claude via OpenRouter).
         sampling_params:
           type: boolean
           description: >-
             Whether the model accepts classic sampling parameters (temperature,
             top_p).
+    ModelControls:
+      description: Request-control values accepted by a provider/model offering.
+      type: object
+      required:
+        - reasoning_effort
+      properties:
+        reasoning_effort:
+          type: array
+          description: >-
+            Exact reasoning-effort values accepted by this offering. An empty
+            array means the request control is unsupported.
+          items:
+            $ref: '#/components/schemas/ReasoningEffort'
     ModelCosts:
       description: Pricing per million tokens in USD.
       type: object
@@ -407,6 +436,15 @@ components:
         - levels
         - always_adaptive
         - none
+    ReasoningEffort:
+      description: Native reasoning-effort level requested for an LLM call.
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+        - xhigh
+        - max
   headers:
     XRequestId:
       description: >

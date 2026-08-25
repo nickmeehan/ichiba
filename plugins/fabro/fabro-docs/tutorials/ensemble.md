@@ -4,7 +4,7 @@
 
 # Ensemble
 
-> Multi-provider fan-out, error policies, and result synthesis
+> Multi-provider fan-out and shared-checkout result synthesis
 
 This tutorial combines parallel execution with multi-model routing to get independent opinions from four different LLM providers, then synthesizes the results. This is the ensemble pattern — useful when you want diverse perspectives, consensus-based decisions, or protection against any single model's blind spots.
 
@@ -31,15 +31,15 @@ digraph Ensemble {
     start [shape=Mdiamond, label="Start"]
     exit  [shape=Msquare, label="Exit"]
 
-    fork [label="Fan Out", shape=component, join_policy="wait_all"]
+    fork [label="Fan Out", shape=component]
 
     opus    [label="Opus",    prompt="Analyze the goal. Provide your independent assessment, recommendations, and any code or prose needed. Be thorough.", shape=tab]
     gemini  [label="Gemini",  prompt="Analyze the goal. Provide your independent assessment, recommendations, and any code or prose needed. Be thorough.", shape=tab]
     codex   [label="Codex",   prompt="Analyze the goal. Provide your independent assessment, recommendations, and any code or prose needed. Be thorough.", shape=tab]
     mercury [label="Mercury", prompt="Analyze the goal. Provide your independent assessment, recommendations, and any code or prose needed. Be thorough.", shape=tab]
 
-    merge [label="Merge", shape=tripleoctagon]
-    synth [label="Synthesize", prompt="You have received independent analyses from four different models (Opus, Gemini, Codex, Mercury). Compare their perspectives: identify consensus, highlight disagreements, and synthesize the strongest ideas into a single coherent recommendation. Note where models agreed and where they diverged.", shape=tab]
+    merge [label="Synthesize", shape=tripleoctagon, prompt="Compare every branch result: identify consensus, highlight disagreements, and synthesize the strongest ideas into one recommendation. Note where models agreed and diverged."]
+    synth [label="Write Recommendation", prompt="Write the synthesized analysis as a single coherent recommendation.", shape=tab]
 
     start -> fork
     fork -> opus

@@ -48,10 +48,12 @@ working_dir = "/tmp/workdir"
 
 [run.model]
 name = "claude-sonnet-4-5"
-fallbacks = ["openai", "gemini"]
 
 [run.model.controls]
 reasoning_effort = "high"
+
+[run.model.fallbacks]
+"claude-sonnet-4-5" = ["openai", "gemini"]
 
 [[run.prepare.steps]]
 script = "git clone https://github.com/fabro-sh/fabro repo"
@@ -82,7 +84,7 @@ memory = "8GB"
 disk = "20GB"
 
 [environments.cloud.env]
-API_KEY = "{{ env.MY_API_KEY }}"
+API_KEY = "{{ secrets.MY_API_KEY }}"
 NODE_ENV = "production"
 
 [run.integrations.github.permissions]
@@ -105,7 +107,7 @@ repo_name = "fabro"
 repo_url = "https://github.com/fabro-sh/fabro"
 
 [run.artifacts]
-include = ["test-results/**", "playwright-report/**"]
+include = ["test-results/**", "playwright-report/**", "**/*.trace.zip"]
 
 [run.agent.mcps.playwright]
 type = "sandbox"
@@ -139,13 +141,49 @@ Override the default model and provider for all nodes that don't have an explici
 name = "claude-sonnet-4-5"
 ```
 
-| Field       | Description                                                                                                                                                                                |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`      | Model ID or alias (e.g. `claude-sonnet-4-5`, `opus`, `gemini-pro`). See [Models](/core-concepts/models).                                                                                   |
-| `provider`  | Provider name (optional — auto-inferred from the model catalog). Only needed for models not in the catalog or to force a specific provider.                                                |
-| `fallbacks` | Ordered list of model references to try when the primary is unavailable. Entries can be bare provider tokens (`"openai"`), bare model aliases, or qualified `"provider/model"` references. |
+| Field       | Description                                                                                                                                                                        |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | Canonical model slug or alias (e.g. `claude-sonnet-4-5`, `opus`, `gemini-pro`). See [Models](/core-concepts/models).                                                               |
+| `provider`  | Optional provider pin. When omitted, Fabro selects among ready offerings by provider priority. When present, an unavailable provider is an error rather than permission to switch. |
+| `fallbacks` | Table of ordered fallback lists keyed by the originally requested model.                                                                                                           |
 
 Provider values are catalog provider ID strings. Built-in IDs like `anthropic` and `openai` work, and settings-defined IDs like `proxy` work after they are added under `[llm.providers.<id>]`.
+
+For a qualified fallback, the selector may be that provider's canonical model ID, alias, or API ID. Fabro splits on the first `:` when the part before it names a known provider, so provider API IDs may contain `/` or additional colons:
+
+```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.model.fallbacks]
+"kimi-k3" = [
+  "moonshot:kimi-k3",
+  "openrouter:kimi-k3",
+  "claude-opus",
+]
+```
+
+This chain applies only when the original request resolves to `kimi-k3`. It tries direct Moonshot AI, then OpenRouter, then Claude Opus. The OpenRouter entry could equivalently be written as `"openrouter:moonshotai/kimi-k3"` using its API ID. Legacy `provider/model` fallback references remain accepted but are normalized to `provider:model`.
+
+A colon alone does not make a reference qualified. Many model IDs contain one — ollama `name:tag` values, Bedrock inference-profile IDs and ARNs — so Fabro treats the reference as qualified only when the text before the first `:` names a known provider. `"llama3:8b"` stays a single model ID, while `"ollama:llama3:8b"` pins the `ollama` provider and passes `llama3:8b` as the selector.
+
+At run creation, Fabro resolves the primary selector, every node selector, and the fallback table against the server's ready-provider snapshot. It persists the selected canonical model slug and provider, so resuming the run does not choose a different provider just because credentials or priorities changed. `fabro validate` only checks the table's TOML shape because it is offline and has no server model catalog. Use `fabro preflight` for catalog and provider checks.
+
+Each original requested model selects one fixed chain. Fabro does not jump to the chain configured for a fallback target. When a target lacks the requested reasoning level, Fabro uses the nearest supported level. It rounds equal-distance choices up.
+
+For example, a server that selects Modal as the primary `kimi-k3` offering can define these independent chains:
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.model.fallbacks]
+"kimi-k3" = ["moonshot:kimi-k3", "openrouter:kimi-k3", "claude-opus"]
+"glm-5.2" = ["gpt-sol"]
+"gpt-sol" = ["claude-opus"]
+"claude-opus" = ["gpt-sol"]
+"gpt-terra" = ["claude-opus"]
+"gpt-luna" = ["claude-sonnet"]
+"claude-fable" = ["gpt-sol", "claude-opus"]
+```
+
+If `claude-fable` falls back to `gpt-sol`, Fabro continues with `claude-opus` from the Fable list. It does not restart from the separate `gpt-sol` list.
+
+Historical built-in provider API IDs are accepted for compatibility and normalize before this selection. For example, `name = "openai/gpt-5.6-sol"` is treated as the canonical `gpt-5.6-sol` selector; omit `provider` to use readiness and priority, or set `provider` separately to pin an offering.
 
 #### `[run.model.controls]`
 
@@ -166,14 +204,14 @@ speed = "fast"
 | `reasoning_effort` | Native reasoning-effort value to request when the selected model allows it, such as `"low"`, `"medium"`, `"high"`, `"xhigh"`, or `"max"`.        |
 | `speed`            | Native speed value to request when the selected model declares it, such as `"fast"`. The standard speed is implicit and does not need to be set. |
 
-#### Fallbacks with splice
+#### Fallback lists with splice
 
-Use the reserved `"..."` marker in `fallbacks` to splice in the inherited list from lower-precedence layers:
+Use the reserved `"..."` marker in one model's list to splice in that model's inherited list from lower-precedence layers:
 
 ```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[run.model]
-# Prepend "anthropic" to whatever fallbacks the project config already defines.
-fallbacks = ["anthropic", "..."]
+[run.model.fallbacks]
+# Prepend Anthropic to the inherited chain for gpt-5.6-sol.
+"gpt-5.6-sol" = ["anthropic", "..."]
 ```
 
 ### `[run.prepare]`
@@ -185,16 +223,19 @@ Ordered list of steps to run before the workflow starts. Use this to clone repos
 script = "pip install -r requirements.txt"
 
 [[run.prepare.steps]]
-script = "npm install"
+command = ["npm", "install"]
+env = { NPM_TOKEN = "{{ secrets.NPM_TOKEN }}" }
 ```
 
-| Field     | Description                                           |
-| --------- | ----------------------------------------------------- |
-| `script`  | Shell-evaluated command (runs through `sh -c`).       |
-| `command` | Argv-style command, mutually exclusive with `script`. |
-| `env`     | Additional environment variables for this step.       |
+| Field     | Description                                                                                                                      |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `script`  | Bash source, evaluated by the sandbox's non-login Bash (`bash -c`). Supports `{{ vars.* }}` and `{{ secrets.* }}` interpolation. |
+| `command` | Argv-style command, mutually exclusive with `script`. Each resolved element is shell-quoted as one argument.                     |
+| `env`     | Additional environment variables for this step. Values support the same interpolation as `script` and `command`.                 |
 
 Each step must exit with status 0. If any step fails, the run aborts before the workflow starts. Prepare steps replace across layers — the higher-precedence layer wins wholesale.
+
+Fabro substitutes `{{ vars.* }}` when the server creates the run, then resolves `{{ secrets.* }}` from token entries in the server vault immediately before the worker executes the steps. Secret expressions remain in the persisted run definition; resolved secret values are not persisted. A missing or non-token secret aborts startup with the affected step and token named in the error.
 
 ### `[run.clone]`
 
@@ -203,9 +244,15 @@ Configure whether clone-based sandboxes clone the run's GitHub origin before exe
 ```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [run.clone]
 enabled = true
+depth = 100
 ```
 
 Set `enabled = false` to start Docker and Daytona runs with an empty provider workspace. Use [prepare steps](#runprepare) to clone or create any files the workflow needs.
+
+| Field     | Description                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------------- |
+| `enabled` | When `false`, Fabro skips the repository clone. Defaults to `true`.                               |
+| `depth`   | Git history depth for Docker and Daytona. Defaults to `100`. Set it to `0` to clone full history. |
 
 ### `[run.run_branch]`
 
@@ -283,7 +330,7 @@ memory = "8GB"
 | `network.allow`                     | CIDRs for `cidr_allow_list`; entries are validated as CIDRs.                                                                      |
 | `lifecycle.preserve`                | Keep the created sandbox after the run finishes.                                                                                  |
 | `lifecycle.stop_on_terminal`        | Stop the sandbox when the run reaches a terminal state.                                                                           |
-| `lifecycle.auto_stop`               | Daytona auto-stop duration, such as `"30m"`.                                                                                      |
+| `lifecycle.auto_stop`               | Daytona auto-stop duration, such as `"30m"`. Defaults to `"120m"`; `"0s"` disables auto-stop.                                     |
 | `labels`                            | Provider labels. Merge by key across layers.                                                                                      |
 | `env`                               | Environment variables passed to command and agent execution. Merge by key across layers.                                          |
 
@@ -291,23 +338,24 @@ When `provider = "local"`, Fabro runs directly in the resolved working
 directory. If you want local isolation, create or enter a separate clone or Git
 worktree yourself.
 
-Environment variable values can be literal strings or host environment
-references using `{{ env.VARNAME }}` syntax:
+Environment variable values can combine literal text with server variables and token secrets:
 
 ```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [environments.ci.env]
-API_KEY = "{{ env.MY_API_KEY }}"
+API_KEY = "{{ secrets.SERVICE_API_KEY }}"
 NODE_ENV = "production"
-SERVICE_URL = "https://api.{{ env.REGION }}.example.com"
+SERVICE_URL = "https://api.{{ vars.REGION }}.example.com"
+RELEASE_CHANNEL = "{{ vars.RELEASE_CHANNEL }}"
 ```
 
-| Syntax                        | Description                                                                  |
-| ----------------------------- | ---------------------------------------------------------------------------- |
-| `"literal"`                   | Static value passed as-is                                                    |
-| `"{{ env.VARNAME }}"`         | Whole-value reference resolved from the host environment at consumption time |
-| `"prefix-{{ env.X }}-suffix"` | Substring interpolation; multiple tokens per string are supported            |
+| Syntax                         | Description                                                               |
+| ------------------------------ | ------------------------------------------------------------------------- |
+| `"literal"`                    | Static value passed as-is                                                 |
+| `"{{ vars.NAME }}"`            | Server-managed variable substituted when the run is created               |
+| `"{{ secrets.NAME }}"`         | Token secret resolved from the server vault when the run starts           |
+| `"prefix-{{ vars.X }}-suffix"` | Substring interpolation; multiple supported tokens per string are allowed |
 
-Missing host variables produce a hard error pointing at the specific field and unresolved token.
+Missing or non-token secret references fail closed before sandbox startup. `{{ env.* }}` is not supported: the process environment is not a configuration source. Use `{{ vars.NAME }}` for a non-sensitive value or `{{ secrets.NAME }}` for a credential.
 
 ### `[run.integrations.github.permissions]`
 
@@ -323,6 +371,24 @@ issues = "read"
 Only requested permissions are included. The upper bound is the permission set granted to the installed GitHub App, and Fabro logs a warning and continues without `GITHUB_TOKEN` if the app is not configured or is not installed on the repository.
 
 This table follows the normal settings precedence order. A higher-precedence layer can set `permissions = {}` to clear inherited permissions and run without a GitHub token.
+
+### `[run.integrations.github].additional_repositories`
+
+Declare extra GitHub repositories, beyond the implicit run origin, that the minted `GITHUB_TOKEN` must cover. The one `permissions` map applies to the origin and every declared repository.
+
+```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.integrations.github]
+additional_repositories = ["fabro-sh/keystone"]
+permissions = { contents = "read" }
+```
+
+Each entry is a full `owner/repository` slug. Every repository in the effective set must share one owner and be reachable by the origin repository's GitHub App installation. A non-empty list requires `contents = "read"` or `contents = "write"`. Malformed slugs, case-insensitive duplicates, cross-owner sets, and sets larger than 499 entries fail configuration validation with indexed error paths such as `run.integrations.github.additional_repositories[1]`.
+
+Unlike permissions-only configuration, declared additional repositories are a hard requirement: missing credentials, a missing origin, or an inaccessible declared repository fails preflight and run initialization with the repository named.
+
+The higher-precedence list replaces the lower one wholesale — no union and no `...` splice — and `additional_repositories = []` explicitly clears an inherited list. `additional_repositories` and `permissions` resolve independently; if layering leaves repositories declared while permissions were cleared, resolution reports the invalid combination instead of dropping either field.
+
+See [Additional repositories](/integrations/github#additional-repositories) for what works inside stages (`gh`, GitHub API, plain Git over HTTPS and the common SSH spellings) and for the security boundary.
 
 ### `[run.notifications]`
 
@@ -343,13 +409,13 @@ channel = "#deploys"
 | `enabled`                                  | Enables this route. Defaults to `false`.                                                                                                            |
 | `provider`                                 | Notification provider. Use `"slack"` for Slack lifecycle notifications. Other provider names may be parsed but are not delivered by the server yet. |
 | `events`                                   | Raw Fabro event names that trigger this route, such as `run.started`, `run.completed`, and `run.failed`.                                            |
-| `[run.notifications.<name>.slack].channel` | Required for Slack lifecycle notifications. Literal channel names and `{{ env.VAR }}` interpolation are supported.                                  |
+| `[run.notifications.<name>.slack].channel` | Required for Slack lifecycle notifications. Literal channel names and `{{ vars.NAME }}` interpolation are supported.                                |
 
 Each enabled Slack route posts once for each matching lifecycle event. Messages include the run ID, an Open in Fabro link when available, workflow label, terminal result, duration, and pull request details when those are already present in the run event stream.
 
 `run.failed` is emitted only when the run terminally fails. A failed stage that routes onward to a normal completion path produces `run.completed`, not `run.failed`.
 
-If a Slack route's channel is missing, empty, or references an unresolved environment variable, Fabro logs a warning and skips that route. Delivery failures are logged and never fail or alter the run.
+If a Slack route's channel is missing, empty, or contains an unsupported interpolation token, Fabro logs a warning and skips that route. Delivery failures are logged and never fail or alter the run.
 
 ### `[run.checkpoint]`
 
@@ -359,14 +425,16 @@ Configure how git checkpoint commits behave.
 [run.checkpoint]
 exclude_globs = ["**/node_modules/**", "**/.cache/**", "**/dist/**"]
 skip_git_hooks = false
+commit_timeout = "30s"
 ```
 
 | Field            | Description                                                                                                                                                                                                                 |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `exclude_globs`  | Glob patterns for files to exclude from checkpoint commits. Uses git pathspec `:(glob,exclude)` syntax.                                                                                                                     |
 | `skip_git_hooks` | When `true`, Fabro-managed run-branch checkpoint commits bypass local Git commit hooks (e.g. `pre-commit`, `commit-msg`). Defaults to `false`. Does not affect Fabro workflow `[[run.hooks]]` or metadata-branch snapshots. |
+| `commit_timeout` | Max duration for the per-node run-branch checkpoint commit (e.g. `"30s"`, `"10m"`). This commit runs repository commit hooks unless `skip_git_hooks` is `true`. Defaults to `"30s"`.                                        |
 
-`exclude_globs` replaces across layers — the higher-precedence layer wins wholesale. `skip_git_hooks` uses normal override semantics: the highest layer that sets it wins.
+`exclude_globs` replaces across layers — the higher-precedence layer wins wholesale. `skip_git_hooks` and `commit_timeout` use normal override semantics: the highest layer that sets the field wins.
 
 ### `[run.inputs]`
 
@@ -408,14 +476,29 @@ Configure automatic collection of test artifacts (Playwright reports, JUnit XML,
 
 ```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [run.artifacts]
-include = ["test-results/**", "playwright-report/**", "*.trace.zip"]
+include = ["test-results/**", "playwright-report/**", "**/*.trace.zip"]
 ```
 
-| Field     | Description                                                                                                     |
-| --------- | --------------------------------------------------------------------------------------------------------------- |
-| `include` | Glob patterns for files to collect as assets. Matched against the working directory after each stage completes. |
+| Field     | Description                                                                               |
+| --------- | ----------------------------------------------------------------------------------------- |
+| `include` | Workspace-relative glob patterns for regular files to collect as assets after each stage. |
 
 Artifact collection is opt-in — when no `[run.artifacts]` section is present, no file scanning occurs.
+
+Artifact globs use `/` as the separator and have the same semantics in every sandbox:
+
+* `*` and `?` match within one path segment.
+* Bracket expressions such as `[abc]` and `[!abc]` match one character.
+* `**` matches across directories when used as a complete segment.
+* Leading dots are matched normally.
+* Patterns use `/`, are relative to the sandbox working directory, and are case-sensitive. Backslashes are invalid.
+* Absolute patterns and patterns containing a `..` segment are invalid.
+
+For example, `.ai/reports/*.md` matches direct Markdown children of `.ai/reports`, while `.ai/reports/**/*.md` also matches nested reports. `*.trace.zip` matches only the working-directory root; use `**/*.trace.zip` to match at any depth. To collect date-named implementation plans, use `.ai/plans/????-??-??-*.md`.
+
+Each collection reflects the post-stage workspace state rather than filesystem modification timestamps. A path with unchanged content is recorded only once per run; if its content changes, Fabro captures the new version.
+
+Fabro resolves the configured workspace root but does not recurse through symlinks below it while collecting artifacts. Dependency, cache, and build directories such as `.git`, `node_modules`, `target`, `.venv`, `.cache`, and `dist` are pruned. A collection is limited to 100 files, 10 MB per file, and 50 MB total.
 
 ### `[run.agent]`
 
@@ -430,7 +513,7 @@ fabro_tools = true
 
 One workflow-agent exception is intentional: `fabro_run_create` always creates [child runs](/execution/child-runs) parented to the current run. If an agent supplies `parent_id`, it must match the current run ID.
 
-This setting is separate from normal agent `permissions` and from MCP server configuration. `permissions` controls workspace tool access, while `[run.agent.mcps]` configures external MCP servers available to the agent.
+This setting is independent of `[run.agent.mcps]`, which configures external MCP servers available to the agent.
 
 ### `[run.agent.mcps]`
 
@@ -445,17 +528,28 @@ startup_timeout = "60s"
 tool_timeout = "2m"
 ```
 
-| Field             | Description                                                                          | Default |
-| ----------------- | ------------------------------------------------------------------------------------ | ------- |
-| `type`            | Transport type: `"stdio"`, `"http"`, or `"sandbox"`.                                 | —       |
-| `script`          | (stdio, sandbox) Shell-evaluated startup command, mutually exclusive with `command`. | —       |
-| `command`         | (stdio, sandbox) Argv array: executable + arguments.                                 | —       |
-| `port`            | (sandbox) Port the server listens on inside the sandbox.                             | —       |
-| `url`             | (http) The MCP server endpoint URL.                                                  | —       |
-| `env`             | (stdio, sandbox) Additional environment variables.                                   | `{}`    |
-| `headers`         | (http) Optional HTTP headers for authentication.                                     | `{}`    |
-| `startup_timeout` | Max duration for server startup + MCP handshake (e.g. `"10s"`, `"1m"`).              | `"10s"` |
-| `tool_timeout`    | Max duration for a single tool call.                                                 | `"60s"` |
+To reuse a definition from the server-managed MCP catalog, reference its ID instead of defining an inline transport:
+
+```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.agent.mcps.sentry]
+id = "sentry"
+```
+
+| Field             | Description                                                                            | Default |
+| ----------------- | -------------------------------------------------------------------------------------- | ------- |
+| `id`              | Server-managed MCP definition to use. Cannot be combined with inline transport fields. | —       |
+| `enabled`         | Set `false` to leave this inline server or catalog reference disabled.                 | `true`  |
+| `type`            | Transport type: `"stdio"`, `"http"`, or `"sandbox"`.                                   | —       |
+| `script`          | (stdio, sandbox) Shell-evaluated startup command, mutually exclusive with `command`.   | —       |
+| `command`         | (stdio, sandbox) Argv array: executable + arguments.                                   | —       |
+| `port`            | (sandbox) Port the server listens on inside the sandbox.                               | —       |
+| `url`             | (http) The MCP server endpoint URL.                                                    | —       |
+| `env`             | (stdio, sandbox) Additional environment variables.                                     | `{}`    |
+| `headers`         | (http) Optional HTTP headers for authentication.                                       | `{}`    |
+| `startup_timeout` | Max duration for server startup + MCP handshake (e.g. `"10s"`, `"1m"`).                | `"10s"` |
+| `tool_timeout`    | Max duration for a single tool call.                                                   | `"60s"` |
+
+Inline transport commands, URLs, env values, and headers support `{{ vars.* }}` and `{{ secrets.* }}` interpolation. As with prepare steps, server variables resolve at run creation and token secrets resolve at launch; missing values fail closed. See [MCP runtime interpolation](/agents/mcp#runtime-interpolation) for the standalone `fabro exec` difference.
 
 The `sandbox` transport runs the MCP server inside the workflow's sandbox. This is useful for tools that need access to the sandbox environment, such as browser automation with Playwright. See [MCP](/agents/mcp#sandbox) for details.
 

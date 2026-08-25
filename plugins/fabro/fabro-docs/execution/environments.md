@@ -153,6 +153,19 @@ preserve = true
 
 `env` and `labels` merge by key.
 
+## Environment value interpolation
+
+Environment `env` values can mix literal text with `{{ vars.NAME }}` and `{{ secrets.NAME }}` tokens:
+
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[environments.fabro-dev.env]
+DEPLOY_ENV = "{{ vars.DEPLOY_ENV }}"
+SERVICE_URL = "https://api.{{ vars.REGION }}.example.com"
+SERVICE_TOKEN = "{{ secrets.SERVICE_TOKEN }}"
+```
+
+Server-managed variables resolve when the run is created. Token secrets resolve immediately before the sandbox starts, so resolved secret values are not persisted in the run definition. A missing or non-token secret fails closed, as does any `{{ env.* }}` reference: the process environment is not a configuration source.
+
 ## Selecting an environment from the CLI
 
 Use `--environment` with an environment slug:
@@ -248,7 +261,9 @@ memory = "4GB"
 mode = "block"
 ```
 
-Docker and Daytona are clone-based providers. When a run has a GitHub origin, Fabro clones it into the provider workspace. Set `[run.clone] enabled = false` to start with an empty workspace. Docker and Daytona ignore `cwd`; use the provider-owned workspace layout and `run.working_dir` for repository-relative commands.
+Docker and Daytona are clone-based providers. When a run has a GitHub origin, Fabro clones it into the provider workspace with a history depth of 100. Set `[run.clone] enabled = false` to start with an empty workspace. Set `[run.clone] depth = 0` to clone full history. Docker and Daytona ignore `cwd`; use the provider-owned workspace layout and `run.working_dir` for repository-relative commands.
+
+The image must provide `/bin/bash`; Fabro evaluates every sandbox command with it and has no `sh` fallback. Commands run in a **non-login** shell, so login profiles (`/etc/profile.d/*.sh`, `~/.bash_profile`, and `nvm`/`rbenv`/`sdkman` initializers) are not sourced — put anything they set into the Dockerfile's `ENV` instead. Fabro verifies Bash during initialization and again on resume, and fails with remediation rather than reporting the sandbox ready.
 
 ## Daytona
 

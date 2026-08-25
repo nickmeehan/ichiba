@@ -144,6 +144,15 @@ provider = "daytona"
 enabled = false
 ```
 
+Daytona clones 100 commits by default. To keep only the newest commit, set a smaller clone depth:
+
+```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.clone]
+depth = 1
+```
+
+Set `depth = 0` to clone the full repository history.
+
 If the clone fails without GitHub access configured, Fabro suggests running the setup flow:
 
 ```
@@ -201,6 +210,10 @@ The `lifecycle.auto_stop` setting tells Daytona to stop the sandbox after a peri
 auto_stop = "30m"
 ```
 
+When `auto_stop` is unset, Fabro applies a default of 120 minutes so a sandbox leaked by an interrupted run is still reclaimed. Set `auto_stop = "0s"` to disable auto-stop and let the sandbox run indefinitely.
+
+Daytona counts inactivity from the last sandbox interaction (a command, file operation, or other API call). Time an agent spends on LLM inference does not touch the sandbox, so intervals shorter than your longest inference call risk stopping the sandbox mid-run.
+
 ## Server defaults
 
 When running via `fabro server start`, the server config at `~/.fabro/settings.toml` can set default Daytona settings for all runs. Run config TOML values override server defaults. Labels are **merged** — run config labels win on key collisions. The `network` setting uses simple override (run config replaces the server default entirely).
@@ -221,7 +234,7 @@ Custom Daytona snapshot names are computed from the Dockerfile, resource hints, 
 
 ### "Timed out waiting for snapshot to become active"
 
-Snapshot creation took longer than 10 minutes. This can happen with large Dockerfiles. Check the snapshot status in the Daytona dashboard — it may still be building. Subsequent runs will reuse the snapshot once it's active.
+Snapshot creation took longer than 30 minutes. This can happen with large Dockerfiles. Check the snapshot status in the Daytona dashboard — it may still be building. Subsequent runs will reuse the snapshot once it's active.
 
 ### Git clone fails for private repositories
 

@@ -16,12 +16,12 @@ An agent can spawn **sub-agents** to delegate work to independent child sessions
 
 Sub-agent management is exposed through four built-in tools:
 
-| Tool          | Description                                             |
-| ------------- | ------------------------------------------------------- |
-| `spawn_agent` | Create a new sub-agent with a task prompt               |
-| `send_input`  | Send follow-up input to a running sub-agent             |
-| `wait`        | Block until a sub-agent completes and return its result |
-| `close_agent` | Cancel and remove a running sub-agent                   |
+| Tool          | Description                                              |
+| ------------- | -------------------------------------------------------- |
+| `spawn_agent` | Create a new sub-agent with a task prompt                |
+| `send_input`  | Send follow-up input to a running or completed sub-agent |
+| `wait`        | Block until a sub-agent completes and return its result  |
+| `close_agent` | Close a running or completed sub-agent                   |
 
 These tools are registered automatically when the session starts. They inherit the parent's permissions.
 
@@ -35,6 +35,12 @@ Each sub-agent runs in its own session:
 
 The parent can spawn multiple sub-agents and synchronize with them later.
 
+## Continue a completed session
+
+A completed sub-agent remains available until the parent closes it. Calling `send_input` starts another turn in the same child session, so the child keeps its conversation history. A message sent while the child is still running is queued for a safe turn boundary instead.
+
+Call `wait` again to receive the new turn's result. Call `close_agent` when the child is no longer needed; a closed child cannot accept more input.
+
 ## Depth limits
 
 Sub-agents can themselves spawn sub-agents, creating a hierarchy. `max_subagent_depth` limits how deep that tree can grow. By default the depth limit is `1`.
@@ -47,7 +53,6 @@ Sub-agent failures do not automatically fail the parent stage. The parent receiv
 
 Common cases:
 
-* **Hits `max_turns`** -- returns normally with its last output
 * **Panics or errors** -- returned as a failed `wait` result
 * **`spawn_agent` fails** -- returned immediately as a tool result
 
@@ -100,5 +105,5 @@ Sub-agents are most useful for:
 Use [child runs](/execution/child-runs) instead when the delegated work should be a separate Fabro run with its own workflow, lifecycle, sandbox, checkpoints, and outputs.
 
 <Note>
-  Sub-agents run with no turn limit by default. Pass `max_turns` when you want predictable cost or time bounds. All active sub-agents are cleaned up automatically when the parent session closes.
+  Sub-agents run until they complete, fail, are cancelled, or hit the session's wall-clock timeout. All active sub-agents are cleaned up automatically when the parent session closes.
 </Note>

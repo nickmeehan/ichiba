@@ -148,6 +148,8 @@ The system prompt varies by LLM provider. Each provider has its own identity tex
 <Accordion title="Example system prompt (Anthropic provider)">
   This is the full system prompt sent to Claude as the LLM system message. The `<environment>` block is filled in at runtime.
 
+  Tool guidance tracks the tools actually registered for the session. The `web_search` section shown below is present when a [Brave Search API key](/integrations/brave-search) or [Venice API key](/integrations/venice-search) is configured. Without either key, both the tool and its guidance are omitted.
+
   ```
   You are Claude, an AI coding assistant made by Anthropic. You help users with
   software engineering tasks including solving bugs, adding new functionality,
@@ -233,7 +235,7 @@ The system prompt varies by LLM provider. Each provider has its own identity tex
   commands.
 
   ## web_search
-  Search the web using Brave Search. Returns titles, URLs, and descriptions.
+  Search the web. Returns titles, URLs, and descriptions.
 
   ## web_fetch
   Fetch content from a URL and optionally summarize it. Pass a prompt to
@@ -258,18 +260,19 @@ The system prompt varies by LLM provider. Each provider has its own identity tex
 </Accordion>
 
 <Note>
-  OpenAI and Gemini providers have their own system prompts with different identity text, tool guidance (e.g. `apply_patch` instead of `edit_file` for OpenAI), and coding conventions. The overall structure is the same.
+  Fabro selects an agent profile for the model. Anthropic, Claude 5, OpenAI, GPT-5.6, Gemini, and Kimi profiles can use different identity text, tool names, tool guidance, and coding conventions. The overall system-prompt structure is the same.
 </Note>
 
 ### Project docs
 
-Fabro automatically discovers project instruction files by walking the directory hierarchy from the git root to the working directory. Which files are loaded depends on the provider:
+Fabro automatically discovers project instruction files by walking the directory hierarchy from the git root to the working directory. Which files are loaded depends on the agent profile:
 
-| Provider  | Files                                 |
-| --------- | ------------------------------------- |
-| Anthropic | `AGENTS.md`, `CLAUDE.md`              |
-| OpenAI    | `AGENTS.md`, `.codex/instructions.md` |
-| Gemini    | `AGENTS.md`, `GEMINI.md`              |
+| Agent profile          | Files                                 |
+| ---------------------- | ------------------------------------- |
+| Anthropic and Claude 5 | `AGENTS.md`, `CLAUDE.md`              |
+| OpenAI and GPT-5.6     | `AGENTS.md`, `.codex/instructions.md` |
+| Gemini                 | `AGENTS.md`, `GEMINI.md`              |
+| Kimi                   | `AGENTS.md`                           |
 
 Files are loaded in directory order (root first, deepest last) with a total budget of 32KB. If the combined content exceeds this budget, later files are truncated.
 

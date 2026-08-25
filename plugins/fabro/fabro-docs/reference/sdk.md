@@ -84,13 +84,13 @@ pub fn new(
 
 **Lifecycle methods:**
 
-| Method                       | Description                                                                       |
-| ---------------------------- | --------------------------------------------------------------------------------- |
-| `initialize().await`         | Discovers project docs, skills, and MCP servers. Call before `process_input`.     |
-| `process_input(input).await` | Sends user input and runs the agent loop until the model stops or a limit is hit. |
-| `close()`                    | Ends the session and emits `SessionEnded`.                                        |
-| `interrupt()`                | Cancels the current `process_input` call.                                         |
-| `cancel_token()`             | Returns a `CancellationToken` for external cancellation.                          |
+| Method                       | Description                                                                                                     |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `initialize().await`         | Discovers project docs, skills, and MCP servers. Call before `process_input`.                                   |
+| `process_input(input).await` | Sends user input and runs the agent loop until the model stops, the session is interrupted, or an error occurs. |
+| `close()`                    | Ends the session and emits `SessionEnded`.                                                                      |
+| `interrupt()`                | Cancels the current `process_input` call.                                                                       |
+| `cancel_token()`             | Returns a `CancellationToken` for external cancellation.                                                        |
 
 **Inspection:**
 
@@ -111,20 +111,18 @@ pub fn new(
 
 All fields are public. Key settings with their defaults:
 
-| Field                          | Default         | Description                                                                     |
-| ------------------------------ | --------------- | ------------------------------------------------------------------------------- |
-| `max_turns`                    | `0` (unlimited) | Maximum conversation turns before stopping.                                     |
-| `max_tool_rounds_per_input`    | `200`           | Maximum tool execution rounds per `process_input` call.                         |
-| `default_command_timeout_ms`   | `10,000`        | Default timeout for Bash tool commands.                                         |
-| `max_command_timeout_ms`       | `600,000`       | Maximum allowed timeout for Bash tool commands.                                 |
-| `enable_loop_detection`        | `true`          | Detect and break out of repetitive tool call patterns.                          |
-| `enable_context_compaction`    | `true`          | Automatically summarize old turns when approaching the context window limit.    |
-| `compaction_threshold_percent` | `80`            | Context window usage percentage that triggers compaction.                       |
-| `max_subagent_depth`           | `1`             | Maximum nesting depth for sub-agents.                                           |
-| `wall_clock_timeout`           | `None`          | Hard timeout for `process_input`. Triggers `InterruptReason::WallClockTimeout`. |
-| `tool_hooks`                   | `None`          | Pre/post hooks around tool execution (see [Tool hooks](#tool-hooks)).           |
-| `mcp_servers`                  | `[]`            | MCP server configurations to connect on startup.                                |
-| `skill_dirs`                   | `None`          | Directories to discover `SKILL.md` files. `None` uses convention defaults.      |
+| Field                          | Default   | Description                                                                     |
+| ------------------------------ | --------- | ------------------------------------------------------------------------------- |
+| `default_command_timeout_ms`   | `10,000`  | Default timeout for Bash tool commands.                                         |
+| `max_command_timeout_ms`       | `600,000` | Maximum allowed timeout for Bash tool commands.                                 |
+| `enable_loop_detection`        | `true`    | Detect and break out of repetitive tool call patterns.                          |
+| `enable_context_compaction`    | `true`    | Automatically summarize old turns when approaching the context window limit.    |
+| `compaction_threshold_percent` | `80`      | Context window usage percentage that triggers compaction.                       |
+| `max_subagent_depth`           | `1`       | Maximum nesting depth for sub-agents.                                           |
+| `wall_clock_timeout`           | `None`    | Hard timeout for `process_input`. Triggers `InterruptReason::WallClockTimeout`. |
+| `tool_hooks`                   | `None`    | Pre/post hooks around tool execution (see [Tool hooks](#tool-hooks)).           |
+| `mcp_servers`                  | `[]`      | MCP server configurations to connect on startup.                                |
+| `skill_dirs`                   | `None`    | Directories to discover `SKILL.md` files. `None` uses convention defaults.      |
 
 ### Sandbox
 
@@ -149,6 +147,7 @@ pub trait Sandbox: Send + Sync {
         cancel_token: Option<CancellationToken>,
     ) -> Result<ExecResult, String>;
     async fn grep(&self, pattern: &str, path: &str, options: &GrepOptions) -> Result<Vec<String>, String>;
+    async fn walk_files(&self, base: &str, relative_start: &str, options: &WalkOptions) -> Result<Vec<SandboxFile>, String>;
     async fn glob(&self, pattern: &str, path: Option<&str>) -> Result<Vec<String>, String>;
     async fn initialize(&self) -> Result<(), String>;
     async fn cleanup(&self) -> Result<(), String>;
@@ -161,11 +160,10 @@ pub trait Sandbox: Send + Sync {
 
 **Built-in implementations:**
 
-| Type                     | Description                                                                                |
-| ------------------------ | ------------------------------------------------------------------------------------------ |
-| `LocalSandbox`           | Executes directly on the local filesystem.                                                 |
-| `DockerSandbox`          | Runs inside a Docker container (feature-gated: `docker`).                                  |
-| `ReadBeforeWriteSandbox` | Decorator that blocks writes to files the agent hasn't read. Wraps any `Arc<dyn Sandbox>`. |
+| Type            | Description                                               |
+| --------------- | --------------------------------------------------------- |
+| `LocalSandbox`  | Executes directly on the local filesystem.                |
+| `DockerSandbox` | Runs inside a Docker container (feature-gated: `docker`). |
 
 The `DaytonaSandbox` implementation (feature-gated: `daytona`) runs inside a Daytona cloud sandbox.
 
@@ -224,7 +222,6 @@ Key `AgentEvent` variants:
 | `ToolCallCompleted { tool_name, tool_call_id, output, is_error }` | A tool call finished.                     |
 | `Error { error }`                                                 | An `AgentError` occurred.                 |
 | `LoopDetected`                                                    | The agent is repeating itself.            |
-| `TurnLimitReached { max_turns }`                                  | Turn limit hit.                           |
 | `CompactionStarted` / `CompactionCompleted`                       | Context window compaction.                |
 | `SubAgentSpawned` / `SubAgentCompleted`                           | Sub-agent lifecycle.                      |
 | `McpServerReady` / `McpServerFailed`                              | MCP server connection status.             |
@@ -293,13 +290,13 @@ let config = SessionOptions {
 
 All fallible `Session` methods return `Result<T, AgentError>`:
 
-| Variant                        | Description                                                                |
-| ------------------------------ | -------------------------------------------------------------------------- |
-| `Llm(SdkError)`                | An error from the LLM provider (wraps `fabro_llm::error::SdkError`).       |
-| `SessionClosed`                | `process_input` was called on a closed session.                            |
-| `InvalidState(String)`         | The session is in an unexpected state.                                     |
-| `ToolExecution(String)`        | A tool execution failed.                                                   |
-| `Interrupted(InterruptReason)` | The session was cancelled (`Cancelled`) or timed out (`WallClockTimeout`). |
+| Variant                        | Description                                                          |
+| ------------------------------ | -------------------------------------------------------------------- |
+| `Llm(SdkError)`                | An error from the LLM provider (wraps `fabro_llm::error::SdkError`). |
+| `SessionClosed`                | `process_input` was called on a closed session.                      |
+| `InvalidState(String)`         | The session is in an unexpected state.                               |
+| `ToolExecution(String)`        | A tool execution failed.                                             |
+| `Interrupted(InterruptReason)` | The session was cancelled or timed out.                              |
 
 ***
 
@@ -367,17 +364,48 @@ let client = Client::from_source(&source, Arc::clone(&catalog)).await?;
 
 For env-backed usage, `EnvCredentialSource` checks for API key environment variables and registers adapters for each provider found:
 
-| Environment variable                 | Provider  |
-| ------------------------------------ | --------- |
-| `ANTHROPIC_API_KEY`                  | Anthropic |
-| `OPENAI_API_KEY`                     | OpenAI    |
-| `GEMINI_API_KEY` or `GOOGLE_API_KEY` | Gemini    |
-| `KIMI_API_KEY`                       | Kimi      |
-| `ZAI_API_KEY`                        | ZAI       |
-| `MINIMAX_API_KEY`                    | Minimax   |
-| `INCEPTION_API_KEY`                  | Inception |
+| Environment variable                 | Provider                                         |
+| ------------------------------------ | ------------------------------------------------ |
+| `ANTHROPIC_API_KEY`                  | Anthropic                                        |
+| `OPENAI_API_KEY`                     | OpenAI                                           |
+| `GEMINI_API_KEY` or `GOOGLE_API_KEY` | Gemini                                           |
+| `MOONSHOT_API_KEY` or `KIMI_API_KEY` | Moonshot AI; `MOONSHOT_API_KEY` takes precedence |
+| `ZAI_API_KEY`                        | ZAI                                              |
+| `MINIMAX_API_KEY`                    | Minimax                                          |
+| `INCEPTION_API_KEY`                  | Inception                                        |
+| `POOLSIDE_API_KEY`                   | Poolside                                         |
+| `DEEPSEEK_API_KEY`                   | DeepSeek                                         |
+| `OPENROUTER_API_KEY`                 | OpenRouter, when enabled in settings             |
 
 The first provider registered becomes the default. Provider base URLs come from the model catalog. For vault-backed usage inside Fabro, use `fabro_auth::VaultCredentialSource` instead.
+
+The built-in Modal definition reads two proxy-token headers from the vault, so `EnvCredentialSource` does not configure it automatically. For direct SDK use, enable Modal and set its endpoint URL in the catalog:
+
+```toml theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[llm.providers.modal]
+enabled = true
+base_url = "https://your-endpoint.modal.run/v1"
+```
+
+Then read the two environment variables explicitly and create a typed credential after constructing `catalog` from those settings:
+
+```rust theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+use fabro_auth::ApiCredential;
+use fabro_llm::client::Client;
+use std::collections::HashMap;
+
+let credential = ApiCredential::with_extra_headers(
+    "modal",
+    HashMap::from([
+        ("Modal-Key".to_string(), std::env::var("MODAL_TOKEN_ID")?),
+        (
+            "Modal-Secret".to_string(),
+            std::env::var("MODAL_TOKEN_SECRET")?,
+        ),
+    ]),
+);
+let client = Client::from_credentials(vec![credential], catalog).await?;
+```
 
 #### Creating manually
 

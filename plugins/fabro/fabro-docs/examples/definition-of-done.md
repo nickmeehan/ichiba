@@ -265,7 +265,7 @@ Otherwise set preferred_next_label to \"more_work_needed\"."
 
 **Three-category triage** — failures are classified as IMPLEMENTABLE (can fix now), STRUCTURAL (needs architecture work), or DEFERRED (needs external resources). This prevents the agent from wasting cycles on items it can't address in a code-only pass.
 
-**Batched fixes** — the `fix_batch` node tackles up to 5 failures per iteration. The self-loop (`fix_batch -> fix_batch` with `loop_restart=true`) allows it to keep going when more fixes remain, while `goal_gate=true` ensures the workflow only succeeds if fixes were actually applied.
+**Batched fixes** — the `fix_batch` node tackles up to 5 failures per iteration. The self-loop (`fix_batch -> fix_batch` with `loop_restart=true`) allows it to keep going when more fixes remain, while `goal_gate=true` ensures the workflow only succeeds if fixes were actually applied. Because `loop_restart` begins each round with a fresh, empty context, every iteration re-derives the remaining work from the repository state rather than from accumulated conversation history — see [Failures — Loop restart edges](/execution/failures#loop-restart-edges).
 
 **Build gate** — after each fix batch, a script node runs `cargo build` and `cargo test`. If the build breaks, a dedicated `build_fix` node diagnoses and repairs compilation errors before retrying.
 

@@ -14,7 +14,7 @@
 openapi: 3.1.0
 info:
   title: Fabro Run API
-  version: 0.1.0
+  version: 0.2.0
   description: HTTP API for managing Fabro workflow run executions.
 servers: []
 security:
@@ -51,6 +51,8 @@ tags:
     description: Internal run details (stages, turns, context, configuration)
   - name: Workflows
     description: Workflow definitions and execution
+  - name: Workflow Versions
+    description: Immutable, content-addressed workflow packages
   - name: Billing
     description: Token counts and billed totals
   - name: Insights
@@ -77,7 +79,8 @@ paths:
           required: true
           schema:
             type: string
-          description: The model identifier.
+          description: The canonical model ID or an alias.
+        - $ref: '#/components/parameters/ModelTestProviderParam'
         - $ref: '#/components/parameters/ModelTestModeParam'
       responses:
         '200':
@@ -106,6 +109,16 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
+    ModelTestProviderParam:
+      name: provider
+      in: query
+      required: false
+      description: |
+        Pin the test to this provider's offering. When omitted, the server
+        selects among ready providers by catalog priority.
+      schema:
+        $ref: '#/components/schemas/ProviderId'
+      example: openrouter
     ModelTestModeParam:
       name: mode
       in: query
@@ -120,12 +133,15 @@ components:
       type: object
       required:
         - model_id
+        - provider
         - status
       properties:
         model_id:
           type: string
-          description: The model identifier that was tested.
+          description: The canonical model ID that was tested.
           example: claude-opus-4-6
+        provider:
+          $ref: '#/components/schemas/ProviderId'
         status:
           type: string
           enum:
@@ -173,6 +189,10 @@ components:
             failure responses only.
           items:
             type: string
+    ProviderId:
+      description: LLM provider identifier.
+      type: string
+      example: anthropic
     ModelTestMode:
       description: Single-model test mode.
       type: string

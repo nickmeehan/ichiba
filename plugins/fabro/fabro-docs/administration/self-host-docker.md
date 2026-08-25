@@ -62,6 +62,37 @@ docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d
 
 Leave `FABRO_DOMAIN` unset to serve plain HTTP on `localhost`.
 
+### Private access with Tailscale Services
+
+For a private tailnet deployment, use [Tailscale Services](https://tailscale.com/docs/features/tailscale-services) instead of Caddy. Tailscale terminates HTTPS on the tailnet DNS name and forwards to Fabro over host loopback. In this mode there is no Caddy container, no Let's Encrypt certificate, and no public DNS record for the Fabro app.
+
+Configure the canonical external origin in `.env`:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+FABRO_WEB_URL=https://fabro-testing.example.ts.net
+```
+
+`FABRO_WEB_URL` must be the Tailscale Service HTTPS origin with no trailing slash. Fabro uses it for install-mode links, browser auth, API links, and run URLs.
+
+Start the loopback-only compose stack:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+docker compose -f docker-compose.tailscale.yaml up -d
+```
+
+Then publish the service from the host:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+tailscale serve --service=svc:fabro-testing --https=443 http://127.0.0.1:${FABRO_PORT:-32276}
+tailscale serve status --json
+```
+
+The host must be joined to the tailnet with a device identity allowed to advertise the selected service. Depending on the tailnet policy, a tailnet admin may need to approve the service before the HTTPS name is reachable.
+
+<Warning>
+  Tailscale Services is private tailnet ingress. GitHub webhook deliveries from github.com cannot reach it. If your Fabro deployment needs GitHub webhooks, use `server_url` with a public webhook endpoint, `tailscale_funnel`, or another public relay for the webhook path.
+</Warning>
+
 ## Bootstrap environment variables
 
 For the web UI you need a session secret unless install mode is generating the initial local configuration:
@@ -80,13 +111,14 @@ Generate one with `openssl rand -hex 32`.
 | `FABRO_DEV_TOKEN`                                                 | Optional — pre-set the dev token instead of reading the one written to `/storage` on first boot |
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Optional static S3 object-store credentials                                                     |
 
-Do not put optional integration secrets in `.env` for server runtime. Configure LLM provider keys, Slack, Daytona, Brave Search, `GITHUB_TOKEN`, and GitHub App secrets in the vault with `fabro secret set`, `fabro provider login`, or `fabro install`.
+Do not put optional integration secrets in `.env` for server runtime. Configure LLM provider keys, Slack, Daytona, Brave Search, Venice Search, `GITHUB_TOKEN`, and GitHub App secrets in the vault with `fabro secret set`, `fabro provider login`, or `fabro install`.
 
 Optional:
 
-| Variable       | Purpose                                                    |
-| -------------- | ---------------------------------------------------------- |
-| `FABRO_DOMAIN` | Public hostname when using the Caddy reverse-proxy overlay |
+| Variable        | Purpose                                                                                             |
+| --------------- | --------------------------------------------------------------------------------------------------- |
+| `FABRO_DOMAIN`  | Public hostname when using the Caddy reverse-proxy overlay                                          |
+| `FABRO_WEB_URL` | Canonical external web origin when TLS is terminated by a platform layer such as Tailscale Services |
 
 See [Server Configuration](/administration/server-configuration) for the full settings reference, and [`.env.example`](https://github.com/fabro-sh/fabro/blob/main/.env.example) for the complete list.
 

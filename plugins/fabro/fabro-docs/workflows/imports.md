@@ -95,7 +95,7 @@ Every node from `validate.fabro` inherits `model="haiku"` and `reasoning_effort=
 Classes on the placeholder are unioned into every imported node's class list, in addition to a class derived from the placeholder ID itself (lowercased, non-alphanumeric stripped). This lets [stylesheets](/workflows/stylesheets) target imported subgraphs as a group.
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-validate [import="./validate.fabro", class="fast, shared"]
+validate [import="./validate.fabro", class="fast shared"]
 ```
 
 Each imported node ends up with the classes it declared, plus `fast`, `shared`, and `validate`.
@@ -124,6 +124,8 @@ digraph Lint {
     start -> run -> exit
 }
 ```
+
+Imported prompts receive the same `{{ goal }}`, `{{ inputs.* }}`, and `{{ vars.* }}` context as prompts in the root graph. The server-managed variable values are the snapshot captured when the run is created.
 
 Do not put templates in `import` paths, node IDs, edge definitions, other structural references, or attributes besides `prompt` — they are literal text. See [Variables](/workflows/variables#expansion-timing) for the rendering pipeline.
 

@@ -83,15 +83,6 @@ The `shell` tool and web tools (`web_search`, `web_fetch`) are only auto-approve
 
 Sub-agent management tools (`spawn_agent`, `send_input`, `wait`, `close_agent`) are auto-approved at all permission levels. Sub-agents inherit the parent's permission level, so a `read-only` parent spawns `read-only` children.
 
-## Read-before-write guardrail
-
-Independent of the permission system, Fabro enforces a **read-before-write guardrail** that applies to all permission levels. Even with `full` permissions, an agent must read an existing file before modifying or deleting it. See [Tools: Read-before-write guardrail](/agents/tools#read-before-write-guardrail) for details.
-
-This guardrail operates at the sandbox layer and works alongside (not instead of) the permission system. A tool call must pass **both** checks:
-
-1. The tool's category must be allowed by the current permission level
-2. If writing to an existing file, the file must have been previously read
-
 ## Permission flow
 
 The following sequence shows how Fabro decides whether to execute a tool call:

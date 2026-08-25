@@ -56,6 +56,49 @@ Common flags:
 
 See [Server Configuration](/administration/server-configuration) for the full `settings.toml` reference.
 
+### SQLite blob storage activation
+
+On startup, Fabro activates SQLite as the only live content-addressed blob
+store before it opens routes, schedulers, workers, webhooks, reapers, or the
+ready callback. The activation inventories the exact legacy SlateDB blob
+prefix, checks disk headroom sized to the rows not yet imported (a warm
+restart with nothing left to import only needs a small fixed headroom; on
+filesystems whose free space cannot be determined the check is skipped with
+a warning), imports in bounded transactions, compares every legacy blob
+byte-for-byte with SQLite, runs a live SQLite integrity check, and attempts a
+final WAL truncate checkpoint. A busy final truncate logs a warning and startup
+continues so a later checkpoint can finish after the blocking reader exits.
+Boots that import new rows additionally re-verify every
+legacy blob against SQLite and validate every SQLite blob row independently.
+Any failure stops startup. Warm boots that import no rows skip that full target
+scan: the import pass has already byte-compared every retained legacy row, and
+SQLite-only blobs are hash-validated when read. Rows committed by an interrupted
+import are retained so the next startup can resume, but the legacy source is
+never modified and there is no fallback or dual read/write path.
+
+For a non-empty legacy inventory, the first activation also creates the
+private sibling backup
+`fabro.sqlite3.pre-blob-activation.bak`. Fabro writes the staging database
+inside a private same-directory area, applies owner-only permissions, flushes
+and validates it, then publishes the backup without overwriting an existing file.
+A valid retained backup is revalidated on every warm restart and is preserved
+as the original pre-activation safety artifact. If any legacy row is already
+present in SQLite, a missing retained backup stops startup rather than silently
+moving that rollback boundary forward. It is not a promise that an
+older binary can safely resume after the activated server has accepted new
+work; recovery after that boundary is forward-only. Empty legacy inventories
+do not need this backup.
+
+Keep both the unchanged legacy `blobs/sha256` prefix and the private activation
+backup for at least 30 consecutive calendar days after the first successful
+production activation. Cleanup is eligible only after a successful cold
+activation, a later warm restart that revalidates the backup and byte-compares
+every retained legacy blob against SQLite, and 30 days of production observation
+with no unresolved inventory, import, verification, integrity, backup, or
+checkpoint failure. Scott must review that evidence and explicitly authorize a
+separate cleanup change. Day 30 is only the earliest eligibility date; nothing
+is deleted automatically, and incomplete evidence extends the support window.
+
 ## Submitting runs
 
 Workflows are submitted via the REST API and executed in the background. The exact request body is documented in the API reference:

@@ -6,7 +6,9 @@
 
 > Give Fabro agents web search capabilities via the Brave Search API
 
-Fabro's [`web_search`](/agents/tools#web_search) tool lets agents search the web during workflow execution. It uses the [Brave Search API](https://brave.com/search/api/) to return titles, URLs, and descriptions for any query. The tool is registered automatically for all provider profiles (Anthropic, OpenAI, Gemini) — no workflow configuration is needed beyond setting the API key.
+Fabro's [`web_search`](/agents/tools#web_search) tool lets agents search the web during workflow execution. It uses the [Brave Search API](https://brave.com/search/api/) to return titles, URLs, and descriptions for any query.
+
+Fabro selects the backend from the credentials in its vault. Direct Brave Search is preferred whenever `BRAVE_SEARCH_API_KEY` is present. When that key is absent, Fabro can use [Venice Search](/integrations/venice-search) with `VENICE_API_KEY` instead.
 
 ## Setup
 
@@ -24,7 +26,7 @@ fabro secret set BRAVE_SEARCH_API_KEY BSA...
 fabro doctor
 ```
 
-The doctor output should show **Brave Search** as "connected". If the key is missing, web search is reported as a warning — workflows still run, but `web_search` calls return an error.
+The doctor output should show **Web Search** as `brave: configured and reachable`. If the Brave key is missing but a Venice key exists, Fabro checks Venice instead. If neither key exists, web search is reported as a warning. Workflows still run, but the `web_search` tool is omitted from the agent's tool set and its system prompt.
 
 The Fabro server reads this key from the vault only. It does not read `BRAVE_SEARCH_API_KEY` from process env or `server.env`.
 
@@ -42,7 +44,7 @@ Agents call the `web_search` tool with a query string. Fabro sends the query to 
    The Rust book
 ```
 
-If `BRAVE_SEARCH_API_KEY` is not configured in the vault, the tool returns an error explaining that the key is required. The agent can then fall back to other approaches.
+If `BRAVE_SEARCH_API_KEY` is not configured, Fabro uses Venice when `VENICE_API_KEY` is available. If neither key is configured, the tool is not registered.
 
 See the [`web_search` tool reference](/agents/tools#web_search) for parameters and details.
 

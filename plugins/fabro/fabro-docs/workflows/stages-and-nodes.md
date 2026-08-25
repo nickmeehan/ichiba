@@ -14,7 +14,7 @@ This distinction matters for observability and debugging: the workflow graph sho
 
 ## Node types
 
-Every node's Graphviz `shape` attribute determines its execution behavior. If no shape is specified, the node defaults to an agent.
+An explicit `type` attribute selects a node's execution behavior. Otherwise, its Graphviz `shape` selects the behavior. When both are omitted, a node with `script` is a command node and every other node defaults to an agent.
 
 ### Start
 
@@ -38,7 +38,7 @@ exit [shape=Msquare, label="Exit"]
 
 ### Agent
 
-**Shape:** `box` (default)
+**Shape:** `box` (default when `shape`, `type`, and `script` are omitted)
 
 Runs an LLM with access to tools — bash, file editing, sub-agents — in an agentic loop. The agent works autonomously, calling tools as needed, until it decides the task is complete.
 
@@ -55,7 +55,7 @@ Key attributes:
 | `max_tokens`       | Maximum tokens for LLM responses                                                                                     |
 | `fidelity`         | How much prior context is passed to this node (see [Context](/execution/context#fidelity-controlling-agent-context)) |
 | `thread_id`        | Groups nodes into a shared conversation thread (advanced — see below)                                                |
-| `timeout`          | Execution timeout (e.g. `"900s"`)                                                                                    |
+| `timeout`          | Execution timeout (e.g. `"900s"`). Time spent waiting for an answer to an agent question does not count.             |
 
 **Fidelity levels:**
 
@@ -97,18 +97,30 @@ Prompt nodes accept the same attributes as agent nodes (`prompt`, `reasoning_eff
 
 ### Command
 
-**Shape:** `parallelogram`
+**Shape:** `parallelogram` (optional when `shape` and `type` are omitted — inferred from `script`)
 
 Runs a shell script inside the configured sandbox and captures its output. The output is available to downstream nodes as context. This ensures command nodes execute in the same environment as agent nodes.
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-test [label="Run Tests", shape=parallelogram, script="cargo test 2>&1 || true"]
+test [label="Run Tests", script="cargo test 2>&1 || true"]
+
+merge_results [
+    script="python3 scripts/merge.py",
+    stdin_source="context.parallel.results"
+]
 ```
 
-| Attribute  | Description                       |
-| ---------- | --------------------------------- |
-| `script`   | The shell command to execute      |
-| `language` | `"shell"` (default) or `"python"` |
+When a node has no explicit `shape` or `type`, the presence of `script` makes it a command node. Writing `shape=parallelogram` explicitly is still valid and does the same thing.
+
+| Attribute      | Description                                                                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `script`       | The shell command to execute (required). Substitutes `{{ goal }}`, `{{ inputs.NAME }}`, and `{{ vars.NAME }}` — see [command node scripts](/workflows/variables#command-node-scripts) |
+| `language`     | `"shell"` (default) or `"python"`                                                                                                                                                     |
+| `stdin_source` | Flat runtime context key to pass to the command's standard input. `context.NAME` first checks that exact key, then falls back to `NAME`.                                              |
+
+For `stdin_source`, strings are passed unchanged. Other JSON values use compact
+JSON. Fabro does not add a newline. A missing source, or a value larger than
+30 MiB, fails before the command starts.
 
 ### Human
 
@@ -158,36 +170,60 @@ Conditions support `=`, `!=`, `&&`, and context variable lookups (e.g. `context.
 
 **Shape:** `component`
 
-Fans out to execute multiple branches concurrently. Each branch gets its own isolated context.
+Fans out to execute multiple branches concurrently. Every branch runs in the same sandbox checkout and working directory, and the parallel node waits for every branch to finish.
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-fork [label="Fan Out", shape=component, join_policy="wait_all"]
+fork [label="Fan Out", shape=component]
 
 fork -> security
 fork -> architecture
 fork -> quality
 ```
 
-| Attribute      | Description                                  |
-| -------------- | -------------------------------------------- |
-| `join_policy`  | When the merge can proceed (see table below) |
-| `max_parallel` | Maximum concurrent branches (default: 4)     |
+| Attribute      | Description                                                                                              |
+| -------------- | -------------------------------------------------------------------------------------------------------- |
+| `max_parallel` | Maximum concurrent branches (default: 4)                                                                 |
+| `for_each`     | Flat context key containing a runtime JSON array. Requires one outgoing agent or prompt template target. |
 
-**Join policies:**
+To run one template node for a runtime array, add `for_each`:
 
-| Policy          | Behavior                                  |
-| --------------- | ----------------------------------------- |
-| `wait_all`      | Wait for every branch to finish (default) |
-| `first_success` | Proceed as soon as one branch succeeds    |
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+review_batch [shape=component, for_each="context.candidates", max_parallel=8]
+reviewer [prompt="Review this candidate for security issues."]
+aggregate [shape=tripleoctagon, prompt="Synthesize every candidate review."]
+
+review_batch -> reviewer -> aggregate
+```
+
+Fabro accepts an inline array or a managed JSON artifact reference. It runs
+`reviewer` once per item, appends the item to the prompt as fenced data, and
+keeps the results in input order. The source lookup is flat:
+`context.candidates` checks that exact key and then `candidates`; it does not
+traverse nested objects.
+
+Each item can contribute up to 64 KiB of serialized JSON to its branch prompt. Fabro stores larger items as content-addressed blobs and replaces the inline item with its size, a readable file path, and a 300-character preview. The preview remains inside the untrusted-data fence, and the branch agent can read the file for the full item.
+
+The template target must be an agent or prompt node, and nested `for_each` is
+rejected. An empty source array succeeds with `parallel.results=[]` and skips
+straight to `aggregate`. Missing, invalid, non-array, or over-long sources fail
+the parallel stage before any branches start; the limit is 1000 items.
+
+Because the checkout is shared, file changes from one branch are immediately visible to the others. Concurrent writes can race or overwrite each other. Fabro does not isolate branch files, lock paths, detect conflicts, or warn about overlapping writes. Design branches to be read-only or assign each branch disjoint files and directories when deterministic workspace changes matter.
+
+For each branch's first node, fidelity resolves from the fork-to-branch edge, then the branch node; otherwise it inherits the fork preamble unchanged. Fabro renders branch-specific preambles before fan-out from the fork snapshot. Branch-level `full` degrades to `summary:high` because concurrent branches cannot share sessions, and `thread_id` on a branch node or fork-to-branch edge is inert.
 
 ### Merge (fan-in)
 
 **Shape:** `tripleoctagon`
 
-Collects results from parallel branches into a single context. Typically paired with a parallel fan-out node:
+Converges parallel branches after all of them finish. Branch status and context updates are collected in the runtime context at `parallel.results`; Fabro does not create a `parallel_results.json` file in the checkout.
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-merge [label="Merge Results", shape=tripleoctagon]
+merge [
+    label="Synthesize Results",
+    shape=tripleoctagon,
+    prompt="Synthesize every branch result into one report."
+]
 
 security     -> merge
 architecture -> merge
@@ -195,20 +231,20 @@ quality      -> merge
 merge -> report
 ```
 
-The merged results are available to downstream nodes as `parallel_results.json`.
+A fan-in node with a `prompt` synthesizes the collected results. It never chooses, restores, or merges a branch's workspace state: all branches have already operated on the same checkout. Without a prompt, fan-in is only a convergence barrier.
 
 ## Common node attributes
 
 These attributes can be set on any node type:
 
-| Attribute      | Description                                                                                            |
-| -------------- | ------------------------------------------------------------------------------------------------------ |
-| `label`        | Display name shown in the graph visualization                                                          |
-| `class`        | CSS-like class for [model stylesheet](/workflows/stylesheets) targeting (space-separated for multiple) |
-| `max_visits`   | Max times this node can execute in a run. Overrides the graph-level `max_node_visits` for this node.   |
-| `goal_gate`    | When `true`, the workflow fails if this node doesn't succeed                                           |
-| `max_retries`  | Override default retry count for this node                                                             |
-| `retry_policy` | Named retry preset (see table below)                                                                   |
+| Attribute      | Description                                                                                                     |
+| -------------- | --------------------------------------------------------------------------------------------------------------- |
+| `label`        | Display name shown in the graph visualization                                                                   |
+| `class`        | CSS-like class for [model stylesheet](/workflows/stylesheets) targeting. Separate multiple classes with spaces. |
+| `max_visits`   | Max times this node can execute in a run. Overrides the graph-level `max_node_visits` for this node.            |
+| `goal_gate`    | When `true`, the workflow fails if this node doesn't succeed                                                    |
+| `max_retries`  | Override default retry count for this node                                                                      |
+| `retry_policy` | Named retry preset (see table below)                                                                            |
 
 **Retry policies:**
 

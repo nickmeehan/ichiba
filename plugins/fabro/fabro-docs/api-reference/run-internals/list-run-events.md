@@ -4,7 +4,11 @@
 
 # List Run Events
 
-> Returns a paginated JSON list of stored run events.
+> Returns a paginated JSON list of stored run events. Ascending order
+uses `since_seq` as an inclusive cursor. Descending order uses
+`before_seq` as an exclusive cursor and starts at the newest event
+when `before_seq` is omitted.
+
 
 
 
@@ -14,7 +18,7 @@
 openapi: 3.1.0
 info:
   title: Fabro Run API
-  version: 0.1.0
+  version: 0.2.0
   description: HTTP API for managing Fabro workflow run executions.
 servers: []
 security:
@@ -51,6 +55,8 @@ tags:
     description: Internal run details (stages, turns, context, configuration)
   - name: Workflows
     description: Workflow definitions and execution
+  - name: Workflow Versions
+    description: Immutable, content-addressed workflow packages
   - name: Billing
     description: Token counts and billed totals
   - name: Insights
@@ -69,12 +75,18 @@ paths:
       tags:
         - Run Internals
       summary: List Run Events
-      description: Returns a paginated JSON list of stored run events.
+      description: |
+        Returns a paginated JSON list of stored run events. Ascending order
+        uses `since_seq` as an inclusive cursor. Descending order uses
+        `before_seq` as an exclusive cursor and starts at the newest event
+        when `before_seq` is omitted.
       operationId: listRunEvents
       parameters:
         - $ref: '#/components/parameters/RunId'
         - $ref: '#/components/parameters/SinceSeq'
         - $ref: '#/components/parameters/EventLimit'
+        - $ref: '#/components/parameters/BeforeSeq'
+        - $ref: '#/components/parameters/EventOrder'
       responses:
         '200':
           description: Paginated list of run events
@@ -82,6 +94,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedEventList'
+        '400':
+          description: Invalid cursor and order combination
+          headers:
+            x-request-id:
+              $ref: '#/components/headers/XRequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Run not found
           headers:
@@ -122,6 +143,31 @@ components:
         maximum: 1000
         default: 100
       example: 100
+    BeforeSeq:
+      name: before_seq
+      in: query
+      required: false
+      description: |
+        Exclusive upper event sequence cursor for descending order. Omit on
+        the first descending request to start from the newest event.
+      schema:
+        type: integer
+        minimum: 1
+      example: 42
+    EventOrder:
+      name: order
+      in: query
+      required: false
+      description: |
+        Event sequence order. `since_seq` is valid only with `asc`;
+        `before_seq` is valid only with `desc`.
+      schema:
+        type: string
+        enum:
+          - asc
+          - desc
+        default: asc
+      example: desc
   schemas:
     PaginatedEventList:
       description: Paginated list of stored run events.
@@ -275,12 +321,9 @@ components:
             Durable identity of one execution of a parallel node, formatted as
             "{node_id}@{visit}".
         parallel_branch_id:
-          type:
-            - string
-            - 'null'
-          description: >
-            Durable identity of one branch within a parallel execution,
-            formatted as "{parallel_group_id}:{index}".
+          oneOf:
+            - $ref: '#/components/schemas/ParallelBranchId'
+            - type: 'null'
         session_id:
           type:
             - string
@@ -308,6 +351,12 @@ components:
           type: object
           additionalProperties: true
       additionalProperties: true
+    ParallelBranchId:
+      description: >-
+        Durable identity of one branch within a parallel execution, in
+        `{parallel_group_id}:{index}` form.
+      type: string
+      example: review_fork@3:1
     Principal:
       oneOf:
         - $ref: '#/components/schemas/PrincipalUser'

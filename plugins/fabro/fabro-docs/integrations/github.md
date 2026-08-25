@@ -55,14 +55,21 @@ fabro install
 
 When you choose the GitHub App strategy, the CLI opens GitHub with a pre-filled [App Manifest](https://docs.github.com/en/apps/sharing-github-apps/registering-a-github-app-from-a-manifest) containing:
 
-| Permission    | Level | Purpose                                        |
-| ------------- | ----- | ---------------------------------------------- |
-| Contents      | Write | Clone repos, push run branches and checkpoints |
-| Metadata      | Read  | Look up repository installation status         |
-| Pull requests | Write | Create and update PRs from workflows           |
-| Checks        | Write | Report workflow status on commits              |
-| Issues        | Write | Create issues from workflows                   |
-| Emails        | Read  | Read verified email for OAuth login            |
+| Permission            | Level | Purpose                                                                              |
+| --------------------- | ----- | ------------------------------------------------------------------------------------ |
+| Contents              | Write | Clone repos, push run branches and checkpoints                                       |
+| Metadata              | Read  | Look up repository installation status                                               |
+| Pull requests         | Write | Create and update PRs from workflows                                                 |
+| Checks                | Write | Report workflow status on commits                                                    |
+| Issues                | Write | Create issues from workflows                                                         |
+| Emails                | Read  | Read verified email for OAuth login                                                  |
+| Dependabot alerts     | Write | Read and manage repository vulnerability alerts                                      |
+| Organization projects | Write | Read and update organization Projects V2                                             |
+| Packages              | Read  | Download private GitHub Packages (e.g. npm registry) with the sandbox `GITHUB_TOKEN` |
+
+These permissions are included when Fabro registers a new app. For an existing GitHub App, add the missing permissions in the app's settings, then approve the permission update on each installation before workflows can use them.
+
+Fabro's App manifest does not request the Workflows permission, so Apps registered through Fabro cannot publish changes under `.github/workflows/`.
 
 The installer:
 
@@ -223,9 +230,22 @@ When a workflow runs in a remote sandbox (Daytona or Docker), Fabro clones the c
 
 For public repositories, the clone works without credentials. The token is still generated because it's needed for pushing checkpoints.
 
+#### Exact commits for run intents
+
+The `RunIntent` create body names a required Git branch and may also pin a full
+40-character commit SHA. Creating the run validates and lowercase-normalizes
+the SHA, but it does not contact GitHub, resolve the commit, or prove that the
+commit belongs to the submitted branch.
+
+At sandbox setup, Docker fetches the submitted commit directly and Daytona
+receives it as `commit_id`; the submitted branch remains the working branch.
+If the exact commit is unavailable, setup fails. Fabro never substitutes the
+branch's newer HEAD. When the request omits `sha`, the sandbox resolves the
+branch at materialization time instead.
+
 ### GITHUB\_TOKEN injection
 
-When any settings layer declares `[run.integrations.github.permissions]`, Fabro prepares a scoped GitHub App token source and exposes it as the `GITHUB_TOKEN` environment variable in sandbox command and agent execution. Agents running inside the sandbox can use this token for GitHub API calls, cloning additional private repos, or pushing to branches. The GitHub CLI (`gh`) reads `GITHUB_TOKEN` automatically, so command stages can run `gh pr list`, `gh issue create`, and similar commands without an explicit `gh auth login`.
+When any settings layer declares `[run.integrations.github.permissions]`, Fabro prepares a scoped GitHub App token source and exposes it as the `GITHUB_TOKEN` environment variable in sandbox command and agent execution. Agents running inside the sandbox can use this token for GitHub API calls and pushes within the granted permissions. The GitHub CLI (`gh`) reads `GITHUB_TOKEN` automatically, so command stages can run `gh pr list`, `gh issue create`, and similar commands without an explicit `gh auth login`.
 
 ```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [run.integrations.github.permissions]
@@ -235,7 +255,49 @@ pull_requests = "write"
 
 Only the listed permissions are requested — the token is scoped to the minimum access needed. If the GitHub App isn't configured or the repository lacks an installation, the run logs a warning and continues without the token.
 
-Installation Access Tokens are short-lived, so Fabro refreshes them when they are close to expiry. Command stages and API-mode agent stages resolve `GITHUB_TOKEN` before use, which keeps long workflows working across token rollover. CLI-mode agent stages receive their token at launch time; for very long CLI-agent stages, run GitHub operations through command stages or API-mode agents if mid-stage token refresh matters.
+In App mode, the token covers only the run's origin repository unless the run declares [additional repositories](#additional-repositories). Injecting `GITHUB_TOKEN` alone does not make other private repositories reachable.
+
+### Additional repositories
+
+A run can declare extra GitHub repositories that its stages may access through the same `GITHUB_TOKEN`:
+
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.integrations.github]
+additional_repositories = ["fabro-sh/keystone"]
+permissions = { contents = "read" }
+```
+
+The run origin stays implicit — never list it. Each entry is a full `owner/repository` slug (no scheme, host, ref, or extra path component). Fabro mints **one** installation token scoped to the origin plus every declared repository, with the one shared `permissions` map applying to all of them.
+
+What works against every declared repository, within the granted permissions:
+
+* **`gh` CLI and raw GitHub API calls** through `GITHUB_TOKEN`.
+* **Plain Git over HTTPS** (`git clone https://github.com/owner/repo`), through a secret-free credential helper that reads `$GITHUB_TOKEN` at invocation time.
+* **The common SSH spellings** `git@github.com:owner/repo[.git]` and `ssh://git@github.com/owner/repo[.git]`, through per-repository SSH-to-HTTPS rewrites injected into the stage environment.
+
+Fabro does not clone additional repositories for you; a workflow that needs one on disk adds its own clone step (`git clone https://github.com/owner/repo` or `gh repo clone owner/repo`).
+
+Requirements and validation:
+
+* Every repository in the effective set must share **one owner** and be reachable by the origin repository's GitHub App installation, because one App installation covers one account. Cross-owner declarations fail configuration validation; a same-owner repository outside the installation fails preflight and run initialization with the repository named.
+* A non-empty `additional_repositories` requires `contents = "read"` or `contents = "write"` in the permission map.
+* Malformed slugs, duplicates (repository identity is case-insensitive), and sets larger than 499 entries fail configuration validation with indexed error paths.
+* Unlike permissions-only configuration, declared additional repositories are a hard requirement: missing GitHub credentials, a missing origin, or an inaccessible declared repository fails preflight and run initialization instead of continuing without the token.
+* Layering: the higher-precedence `additional_repositories` list replaces the lower one wholesale (no union, no `...` splice), and `additional_repositories = []` explicitly clears an inherited list. `permissions` keeps its existing whole-map replacement behavior. If layering leaves repositories declared with permissions cleared, configuration resolution reports the invalid combination.
+
+Behavior notes:
+
+* **Token strategy (PAT):** the configured PAT is used as-is. The repository list drives validation and preflight probes, but it cannot narrow the PAT's inherent GitHub scope — App mode remains the least-authority option.
+* **`GH_TOKEN` precedence:** `gh` checks `GH_TOKEN` before `GITHUB_TOKEN`. If the resolved run environment defines `GH_TOKEN`, `gh` uses it instead of the managed token; Fabro never sets or removes `GH_TOKEN`, and preflight warns when additional repositories are declared alongside one.
+* **SSH rewrites match by prefix.** With `owner/repo` declared, the SSH spelling of `owner/repo-other` is also rewritten to HTTPS. The scoped token is invalid for undeclared repositories at GitHub, so authority is unchanged — but a private undeclared repository fails with a GitHub authorization error instead of a missing-credential or SSH error.
+
+#### Security boundary
+
+Workflow authors may name any repository reachable by the server's GitHub App installation; Fabro applies no second server-side repository intersection. The token is scoped server-side to exactly the declared set — a request to an undeclared repository fails at GitHub, and Fabro never mints an unscoped installation-wide token. With `contents = "write"`, **any stage can push to any declared repository**. Declare the smallest repository set and the weakest permissions that work.
+
+Installation Access Tokens are short-lived. Fabro refreshes its own credentials before checkpoint pushes. For ACP/CLI agent turns launched with GitHub App push credentials, Fabro also re-mints the token and rewrites the sandbox's `origin` URL before the ACP process starts, then every 45 minutes for the lifetime of that turn. Refresh failures are logged and do not fail the stage.
+
+`FABRO_PUSH_CRED_REFRESH_AHEAD` defaults to enabled; set it to `0`, `false`, `off`, `no`, or an empty value to disable both turn-entry and background refresh. `FABRO_PUSH_CRED_REFRESH_INTERVAL_SECONDS` overrides the background interval, and `0` disables only the background loop. This refresh loop is ACP-specific; command and native/API agent stages do not run it. Reconnected sandboxes for resumed or parked runs currently lack the App credentials needed for ACP refresh, so the refresh is skipped there.
 
 The permissions table follows the standard layer-merge order (workflow > project > user > defaults). Set defaults at `[run.integrations.github.permissions]` in `~/.fabro/settings.toml` so every run inherits a baseline; tighten or override per-workflow as needed. A higher layer that defines `permissions = {}` clears the inherited map (no token requested).
 
@@ -245,7 +307,9 @@ The upper bound on what Fabro will mint is whatever permissions the GitHub App i
 
 ### Checkpoint pushing
 
-After each workflow stage, Fabro [checkpoints](/execution/checkpoints) by pushing the run branch and metadata branch to origin. Inside remote sandboxes, the git remote URL is configured with the Installation Access Token for authenticated pushing.
+After each workflow stage, Fabro [checkpoints](/execution/checkpoints) by pushing the run branch and metadata branch to origin. Before a successful run becomes terminal, the publish stage pushes the final commit again and treats failure as a run failure. Inside remote sandboxes, the git remote URL is configured with the Installation Access Token for authenticated pushing.
+
+When pull request creation is enabled, Fabro then checks that GitHub reports the run branch at the exact final commit before opening the PR. A failed final push, branch check, or PR creation marks the run as failed with `publish_failed`; the terminal run event is emitted only after this step finishes.
 
 For long-running workflows, Fabro refreshes the token before each push since Installation Access Tokens are short-lived (typically 1 hour).
 

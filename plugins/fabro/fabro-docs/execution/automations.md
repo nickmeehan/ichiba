@@ -10,7 +10,11 @@ An **automation** is a saved run configuration — a repository, ref, and workfl
 
 ## Defining automations
 
-The server keeps one TOML file per automation in an `automations/` directory next to its `settings.toml`. Manage them in the web UI at `/automations`, through the `/api/v1/automations` REST API, or by editing the files directly:
+The server stores automations in its SQLite database. Manage them in the web UI at `/automations` or through the `/api/v1/automations` REST API.
+
+When upgrading from file-backed automation storage, startup imports every valid `automations/*.toml` file next to the active `settings.toml`. Existing SQLite definitions win on ID conflicts. After a successful import, Fabro renames the directory to a timestamped backup such as `automations.imported-20260711T180000000000Z.bak`. Invalid TOML leaves the original directory untouched for operator repair.
+
+The legacy files use this shape:
 
 ```toml title="automations/nightly-release.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 name = "Nightly release"

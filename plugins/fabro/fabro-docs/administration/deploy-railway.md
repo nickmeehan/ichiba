@@ -44,7 +44,7 @@ Add variables in **Service → Variables** as needed. The [Server Configuration]
 | `SESSION_SECRET`                                                  | 64-character hex string; required when the web UI is enabled                                    |
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Optional static S3 object-store credentials                                                     |
 
-Do not put optional integration secrets in Railway variables for server runtime. After the server is running, add LLM provider keys, Slack, Daytona, Brave Search, `GITHUB_TOKEN`, and GitHub App secrets to the server vault with `fabro secret set`, `fabro provider login`, or `fabro install`.
+Do not put optional integration secrets in Railway variables for server runtime. After the server is running, add LLM provider keys, Slack, Daytona, Brave Search, Venice Search, `GITHUB_TOKEN`, and GitHub App secrets to the server vault with `fabro secret set`, `fabro provider login`, or `fabro install`.
 
 No `.env` file is auto-loaded inside the container; bootstrap variables come from Railway's environment.
 

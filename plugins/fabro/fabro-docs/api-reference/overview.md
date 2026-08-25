@@ -131,6 +131,12 @@ Paginated responses include a `meta` object alongside the `data` array:
 
 When `has_more` is `true`, increment the offset by the limit to fetch the next page.
 
+## Immutable workflow versions
+
+`POST /api/v1/workflow-versions` validates and stores a complete workflow package. The package contains an entrypoint, its text files, and exact IDs for child-workflow dependencies. Its SHA-256 ID is based on canonical content, so submitting the same package again returns the same ID.
+
+A package can contain at most 512 files and 512 workflow dependencies. Each file can contain at most 512 KiB, and the complete canonical package can contain at most 2 MiB. Invalid workflow content or missing dependencies return `422`.
+
 ## Versioning
 
 The Fabro API is versioned under `/api/v1`. All versioned endpoints, including the OpenAPI document, live under that prefix. Future breaking changes can be introduced under a new versioned prefix while preserving existing clients.

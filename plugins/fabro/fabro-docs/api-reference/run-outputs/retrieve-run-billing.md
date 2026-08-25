@@ -14,7 +14,7 @@
 openapi: 3.1.0
 info:
   title: Fabro Run API
-  version: 0.1.0
+  version: 0.2.0
   description: HTTP API for managing Fabro workflow run executions.
 servers: []
 security:
@@ -51,6 +51,8 @@ tags:
     description: Internal run details (stages, turns, context, configuration)
   - name: Workflows
     description: Workflow definitions and execution
+  - name: Workflow Versions
+    description: Immutable, content-addressed workflow packages
   - name: Billing
     description: Token counts and billed totals
   - name: Insights
@@ -377,9 +379,17 @@ components:
         observed LLM request/stream elapsed time; `tool_time_ms` is tool or
         command execution elapsed time; `active_time_ms` equals
         `inference_time_ms + tool_time_ms`.
+
+        For a terminal stage these come from the worker's own stopwatch and are
+        authoritative. For a stage still in flight they are a live estimate
+        reconstructed from the event log, and `active_time_ms` is clamped to
+        `wall_time_ms`. The estimate is replaced by the authoritative
+        breakdown when the stage reaches a terminal event.
       type: object
       required:
         - wall_time_ms
+        - inference_time_ms
+        - tool_time_ms
         - active_time_ms
       properties:
         wall_time_ms:
@@ -422,9 +432,16 @@ components:
         Timing rollup for an entire run. Active fields sum work across stage
         visits, so `active_time_ms` can exceed `wall_time_ms` when parallel
         branches run concurrently.
+
+        For a running run, stages still in flight contribute a live estimate
+        rather than nothing, so wall and active both advance continuously.
+        Unlike `StageTiming`, active is not clamped to wall here — concurrent
+        branches can legitimately sum past run wall time.
       type: object
       required:
         - wall_time_ms
+        - inference_time_ms
+        - tool_time_ms
         - active_time_ms
       properties:
         wall_time_ms:

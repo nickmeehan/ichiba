@@ -80,7 +80,7 @@ Set the `class` attribute on a node to target it with class selectors:
 implement [label="Implement", class="coding"]
 ```
 
-Multiple classes are space-separated: `class="coding critical"`.
+Separate multiple classes with spaces: `class="coding critical"`.
 
 ## Properties
 

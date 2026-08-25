@@ -76,7 +76,7 @@ Use Claude Code's plan mode to collaborate on an implementation plan. Go back an
 > /plan Add retry logic to the webhook delivery system
 
 Planning...
-1. Add RetryPolicy struct to lib/crates/fabro-webhooks/src/policy.rs
+1. Add RetryPolicy struct to lib/components/fabro-webhooks/src/policy.rs
 2. Implement exponential backoff with jitter
 3. Add max_retries field to WebhookConfig
 4. Write tests for retry timing, max attempts, and jitter bounds
