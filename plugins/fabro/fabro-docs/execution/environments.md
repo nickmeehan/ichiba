@@ -215,7 +215,7 @@ Install seeds a `default` environment into SQLite. It is a normal persisted envi
 
 | Environment field                  | Local                                 | Docker                     | Daytona                                               |
 | ---------------------------------- | ------------------------------------- | -------------------------- | ----------------------------------------------------- |
-| `image.docker`                     | Ignored                               | Docker image               | Error                                                 |
+| `image.docker`                     | Ignored                               | Docker image               | Snapshot base image; Fabro computes the snapshot name |
 | `image.dockerfile`                 | Ignored                               | Warning; ignored           | Snapshot Dockerfile; Fabro computes the snapshot name |
 | `resources.cpu`                    | Warning; ignored                      | `cpu_quota = cpu * 100000` | Snapshot CPU                                          |
 | `resources.memory`                 | Warning; ignored                      | Container memory limit     | Snapshot memory                                       |
@@ -233,6 +233,18 @@ Install seeds a `default` environment into SQLite. It is a normal persisted envi
 `local` runs tools directly in the resolved working directory. It offers no filesystem or network isolation, so use it only for trusted workflows.
 
 Create a server-managed local-provider environment through the environments API when you need a host `cwd`.
+
+A version-backed run intent can submit
+`{ "kind": "folder", "path": "/absolute/server/path" }` to run in an existing
+server directory. Fabro accepts this target only with a Local environment,
+resolves symlinks and `..`, requires an existing directory, and persists the
+canonical UTF-8 path. The target path takes precedence over the environment's
+`cwd`. Because the run executes in place with the Local provider's unrestricted
+host access, use folder targets only in trusted single-tenant deployments.
+Docker and Daytona always reject folder targets. This does not add Local Git
+cloning or Local scratch workspaces for the `none` target. Local folder runs
+execute in place without Fabro Git checkpoints: retries retain the canonical
+folder target, but fork and rewind are unavailable for these runs.
 
 When `cwd` is set, local runs execute commands from that absolute server-side
 path. When it is unset, Fabro keeps same-host compatibility by using the
@@ -261,20 +273,20 @@ memory = "4GB"
 mode = "block"
 ```
 
-Docker and Daytona are clone-based providers. When a run has a GitHub origin, Fabro clones it into the provider workspace with a history depth of 100. Set `[run.clone] enabled = false` to start with an empty workspace. Set `[run.clone] depth = 0` to clone full history. Docker and Daytona ignore `cwd`; use the provider-owned workspace layout and `run.working_dir` for repository-relative commands.
+Docker and Daytona are clone-based providers. When a run has a GitHub origin, Fabro clones it into the provider workspace with a history depth of 100. Set `[run.clone] enabled = false` to start a manifest-backed run with an empty workspace. Set `[run.clone] depth = 0` to clone full history. A version-backed run intent can instead submit the explicit `{ "kind": "none" }` target, which forces an empty provider workspace regardless of the workflow's clone setting. Its Git target may select a branch, an optional bare tag, an optional exact commit SHA, or both tag and SHA. Both providers attach the selected revision to the target's working branch; an exact SHA wins over a tag, and unavailable tags or commits fail without branch fallback. The `none` target is not supported by Local environments, while the Local-only `folder` target is rejected by Docker and Daytona. Docker and Daytona ignore `cwd`; use the provider-owned workspace layout and `run.working_dir` for repository-relative commands.
 
 The image must provide `/bin/bash`; Fabro evaluates every sandbox command with it and has no `sh` fallback. Commands run in a **non-login** shell, so login profiles (`/etc/profile.d/*.sh`, `~/.bash_profile`, and `nvm`/`rbenv`/`sdkman` initializers) are not sourced — put anything they set into the Dockerfile's `ENV` instead. Fabro verifies Bash during initialization and again on resume, and fails with remediation rather than reporting the sandbox ready.
 
 ## Daytona
 
-Daytona runs tools in a cloud sandbox. Without `image.dockerfile`, Fabro uses Daytona's built-in `daytona-medium` snapshot. With `image.dockerfile`, Fabro computes a deterministic internal snapshot name from the Dockerfile, resource hints, a single-tenant scope, and the Daytona API key.
+Daytona runs tools in a cloud sandbox. Set either `image.docker` to use an existing Docker image or `image.dockerfile` to build a custom image. Fabro computes a deterministic internal snapshot name from the selected image source, resource hints, a single-tenant scope, and the Daytona API key. If neither field is set, Fabro uses Daytona's built-in `daytona-medium` snapshot.
 
 ```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [environments.cloud]
 provider = "daytona"
 
 [environments.cloud.image]
-dockerfile = { path = "Dockerfile" }
+docker = "python:3.11-slim"
 
 [environments.cloud.resources]
 cpu = 4

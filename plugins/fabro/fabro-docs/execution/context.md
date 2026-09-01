@@ -255,7 +255,7 @@ Checkpoints and checkpoint-completed events persist these `blob://` refs, not ho
 Before Fabro builds a preamble or starts the next stage, it resolves any blob refs into execution-local files so handlers and agents still see normal `file://` references:
 
 * Local execution materializes blobs under `{run_dir}/runtime/blobs/{blob_hash}.json`
-* Remote sandboxes materialize blobs under `{working_directory}/.fabro/blobs/{blob_hash}.json`
+* Remote sandboxes materialize blobs under the sandbox runtime directory, `{runtime_directory}/blobs/{blob_hash}.json`. This directory lives outside the repository checkout, so materialized blobs never appear in `git status` and are never committed by a checkpoint.
 
 These materialized `file://` paths are runtime-only. They are not written back into durable context snapshots.
 

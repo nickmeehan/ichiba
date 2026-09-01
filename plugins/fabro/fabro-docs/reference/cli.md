@@ -611,10 +611,11 @@ fabro mcp config [OPTIONS]
 
 #### Options
 
-| Option                        | Description                                                   |
-| ----------------------------- | ------------------------------------------------------------- |
-| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path |
-| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)          |
+| Option                        | Description                                                                                               |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `--name <name>`               | Name of the mcpServers entry; use distinct names to register multiple Fabro servers<br />Default: `fabro` |
+| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path                                             |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)                                                      |
 
 #### `fabro mcp init`
 
@@ -632,10 +633,11 @@ fabro mcp init [OPTIONS] <AGENT>
 
 #### Options
 
-| Option                        | Description                                                   |
-| ----------------------------- | ------------------------------------------------------------- |
-| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path |
-| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)          |
+| Option                        | Description                                                                                               |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `--name <name>`               | Name of the mcpServers entry; use distinct names to register multiple Fabro servers<br />Default: `fabro` |
+| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path                                             |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)                                                      |
 
 #### `fabro mcp start`
 
@@ -693,13 +695,14 @@ fabro model test [OPTIONS]
 
 #### Options
 
-| Option                      | Description                                                              |
-| --------------------------- | ------------------------------------------------------------------------ |
-| `--deep`                    | Run a multi-turn tool-use test (catches reasoning round-trip bugs)       |
-| `-j, --jobs <jobs>`         | Number of model tests to run concurrently in bulk mode<br />Default: `4` |
-| `-m, --model <model>`       | Test a specific model                                                    |
-| `-p, --provider <provider>` | Filter by provider                                                       |
-| `--server <server>`         | Fabro server target: http(s) URL or absolute Unix socket path            |
+| Option                                  | Description                                                                           |
+| --------------------------------------- | ------------------------------------------------------------------------------------- |
+| `-j, --jobs <jobs>`                     | Number of model tests to run concurrently in bulk mode<br />Default: `4`              |
+| `-m, --model <model>`                   | Test a specific model                                                                 |
+| `-p, --provider <provider>`             | Filter by provider                                                                    |
+| `--reasoning-effort <reasoning_effort>` | Request a reasoning-effort level<br />Values: `low`, `medium`, `high`, `xhigh`, `max` |
+| `--server <server>`                     | Fabro server target: http(s) URL or absolute Unix socket path                         |
+| `--tools`                               | Run a multi-turn tool-use test                                                        |
 
 ### `fabro parent`
 

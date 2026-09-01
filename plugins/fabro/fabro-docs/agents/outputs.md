@@ -240,7 +240,7 @@ Captured stage artifacts such as screenshots, videos, reports, and traces still 
 
 For remote sandboxes (Docker, Daytona), execution-time file access happens inside the sandbox filesystem.
 
-* Blob refs are materialized into `{working_directory}/.fabro/blobs/{blob_hash}.json`
+* Blob refs are materialized into the sandbox runtime directory, `{runtime_directory}/blobs/{blob_hash}.json`. This directory lives outside the repository checkout, so materialized blobs never show up in `git status` or in checkpoint commits.
 * Explicit non-blob `file://` refs keep the existing copy-on-demand behavior and are copied into `{working_directory}/.fabro/artifacts/{filename}` when needed
 
 In both cases, downstream handlers and agents continue to consume ordinary `file://` pointers during execution.

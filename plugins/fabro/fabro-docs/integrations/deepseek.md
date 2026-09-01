@@ -56,7 +56,7 @@ Fabro does not use the `gpt56` profile for DeepSeek. That profile has a smaller 
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro model list --provider deepseek
-fabro model test --provider deepseek --model deepseek-v4-flash --deep
+fabro model test --provider deepseek --model deepseek-v4-flash --tools
 fabro run workflow.fabro --provider deepseek --model deepseek
 ```
 

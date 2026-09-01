@@ -6,7 +6,7 @@
 
 > Using templates in workflows
 
-Fabro renders `{{ ... }}` templates in exactly two workflow attributes: the graph `goal` and node `prompt`s. A command node's `script` gets narrower treatment — [simple value substitution](#command-node-scripts), not templating. Every other attribute is literal text.
+Fabro renders full MiniJinja templates in three workflow attributes: the graph `goal`, the root graph's `model_stylesheet`, and node `prompt`s. A command node's `script` gets narrower treatment — [simple value substitution](#command-node-scripts), not templating. Every other attribute is literal text.
 
 ## Template context
 
@@ -18,7 +18,9 @@ Goal templates can reference inputs and server-managed variables. Prompt templat
 | `{{ inputs.name }}` | A value from `[run.inputs]`, optionally overridden by CLI input flags     |
 | `{{ vars.NAME }}`   | A server-managed variable snapshotted when the run is created             |
 
-Secrets are **not** available in goal or prompt templates. Use `{{ secrets.NAME }}` only in the configuration fields that support run-boundary interpolation.
+The root `model_stylesheet` receives only `inputs` and `vars`. It does not receive `goal`. See [Model Stylesheets](/workflows/stylesheets#template-stylesheets) for examples and output safety guidance.
+
+Secrets are **not** available in goal, prompt, or model stylesheet templates. Use `{{ secrets.NAME }}` only in the configuration fields that support run-boundary interpolation.
 
 ## Run config inputs
 
@@ -39,7 +41,7 @@ repo_url = "https://github.com/fabro-sh/fabro"
 language = "rust"
 ```
 
-These values are available in the graph `goal` and node `prompt` attributes:
+These values are available in the graph `goal`, root `model_stylesheet`, and node `prompt` attributes:
 
 ```dot title="check.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph Check {
@@ -54,7 +56,7 @@ digraph Check {
 }
 ```
 
-Other attributes — `label`, `model`, `provider`, `condition`, and all edge attributes — do not render templates. If one of them contains `{{ … }}` or `{% … %}`, the syntax is treated as literal text and Fabro records a `detemplated_attribute` warning suggesting you move the dynamic value into a `prompt` or `goal`.
+Other attributes — `label`, `model`, `provider`, `condition`, and all edge attributes — do not render templates. If one of them contains `{{ … }}` or `{% … %}`, the syntax is treated as literal text and Fabro records a `detemplated_attribute` warning suggesting you move the dynamic value into a `prompt`, `goal`, or `model_stylesheet`.
 
 Override individual inputs at run time with repeatable `-I` / `--input` flags:
 
@@ -128,7 +130,7 @@ Use server-managed variables for non-sensitive values that should be shared acro
 fabro variable set DEPLOY_ENV staging --description "Deployment target"
 ```
 
-Run configuration strings, graph goals, and node prompts can reference these values with `{{ vars.NAME }}`:
+Run configuration strings, graph goals, root model stylesheets, and node prompts can reference these values with `{{ vars.NAME }}`:
 
 ```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 _version = 1
@@ -174,9 +176,10 @@ Fabro keeps workflow structure static and renders workflow templates once:
 2. Literal `import`, `@file`, graph-goal file, and child-workflow references are resolved.
 3. The graph `goal` is rendered with the `{ inputs, vars }` context.
 4. Node `prompt` attributes are rendered with the `{ goal, inputs, vars }` context.
-5. Node `script` attributes have their `{{ goal }}`, `{{ inputs.* }}`, and `{{ vars.* }}` values substituted.
+5. The root `model_stylesheet` is rendered with the `{ inputs, vars }` context, then parsed and applied.
+6. Node `script` attributes have their `{{ goal }}`, `{{ inputs.* }}`, and `{{ vars.* }}` values substituted.
 
-Templates are not supported in graph syntax, node IDs, edge structure, `import` paths, `@file` paths, child workflow paths, other file references, or any attribute besides `prompt` and `goal` — and `script`, which takes value substitution rather than templates.
+Templates are not supported in graph syntax, node IDs, edge structure, `import` paths, `@file` paths, child workflow paths, other file references, or any attribute besides `prompt`, `goal`, and the root `model_stylesheet` — and `script`, which takes value substitution rather than templates.
 
 Command `stdin_source` values are literal context keys. Fabro resolves them at
 stage execution time, after upstream nodes have updated the workflow context.
@@ -191,9 +194,9 @@ In a `script`, an undefined value records the same diagnostic but leaves the tok
 
 ## Template includes
 
-Prompt and goal templates support static MiniJinja loader dependencies such as `{% include "partial.md" %}`. Includes are resolved relative to the template file being rendered and can be nested.
+Prompt, goal, and root model stylesheet templates support static MiniJinja loader dependencies such as `{% include "partial.md" %}`. Includes are resolved relative to the template file being rendered and can be nested.
 
-Fabro discovers those static dependencies while building the run manifest so sandbox providers receive every required prompt file. Dynamic loader expressions such as `{% include inputs.partial %}` are rejected; use a literal include path and choose content with normal template conditionals instead.
+Fabro discovers those static dependencies while building the run manifest so sandbox providers receive every required template file. Dynamic loader expressions such as `{% include inputs.partial %}` are rejected; use a literal include path and choose content with normal template conditionals instead.
 
 ## Escaping
 

@@ -31,6 +31,15 @@ fabro mcp start
 
 Pass `--server` when the MCP client should connect to a specific Fabro server, or `--storage-dir` when it should use a non-default CLI storage directory.
 
+Both commands register the entry under the `mcpServers` key `fabro` by default. Pass `--name` to choose a different key. Each named entry launches its own single-target `fabro mcp start` process, so you can register more than one Fabro server in the same MCP client:
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro mcp init claude --name fabro-production --server https://fabro.example.com
+fabro mcp init claude --name fabro-testing --server https://fabro-testing.example.com
+```
+
+`fabro mcp init` keeps entries with other names and replaces only the entry that matches `--name`.
+
 | Tool                 | Purpose                                                                                                                                    |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `fabro_run_create`   | Create one or more workflow runs, optionally under a parent run, starting them by default.                                                 |

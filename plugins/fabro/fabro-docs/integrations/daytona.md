@@ -74,8 +74,9 @@ overwritten.
 </Note>
 
 [environments.cloud.image]
-dockerfile = "FROM rust:1.85-slim-bookworm\nRUN apt-get update && apt-get install -y git ripgrep"
-# Or keep the Dockerfile next to this TOML file:
+docker = "rust:1.85-slim-bookworm"
+# Or replace docker with an inline or path-based Dockerfile:
+# dockerfile = "FROM rust:1.85-slim-bookworm\nRUN apt-get update && apt-get install -y git ripgrep"
 # dockerfile = { path = "./Dockerfile" }
 
 [environments.cloud.resources]
@@ -113,7 +114,7 @@ Snapshots let you pre-build an environment image so each run starts with depende
 
 ```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [environments.cloud.image]
-dockerfile = "FROM node:20-slim\nRUN apt-get update && apt-get install -y git"
+docker = "node:20-slim"
 
 [environments.cloud.resources]
 cpu = 4
@@ -121,10 +122,19 @@ memory = 8
 disk = 20
 ```
 
-When a run starts with `image.dockerfile`, Fabro computes an internal snapshot name and looks up that snapshot in Daytona. If it doesn't exist, Fabro creates it automatically and polls until it reaches `Active` state (up to 10 minutes). `dockerfile` can be inline content or `{ path = "..." }`; paths are resolved relative to the TOML file that declares them and are bundled into run manifests. If the snapshot already exists, it's reused immediately.
+Set either `image.docker` or `image.dockerfile`. `image.docker` can name any image that Daytona can pull, so a Dockerfile is not required. Use `image.dockerfile` when the image needs extra packages or other build steps:
+
+```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[environments.cloud.image]
+dockerfile = "FROM node:20-slim\nRUN apt-get update && apt-get install -y git"
+```
+
+Fabro computes an internal snapshot name and looks up that snapshot in Daytona. If it does not exist, Fabro creates it automatically and polls until it reaches `Active` state for up to 30 minutes. A Dockerfile can be inline content or `{ path = "..." }`; paths are resolved relative to the TOML file that declares them and are bundled into run manifests. If the snapshot already exists, Fabro reuses it immediately.
+
+The exact `image.docker` value is part of the snapshot identity. Prefer a digest such as `registry.example.com/team/image@sha256:...` when the image must be reproducible. If a mutable tag moves without its text changing, Fabro continues to reuse the existing snapshot.
 
 <Note>
-  If no Dockerfile is configured, sandboxes are created from the `daytona-medium` snapshot which includes standard dev tools (git, etc.). To force a new custom snapshot, change the Dockerfile text, for example by adding a comment.
+  If neither image source is configured, sandboxes are created from the `daytona-medium` snapshot, which includes standard dev tools such as Git. To force a new Dockerfile snapshot, change the Dockerfile text, for example by adding a comment.
 </Note>
 
 ## Private repositories
@@ -230,7 +240,7 @@ If doctor reports missing scopes, regenerate the Daytona key with `write:snapsho
 
 ### Custom snapshot did not roll
 
-Custom Daytona snapshot names are computed from the Dockerfile, resource hints, tenant scope, and Daytona API key. To force a new custom snapshot, change `image.dockerfile` text under the selected `[environments.<slug>.image]`.
+Custom Daytona snapshot names are computed from the image reference or Dockerfile, resource hints, tenant scope, and Daytona API key. For `image.docker`, use an immutable digest and update it when the image changes. For `image.dockerfile`, change the Dockerfile text under the selected `[environments.<slug>.image]`.
 
 ### "Timed out waiting for snapshot to become active"
 

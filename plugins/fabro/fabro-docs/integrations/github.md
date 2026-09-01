@@ -230,18 +230,29 @@ When a workflow runs in a remote sandbox (Daytona or Docker), Fabro clones the c
 
 For public repositories, the clone works without credentials. The token is still generated because it's needed for pushing checkpoints.
 
-#### Exact commits for run intents
+#### Git targets for run intents
 
-The `RunIntent` create body names a required Git branch and may also pin a full
-40-character commit SHA. Creating the run validates and lowercase-normalizes
-the SHA, but it does not contact GitHub, resolve the commit, or prove that the
-commit belongs to the submitted branch.
+The `RunIntent` create body always names a GitHub repository and a working
+branch. It may also select a bare tag, pin a full 40-character commit SHA, or
+include both:
 
-At sandbox setup, Docker fetches the submitted commit directly and Daytona
-receives it as `commit_id`; the submitted branch remains the working branch.
-If the exact commit is unavailable, setup fails. Fabro never substitutes the
-branch's newer HEAD. When the request omits `sha`, the sandbox resolves the
-branch at materialization time instead.
+| Target fields            | Revision selected when the worker starts                     |
+| ------------------------ | ------------------------------------------------------------ |
+| `branch`                 | The branch HEAD                                              |
+| `branch` + `sha`         | The exact commit                                             |
+| `branch` + `tag`         | The tag's peeled commit                                      |
+| `branch` + `tag` + `sha` | The exact commit; the tag remains part of the run's identity |
+
+`branch` is always the attached branch inside the sandbox. `tag` is a bare tag
+name such as `v1.2.3`; `refs/tags/v1.2.3` and `tags/v1.2.3` are rejected. An
+unpinned tag is resolved when the worker starts, so moving a tag before that
+point changes the selected commit.
+
+Creating the run validates the selectors and lowercase-normalizes `sha`, but
+does not contact GitHub or prove ancestry. An exact SHA is authoritative:
+Fabro does not prove it belongs to the branch or matches the accompanying tag.
+If a requested tag or exact commit is unavailable, sandbox setup fails without
+falling back to a same-named branch or the branch's newer HEAD.
 
 ### GITHUB\_TOKEN injection
 

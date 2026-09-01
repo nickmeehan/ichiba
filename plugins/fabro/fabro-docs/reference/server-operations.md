@@ -61,13 +61,15 @@ See [Server Configuration](/administration/server-configuration) for the full `s
 On startup, Fabro activates SQLite as the only live content-addressed blob
 store before it opens routes, schedulers, workers, webhooks, reapers, or the
 ready callback. The activation inventories the exact legacy SlateDB blob
-prefix, checks disk headroom sized to the rows not yet imported (a warm
-restart with nothing left to import only needs a small fixed headroom; on
-filesystems whose free space cannot be determined the check is skipped with
-a warning), imports in bounded transactions, compares every legacy blob
-byte-for-byte with SQLite, runs a live SQLite integrity check, and attempts a
-final WAL truncate checkpoint. A busy final truncate logs a warning and startup
-continues so a later checkpoint can finish after the blocking reader exits.
+prefix and run history, then checks disk headroom for the rows not yet
+imported, any required blob backup, and the projected post-import database
+snapshot required by run-history activation. A warm restart with no pending
+imports or backups only needs a small fixed headroom; on filesystems whose free
+space cannot be determined the check is skipped with a warning. Fabro then
+imports in bounded transactions, compares every legacy blob byte-for-byte with
+SQLite, runs a live SQLite integrity check, and attempts a final WAL truncate
+checkpoint. A busy final truncate logs a warning and startup continues so a
+later checkpoint can finish after the blocking reader exits.
 Boots that import new rows additionally re-verify every
 legacy blob against SQLite and validate every SQLite blob row independently.
 Any failure stops startup. Warm boots that import no rows skip that full target
@@ -98,6 +100,53 @@ with no unresolved inventory, import, verification, integrity, backup, or
 checkpoint failure. Scott must review that evidence and explicitly authorize a
 separate cleanup change. Day 30 is only the earliest eligibility date; nothing
 is deleted automatically, and incomplete evidence extends the support window.
+
+### SQLite run-history activation
+
+Immediately after blob activation, and still before routes, schedulers,
+workers, webhooks, reapers, or readiness are exposed, Fabro activates SQLite
+as the sole authority for run existence, run events, and each run's current
+projected row. The activation strictly validates and fingerprints the exact
+legacy SlateDB run-event key/value stream, imports each complete run in its own
+transaction, verifies every legacy history as an exact SQLite prefix, replays
+and verifies every SQLite run independently, and runs a full SQLite integrity
+check. It attempts a final WAL truncate checkpoint, but a blocking reader only
+produces a warning because committed activation data remains durable in the
+WAL. A source fingerprint or count change after activation stops startup. There
+is no fallback or dual-read/write mode.
+
+For a non-empty legacy run history, the first activation creates and validates
+the private sibling backup
+`fabro.sqlite3.pre-run-history-activation.bak` before importing anything. The
+backup is published without overwriting an existing file and is revalidated
+on every restart. If import progress exists but that retained backup is
+missing, startup stops. An empty legacy source is accepted without a backup
+only when SQLite also has no unmarked run data. The activation marker stores
+the source identity and first-success timestamp; retries preserve that
+timestamp and repeat source, destination, backup, and integrity checks.
+
+After activation, creating a run commits `run.created`, the run's current row,
+and its existence atomically. Later appends update the event log and current
+row in one transaction, and live streams advance only after commit. Deleting
+a migrated run commits a tombstone with the SQL deletion so the retained
+legacy source cannot resurrect it during a restart.
+
+Keep the unchanged legacy `runs/*/events/*` data and the private activation
+backup for at least 30 consecutive calendar days after the persisted
+first-success timestamp. Cleanup also requires successful cold and warm
+activation evidence, production observation, backup and restore validation,
+deletion/restart coverage, and explicit approval for a separate cleanup
+change. Nothing is deleted automatically. The run-history activation backup
+represents the database immediately before run-history import and can be used
+to retry or recover the activation with a binary that knows the activated
+schema. It is not a binary-downgrade artifact because it already contains the
+new SQL migrations.
+
+To return to the older binary, stop the server and restore the database's
+`.pre-migration.bak` snapshot instead, then remove any `-wal` and `-shm`
+siblings before starting the older binary. That snapshot was taken before the
+new migrations were applied. Either recovery path loses writes accepted after
+its snapshot, so make the rollback boundary explicit before restoring it.
 
 ## Submitting runs
 

@@ -82,6 +82,7 @@ paths:
           description: The canonical model ID or an alias.
         - $ref: '#/components/parameters/ModelTestProviderParam'
         - $ref: '#/components/parameters/ModelTestModeParam'
+        - $ref: '#/components/parameters/ModelTestReasoningEffortParam'
       responses:
         '200':
           description: Test result
@@ -90,7 +91,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ModelTestResult'
         '400':
-          description: Invalid test mode
+          description: Invalid test mode or reasoning effort
           headers:
             x-request-id:
               $ref: '#/components/headers/XRequestId'
@@ -127,6 +128,14 @@ components:
       schema:
         $ref: '#/components/schemas/ModelTestMode'
       example: basic
+    ModelTestReasoningEffortParam:
+      name: reasoning_effort
+      in: query
+      required: false
+      description: Optional native reasoning-effort level for the model test.
+      schema:
+        $ref: '#/components/schemas/ReasoningEffort'
+      example: high
   schemas:
     ModelTestResult:
       description: Result of testing a model in `basic` or `deep` mode.
@@ -199,6 +208,15 @@ components:
       enum:
         - basic
         - deep
+    ReasoningEffort:
+      description: Native reasoning-effort level requested for an LLM call.
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+        - xhigh
+        - max
     ErrorResponseEntry:
       description: A single error entry in an error response.
       type: object

@@ -843,11 +843,17 @@ components:
       description: Workspace content and location requested for a run.
       oneOf:
         - $ref: '#/components/schemas/GitRunTarget'
+        - $ref: '#/components/schemas/NoneRunTarget'
+        - $ref: '#/components/schemas/FolderRunTarget'
       discriminator:
         propertyName: kind
         mapping:
           git:
             $ref: '#/components/schemas/GitRunTarget'
+          none:
+            $ref: '#/components/schemas/NoneRunTarget'
+          folder:
+            $ref: '#/components/schemas/FolderRunTarget'
     RunIntentArgs:
       description: Structured run overrides accepted by workflow-version creation.
       type: object
@@ -1144,7 +1150,10 @@ components:
         ref:
           $ref: '#/components/schemas/ManifestFileRef'
     GitRunTarget:
-      description: Public github.com repository target.
+      description: >-
+        Public github.com repository target. The branch names the attached
+        working branch. An optional tag selects a release at worker start, and
+        an optional exact SHA is authoritative when both are present.
       type: object
       additionalProperties: false
       required:
@@ -1162,14 +1171,62 @@ components:
           example: acme/my-app
         branch:
           type: string
-          description: Required branch name, preserved exactly.
+          description: Required attached working branch name, preserved exactly.
           example: feature/foo
+        tag:
+          type: string
+          minLength: 1
+          description: >-
+            Optional bare tag name. Prefixes such as `refs/tags/` and `tags/`
+            are rejected. Without `sha`, the worker resolves this tag when the
+            sandbox starts and fails if it is unavailable.
+          example: v1.2.3
         sha:
           type: string
           pattern: ^[0-9A-Fa-f]{40}$
           description: >-
             Optional exact commit. The server lowercase-normalizes its syntax
-            but does not resolve it or prove branch ancestry.
+            but does not resolve it, prove branch ancestry, or prove that it
+            matches an accompanying tag. When present, this exact commit wins.
+    NoneRunTarget:
+      description: >-
+        Empty workspace with no repository. Docker and Daytona accept this
+        target and suppress cloning even when workflow settings enable it. Local
+        environments reject it; Local scratch allocation is a separate future
+        capability.
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+      properties:
+        kind:
+          type: string
+          enum:
+            - none
+    FolderRunTarget:
+      description: >-
+        Existing directory on the Fabro server, executed in place by a Local
+        environment. The submitted path must be absolute and name an existing
+        directory; Fabro resolves symlinks and persists its canonical UTF-8
+        path. This target is intended for trusted single-tenant deployments.
+        Docker and Daytona environments always reject it. This target does not
+        add Local Git cloning or Local scratch workspaces. Folder runs execute
+        in place without Fabro Git checkpoints, so fork and rewind are
+        unavailable.
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - path
+      properties:
+        kind:
+          type: string
+          enum:
+            - folder
+        path:
+          type: string
+          minLength: 1
+          description: Absolute path on the Fabro server, not on the API caller's machine.
     IdpIdentity:
       type: object
       required:

@@ -51,7 +51,7 @@ Both models support text input, tool calling, native reasoning, streaming, and a
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro model list --provider poolside
-fabro model test --model laguna-xs-2.1 --deep
+fabro model test --model laguna-xs-2.1 --tools
 fabro run workflow.fabro --model laguna-s-2.1
 ```
 
@@ -107,7 +107,7 @@ enabled = true
 The OpenRouter routes use vendor-namespaced model IDs so they can coexist with direct Poolside routes:
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-fabro model test --model poolside/laguna-xs-2.1 --deep
+fabro model test --model poolside/laguna-xs-2.1 --tools
 fabro run workflow.fabro --model poolside/laguna-s-2.1
 ```
 

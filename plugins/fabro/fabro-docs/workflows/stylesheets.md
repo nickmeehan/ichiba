@@ -41,6 +41,65 @@ In this example:
 * **implement** and **test** get Sonnet with high reasoning (match `.coding`)
 * **review** gets Gemini Pro (matches `#review`)
 
+## Template stylesheets
+
+The root graph's `model_stylesheet` is a [MiniJinja template](/workflows/variables). It can read typed run inputs and server-managed variables through `inputs` and `vars`:
+
+```dot title="variable-effort.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph Review {
+    graph [
+        model_stylesheet="
+            * { reasoning_effort: low; }
+
+            {% if inputs.effort == 'deep' %}
+            .variable-effort { reasoning_effort: high; }
+            {% elif inputs.effort == 'balanced' %}
+            .variable-effort { reasoning_effort: medium; }
+            {% endif %}
+        "
+    ]
+
+    triage [prompt="Triage the change"]
+    review [prompt="Review the change", class="variable-effort"]
+}
+```
+
+Stylesheet templates support expressions, conditionals, loops, filters, macros, `{% set %}`, and normal local values such as `loop`. They do not expose `goal`, `env`, or `secrets`.
+
+Fabro renders a stylesheet once. If an input or variable contains `{{ ... }}` or `{% ... %}`, that text stays literal. Fabro does not render it again.
+
+Template output is not escaped as stylesheet syntax. Map user-facing choices to fixed declarations instead of inserting unrestricted text directly:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+model_stylesheet="
+    {% set efforts = {'quick': 'low', 'thorough': 'high'} %}
+    .review { reasoning_effort: {{ efforts[inputs.review_mode] }}; }
+"
+```
+
+Use single quotes inside MiniJinja expressions when possible. A double quote must follow normal DOT string escaping because the surrounding graph attribute uses double quotes. MiniJinja braces need no extra escaping inside the quoted DOT attribute.
+
+Static template includes are supported and resolve relative to the workflow template root:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+graph [model_stylesheet="{% include 'styles/models.partial' %}"]
+```
+
+Include paths must be literal. Dynamic or root-escaping include paths fail validation. `model_stylesheet` does not support the `@file` shorthand.
+
+Fabro uses this order:
+
+1. Parse the DOT source.
+2. Expand workflow imports and supported file references.
+3. Render the root `model_stylesheet` with `{ inputs, vars }`.
+4. Parse and apply the rendered stylesheet.
+5. Resolve model and provider selectors.
+6. Validate the transformed graph.
+
+A `model_stylesheet` on an imported graph is ignored and produces an `imported_model_stylesheet_ignored` warning. Put the stylesheet on the root graph. A root stylesheet can target imported nodes by their generated IDs, classes, or shapes.
+
+If an input or variable is unavailable, `fabro validate` reports `template_undefined_variable`. It skips stylesheet syntax and model checks for that validation pass. Run-style commands treat the same diagnostic as an error before they create or start a run.
+
 ## Selectors
 
 Each rule starts with a selector that determines which nodes it applies to:
@@ -64,7 +123,7 @@ This node matches both `.coding` and `.critical` rules.
 
 ## Properties
 
-Stylesheets support four properties:
+Stylesheets support five properties:
 
 | Property           | Description                                                                                                                                                                                                                                     | Example                                   |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |

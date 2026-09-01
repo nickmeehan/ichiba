@@ -43,6 +43,53 @@ approve -> manual_review [condition="outcome=failed"]
 
 If no `outcome=failed` edge or `retry_target` exists, the run stops rather than advancing past the approval gate.
 
+## Stop linear workflows on failure
+
+By default, Fabro uses `on_failure="route"`. A failed node can take an unconditional edge when no explicit route matches. This compatibility default lets existing workflows decide how later nodes handle the failure.
+
+Set graph-level `on_failure="exit"` to stop a linear workflow at a failed node:
+
+```dot title="stop-on-failure.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph Build {
+    graph [on_failure="exit"]
+
+    start [shape=Mdiamond]
+    exit [shape=Msquare]
+    plan [prompt="Plan the work"]
+    implement [prompt="Implement the plan"]
+    verify [prompt="Verify the implementation"]
+
+    start -> plan -> implement -> verify -> exit
+}
+```
+
+Fabro still uses an explicit recovery edge, such as `condition="outcome=failed"`, before it applies this policy. Matching preferred labels and suggested next node IDs also remain explicit routes. If no explicit edge matches, `exit` skips the unconditional edge and checks retry targets. The run ends as failed only when no retry target exists.
+
+Set `on_failure` on a node to control that node alone. The node-level attribute overrides the graph level, in both directions: a node can opt out of a graph-level `exit` with `on_failure="route"`, or stop the run on its own failure with `on_failure="exit"` while the rest of the graph keeps the default. A node without the attribute inherits the graph policy. See [Failed-node routing policy](/workflows/transitions#failed-node-routing-policy).
+
+The policy applies only to `failed`. Other outcomes keep their normal routing behavior. For parallel nodes, the policy uses the completed parallel node's final outcome. It does not stop or cancel individual branches early.
+
+## Treat a failed node as succeeded
+
+Set `on_failure="succeed"` on a best-effort node so its failure never blocks the workflow. This pairs well with a strict graph default:
+
+```dot title="best-effort-node.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph Review {
+    graph [on_failure="exit"]
+
+    start [shape=Mdiamond]
+    exit [shape=Msquare]
+    required_check [script="./required-check"]
+    optional_scan [script="./optional-scan" on_failure="succeed"]
+
+    start -> required_check -> optional_scan -> exit
+}
+```
+
+When `optional_scan` fails, Fabro first checks explicit recovery routes with the `failed` outcome. If none match, it rewrites the outcome to `succeeded` and routes the node as a success. Retries still run first; only the final outcome changes. The original failure stays on the `stage.completed` event and in the checkpoint, and the outcome's notes record the promotion. A promoted outcome satisfies a goal gate. Setting `on_failure="succeed"` on the graph applies it to every node.
+
+`succeed` applies only to `failed`. It does not change a `partially_succeeded` outcome. `auto_status=true` is the deprecated spelling of this policy; validation warns and suggests `on_failure="succeed"`.
+
 ## Retry layers
 
 Fabro retries failures at three levels: **LLM retries** handle transient API errors inside a single model call, **turn-level retries** recover from dropped streams mid-response, and **node retries** re-execute the entire node handler when the first two levels aren't enough. These layers are independent — a node retry re-runs the full handler, which gets its own fresh set of LLM and turn-level retries.
@@ -307,9 +354,14 @@ A node failure does **not** automatically terminate the run. Fabro follows this 
 2. **Turn-level retries** — dropped streams retry the same agent turn (up to 3 retries), preserving conversation history
 3. **Provider failover** — if configured, switch to a fallback provider
 4. **Node retries** — re-execute the entire handler (per the retry policy)
-5. **Edge routing** — if the node ultimately fails, look for an outgoing edge that matches (e.g., `condition="outcome=failed"`)
-6. **Retry target** — if no matching edge exists, check `retry_target` / `fallback_retry_target` on the node and graph
-7. **Run failure** — if none of the above produces a path forward, the run terminates
+5. **Direct jump** — use `jump_to_node` when the outcome supplies one
+6. **Explicit edge routing** — look for a matching condition, preferred label, or suggested next node
+7. **Failure policy** — with no explicit route, apply the effective `on_failure` (node-level `on_failure` first, then graph-level): `exit` skips the unconditional edge, `succeed` promotes the outcome to `succeeded` and routes it as a success, and `route` (or no attribute) keeps normal fallback routing
+8. **Unconditional edge** — in `route` mode, or after a `succeed` promotion, use an edge without a condition as the fallback
+9. **Retry target** — if no edge was selected, check `retry_target` and `fallback_retry_target` on the node, then on the graph
+10. **Run failure** — if none of the above produces a path forward, the run terminates
+
+When a retry target sends the run back to a failing path, use graph-level `max_node_visits` or node-level `max_visits` to stop an unbounded cycle.
 
 The run also terminates immediately for:
 

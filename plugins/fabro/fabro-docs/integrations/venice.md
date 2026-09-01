@@ -60,7 +60,7 @@ Pin Venice when the run must use Venice:
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro model list --provider venice
-fabro model test --provider venice --model deepseek-v4-flash --deep
+fabro model test --provider venice --model deepseek-v4-flash --tools
 fabro run workflow.fabro --provider venice --model deepseek-v4-flash
 ```
 

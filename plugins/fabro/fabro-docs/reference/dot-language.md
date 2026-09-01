@@ -74,19 +74,20 @@ graph [goal="Build a feature", model_stylesheet="* { model: claude-haiku-4-5; }"
 rankdir=LR
 ```
 
-| Attribute                      | Type       | Description                                                                           |
-| ------------------------------ | ---------- | ------------------------------------------------------------------------------------- |
-| `goal`                         | String     | Workflow objective — guides agent behavior                                            |
-| `rankdir`                      | Identifier | Layout direction: `LR` (left-to-right) or `TB` (top-to-bottom)                        |
-| `model_stylesheet`             | String     | CSS-like rules for model assignment (see [Model Stylesheets](/workflows/stylesheets)) |
-| `default_max_retries`          | Integer    | Default retry count for all nodes (default: 0)                                        |
-| `retry_target`                 | String     | Default node ID to jump to on retry                                                   |
-| `fallback_retry_target`        | String     | Fallback retry target if primary target fails                                         |
-| `default_fidelity`             | String     | Default [fidelity level](/execution/context) for all nodes                            |
-| `default_thread`               | String     | Default thread ID for all nodes                                                       |
-| `max_node_visits`              | Integer    | Max visits per node across the run (0 = unlimited)                                    |
-| `stall_timeout`                | Duration   | Timeout for stalled workflows (default: `1800s`, 0 = disabled)                        |
-| `loop_restart_signature_limit` | Integer    | Max times the same failure signature can repeat before aborting (default: 3)          |
+| Attribute                      | Type       | Description                                                                                                                                                  |
+| ------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `goal`                         | String     | Workflow objective — guides agent behavior                                                                                                                   |
+| `rankdir`                      | Identifier | Layout direction: `LR` (left-to-right) or `TB` (top-to-bottom)                                                                                               |
+| `model_stylesheet`             | String     | CSS-like rules for model assignment. The root value supports a MiniJinja template with `inputs` and `vars` (see [Model Stylesheets](/workflows/stylesheets)) |
+| `default_max_retries`          | Integer    | Default retry count for all nodes (default: 0)                                                                                                               |
+| `on_failure`                   | String     | Failed-node policy when no explicit recovery route matches: `route` (default), `exit`, or `succeed`                                                          |
+| `retry_target`                 | String     | Default node ID to jump to on retry                                                                                                                          |
+| `fallback_retry_target`        | String     | Fallback retry target if primary target fails                                                                                                                |
+| `default_fidelity`             | String     | Default [fidelity level](/execution/context) for all nodes                                                                                                   |
+| `default_thread`               | String     | Default thread ID for all nodes                                                                                                                              |
+| `max_node_visits`              | Integer    | Max visits per node across the run (0 = unlimited)                                                                                                           |
+| `stall_timeout`                | Duration   | Timeout for stalled workflows (default: `1800s`, 0 = disabled)                                                                                               |
+| `loop_restart_signature_limit` | Integer    | Max times the same failure signature can repeat before aborting (default: 3)                                                                                 |
 
 ### Node defaults
 
@@ -201,12 +202,13 @@ Other node types still need their shape, because their attributes don't identify
 | `class`                 | String     | Classes for [stylesheet](/workflows/stylesheets) targeting. Separate multiple classes with spaces. Commas are also accepted for compatibility.                                                                   |
 | `timeout`               | Duration   | Execution timeout (e.g. `900s`). An agent's wait for human input does not consume this budget. On a human node, this is the response deadline.                                                                   |
 | `max_visits`            | Integer    | Max times this node can execute in a run. Overrides the graph-level `max_node_visits` for this node.                                                                                                             |
+| `on_failure`            | String     | Failed-node policy for this node: `route`, `exit`, or `succeed`. Overrides the graph-level `on_failure`. See [Node Outcomes](/execution/outcomes#succeed-on-failure).                                            |
 | `max_retries`           | Integer    | Override default retry count                                                                                                                                                                                     |
 | `retry_policy`          | String     | Named preset: `none`, `standard`, `aggressive`, `linear`, `patient`                                                                                                                                              |
 | `retry_target`          | String     | Node ID to jump to on retry                                                                                                                                                                                      |
 | `fallback_retry_target` | String     | Fallback node ID if primary `retry_target` is unreachable                                                                                                                                                        |
 | `goal_gate`             | Boolean    | When `true`, workflow fails if this node didn't finish with `succeeded` or `partially_succeeded`. See [Node Outcomes](/execution/outcomes#goal-gate-interaction).                                                |
-| `auto_status`           | Boolean    | When `true`, overrides any non-`succeeded`/non-`skipped` outcome to `succeeded` after the handler completes. See [Node Outcomes](/execution/outcomes#auto_status).                                               |
+| `auto_status`           | Boolean    | Deprecated alias for `on_failure="succeed"`. Validation warns when it is present.                                                                                                                                |
 | `allow_partial`         | Boolean    | When `true` and retries are exhausted on a retry-requesting failure, promotes the outcome to `partially_succeeded` instead of `failed`. Default `false`. See [Node Outcomes](/execution/outcomes#allow_partial). |
 | `selection`             | String     | Edge tiebreaking strategy: `deterministic` (default) or `random` (weighted-random). Cannot be combined with conditional edges.                                                                                   |
 

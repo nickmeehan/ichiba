@@ -202,7 +202,10 @@ enabled = true
 
 ### `[server.slatedb]` section
 
-Configure the embedded SlateDB key-value store used for run event storage.
+Configure the embedded SlateDB key-value store used for the remaining
+object-store-backed indexes and as the read-only source for temporary storage
+migrations. Run history and content-addressed blobs live in SQLite; artifacts
+use `[server.artifacts]`.
 
 | Key              | Description                                      | Default   |
 | ---------------- | ------------------------------------------------ | --------- |
@@ -260,9 +263,13 @@ honors those hand-edited values even though the browser wizard does not manage t
 
 ### SQLite state and migration backups
 
-Shared relational state, including vault entries, server-managed definitions, and CLI auth sessions, lives at `<storage_root>/db/fabro.sqlite3`. Run events continue to use the `[server.slatedb]` object store.
+Shared relational state, including run events and current run rows,
+content-addressed blobs, vault entries, server-managed definitions, and CLI
+auth sessions, lives at `<storage_root>/db/fabro.sqlite3`. The
+`[server.slatedb]` object store remains configured for compatibility imports
+and session-to-run reverse indexes during the storage transition.
 
-CLI auth sessions are stored as an `auth_sessions` row per signed-in CLI, with the rotating refresh tokens for that session in `refresh_tokens`. Revoking a session from **Settings → Sessions**, or with `DELETE /api/v1/auth/sessions/{id}`, deletes the session row and its tokens together.
+CLI auth sessions are stored as an `auth_sessions` row per signed-in CLI, with the rotating refresh tokens for that session in `refresh_tokens`. Pending browser-to-CLI handoffs live briefly in `oauth_authorization_codes`; the table contains a SHA-256 hash of each one-time code, never the raw bearer value. Revoking a session from **Settings → Sessions**, or with `DELETE /api/v1/auth/sessions/{id}`, deletes the session row and its tokens together.
 
 Before applying pending SQLite migrations, Fabro creates `<storage_root>/db/fabro.sqlite3.pre-migration.bak` with SQLite's `VACUUM INTO`. Each migration run replaces the previous snapshot, so only the most recent pre-migration backup is retained.
 

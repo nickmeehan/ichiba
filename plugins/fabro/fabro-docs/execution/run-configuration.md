@@ -319,20 +319,20 @@ selected environment only:
 memory = "8GB"
 ```
 
-| Field                               | Description                                                                                                                       |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `run.environment.id`                | Environment slug to select. Defaults to `default`.                                                                                |
-| `environments.<slug>.provider`      | Required provider: `local`, `docker`, or `daytona`.                                                                               |
-| `image.docker`                      | Docker image. Daytona rejects this field.                                                                                         |
-| `image.dockerfile`                  | Inline Dockerfile or `{ path = "Dockerfile" }`; Daytona uses it to create or reuse an internally named snapshot.                  |
-| `resources.cpu` / `memory` / `disk` | Best-effort resource hints. Unsupported provider fields warn and continue.                                                        |
-| `network.mode`                      | `allow_all`, `block`, or `cidr_allow_list`. Local cannot enforce blocked/CIDR networking; Docker cannot enforce CIDR allow-lists. |
-| `network.allow`                     | CIDRs for `cidr_allow_list`; entries are validated as CIDRs.                                                                      |
-| `lifecycle.preserve`                | Keep the created sandbox after the run finishes.                                                                                  |
-| `lifecycle.stop_on_terminal`        | Stop the sandbox when the run reaches a terminal state.                                                                           |
-| `lifecycle.auto_stop`               | Daytona auto-stop duration, such as `"30m"`. Defaults to `"120m"`; `"0s"` disables auto-stop.                                     |
-| `labels`                            | Provider labels. Merge by key across layers.                                                                                      |
-| `env`                               | Environment variables passed to command and agent execution. Merge by key across layers.                                          |
+| Field                               | Description                                                                                                                                         |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `run.environment.id`                | Environment slug to select. Defaults to `default`.                                                                                                  |
+| `environments.<slug>.provider`      | Required provider: `local`, `docker`, or `daytona`.                                                                                                 |
+| `image.docker`                      | Docker image. Docker runs it directly; Daytona uses it to create or reuse an internally named snapshot.                                             |
+| `image.dockerfile`                  | Inline Dockerfile or `{ path = "Dockerfile" }`; Daytona uses it to create or reuse an internally named snapshot. Do not set it with `image.docker`. |
+| `resources.cpu` / `memory` / `disk` | Best-effort resource hints. Unsupported provider fields warn and continue.                                                                          |
+| `network.mode`                      | `allow_all`, `block`, or `cidr_allow_list`. Local cannot enforce blocked/CIDR networking; Docker cannot enforce CIDR allow-lists.                   |
+| `network.allow`                     | CIDRs for `cidr_allow_list`; entries are validated as CIDRs.                                                                                        |
+| `lifecycle.preserve`                | Keep the created sandbox after the run finishes.                                                                                                    |
+| `lifecycle.stop_on_terminal`        | Stop the sandbox when the run reaches a terminal state.                                                                                             |
+| `lifecycle.auto_stop`               | Daytona auto-stop duration, such as `"30m"`. Defaults to `"120m"`; `"0s"` disables auto-stop.                                                       |
+| `labels`                            | Provider labels. Merge by key across layers.                                                                                                        |
+| `env`                               | Environment variables passed to command and agent execution. Merge by key across layers.                                                            |
 
 When `provider = "local"`, Fabro runs directly in the resolved working
 directory. If you want local isolation, create or enter a separate clone or Git
@@ -447,16 +447,19 @@ repo_url = "https://github.com/fabro-sh/fabro"
 language = "rust"
 ```
 
-Inputs can be used in graph `goal` and node `prompt` attributes with `{{ inputs.name }}` syntax:
+Inputs can be used in graph `goal`, root `model_stylesheet`, and node `prompt` attributes with `{{ inputs.name }}` syntax:
 
 ```dot title="c-i.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph CI {
-    graph [goal="Run tests for {{ inputs.repo_name }}"]
+    graph [
+        goal="Run tests for {{ inputs.repo_name }}",
+        model_stylesheet="{% if inputs.language == 'rust' %}* { reasoning_effort: high; }{% endif %}"
+    ]
     test [label="Test", prompt="Clone {{ inputs.repo_url }} and run the {{ inputs.language }} test suite."]
 }
 ```
 
-Inputs cannot parameterize workflow structure, file references such as node IDs, edges, `import` paths, `@file` paths, or child workflow paths, or any attribute besides `prompt` and `goal` — other attributes such as `script` and `label` are literal text.
+Inputs cannot parameterize workflow structure, file references such as node IDs, edges, `import` paths, `@file` paths, or child workflow paths, or any full-template attribute besides `prompt`, `goal`, and the root `model_stylesheet`. Command `script` supports only simple value substitution. Other attributes such as `label` are literal text.
 
 If a workflow template references an undefined input like `{{ inputs.langauge }}`, `fabro validate` reports a warning. Run-style commands promote that diagnostic to an error before creating or starting a run.
 

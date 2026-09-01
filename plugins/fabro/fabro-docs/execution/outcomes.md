@@ -86,24 +86,28 @@ In this example, if the agent returns a retryable failure and all 5 standard-pol
 
 See [Retry policies](/execution/failures#retry-policies) for the available presets and backoff settings.
 
-## `auto_status`
+## Succeed on failure
 
-When `auto_status=true`, any non-`succeeded` and non-`skipped` outcome is silently overridden to `succeeded` after the handler completes. This is applied after the retry loop, so retries still happen normally — only the final outcome is overridden.
+When a node's effective `on_failure` policy is `succeed`, a `failed` outcome with no explicit recovery route is promoted to `succeeded`. This is applied after the retry loop, so retries still happen normally — only the final outcome changes. The original failure details stay on the `stage.completed` event and in the checkpoint, and the outcome's notes record the promotion.
 
-| Attribute     | Type    | Default |
-| ------------- | ------- | ------- |
-| `auto_status` | Boolean | `false` |
+| Attribute    | Type   | Default                                                 |
+| ------------ | ------ | ------------------------------------------------------- |
+| `on_failure` | String | inherits the graph-level `on_failure` (default `route`) |
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 scan [
     label="Scan",
     shape=parallelogram,
-    auto_status=true,
+    on_failure="succeed",
     script="find . -name '*.log' | head -20"
 ]
 ```
 
-Use `auto_status` for nodes whose failure should never block the workflow — optional scans, best-effort cleanup steps, or informational commands where the output matters more than the exit code.
+Use `on_failure="succeed"` for nodes whose failure should never block the workflow — optional scans, best-effort cleanup steps, or informational commands where the output matters more than the exit code. An explicit `condition="outcome=failed"` edge still takes priority; the promotion applies only when no explicit route matches. The policy applies only to `failed` and leaves `partially_succeeded` unchanged. See [Failed-node routing policy](/workflows/transitions#failed-node-routing-policy) for the full set of policies.
+
+<Note>
+  `auto_status=true` is the deprecated spelling of `on_failure="succeed"`. Fabro still accepts it as an alias, and validation reports an `auto_status_deprecated` warning with the replacement. Unlike the old attribute, the alias no longer promotes `partially_succeeded` outcomes.
+</Note>
 
 ## Goal gate interaction
 
@@ -114,7 +118,7 @@ make the workflow fail.
 
 Nodes marked with `goal_gate=true` are checked when the workflow reaches the exit node. A goal gate is satisfied if its last outcome was `succeeded` **or** `partially_succeeded`. Any other outcome (`failed`, `skipped`) causes the workflow to fail, even though execution reached the exit.
 
-This means `allow_partial=true` on a goal gate node lets the gate pass even if the node exhausted its retries — the promoted `partially_succeeded` outcome counts as passing.
+This means `allow_partial=true` on a goal gate node lets the gate pass even if the node exhausted its retries — the promoted `partially_succeeded` outcome counts as passing. Likewise, a `succeeded` outcome promoted by `on_failure="succeed"` satisfies the gate.
 
 See [Goal gates](/execution/failures#goal-gates) for retry target resolution and failure behavior.
 
