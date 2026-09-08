@@ -6,7 +6,7 @@
 
 > Named, repeatable run configurations with API and schedule triggers
 
-An **automation** is a saved run configuration — a Git repository, working branch, optional tag or exact commit, workflow, and server-managed environment — plus the triggers that may start it. When a trigger fires, Fabro packages the selected workflow as an immutable workflow version and admits it through the same `RunIntent` pipeline as `POST /api/v1/runs`. Automation runs therefore get the same lifecycle, events, and observability as manually created runs. Each run records the automation and trigger that created it.
+An **automation** is a saved run configuration — a Git run target, a workflow, a server-managed environment, and the triggers that may start it. By default, Fabro loads the workflow from the run-target checkout. An automation can instead name an independent GitHub repository and branch, tag, or exact commit for its workflow files. When a trigger fires, Fabro packages the selected workflow as an immutable workflow version and admits it through the same `RunIntent` pipeline as `POST /api/v1/runs`. Automation runs therefore get the same lifecycle, events, and observability as manually created runs. Each run records the automation and trigger that created it.
 
 ## Defining automations
 
@@ -47,6 +47,39 @@ The automation stores the environment ID rather than a copy of its settings. Eac
 An extensionless workflow such as `"release"` resolves directly to `.fabro/workflows/release/workflow.toml` in the selected repository checkout. You may also provide an explicit repository-relative workflow path.
 
 Automation admission does not read `.fabro/project.toml`. Put settings needed by the run in the workflow configuration or the selected server environment. Fabro packages the workflow and its runnable dependencies into immutable workflow versions before creating the run.
+
+### Using a remote workflow
+
+Omit `workflow_source` to resolve the `workflow` selector in the run-target checkout, as in the request above. This is the compatibility default for existing definitions.
+
+To keep reusable workflow files in another repository, enable a remote workflow and provide the same branch-plus-overrides coordinate used by Git run targets:
+
+```json title="Create automation with a remote workflow" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+{
+  "id": "nightly-release",
+  "name": "Nightly release",
+  "environment_id": "default",
+  "target": {
+    "kind": "git",
+    "repo": "acme/orders-api",
+    "branch": "main"
+  },
+  "workflow": "release",
+  "workflow_source": {
+    "repo": "acme/automation-workflows",
+    "branch": "main"
+  },
+  "triggers": [
+    { "type": "api", "id": "manual", "enabled": true }
+  ]
+}
+```
+
+`branch` is required and is used when neither override is present. An optional bare `tag` takes precedence over the branch, and an optional 40-character `sha` takes precedence over both. The branch is retained as fallback and audit context; Fabro fetches an exact SHA directly and does not require it to be reachable from the named branch. Branches and tags are resolved again on every firing. The server uses its configured GitHub credentials independently for the target and workflow-source repositories, with read-only repository access for workflow materialization; automation requests never carry credentials.
+
+Fabro resolves the run target to an exact commit and checks out the selected workflow source before it creates a run. It packages the workflow and its dependencies into immutable, content-addressed workflow versions, then admits the run with the root workflow-version ID and the independently exact run target. The run's automation metadata records both the requested workflow-source coordinate and its resolved commit, so the mutable source can be audited after its branch or tag moves. If an explicit source names the same repository and effective selector as the target, Fabro reuses the checkout without removing the explicit saved source.
+
+If target or source authentication, checkout, workflow discovery, packaging, or workflow-version storage fails, Fabro creates no run and sends no start request.
 
 ### Upgrading legacy targets
 
@@ -89,7 +122,7 @@ The same conversion runs transactionally for automations already in SQLite. An u
 
 Automations created before environment selection was introduced are backfilled conservatively. Fabro selects a compatible environment named `default` when one exists, or the sole Docker or Daytona environment when there is exactly one. With no compatible environment or multiple ambiguous choices, the automation remains incomplete until an operator selects one in the web UI. An incomplete automation cannot run.
 
-When a trigger fires, Fabro prepares the repository at the selected branch, tag, or exact commit, packages the workflow, and creates and starts the run. The created run records the exact checked-out commit in its canonical target, so later inspection and automation creation preserve the revision that actually ran. Repositories are cached server-side as bare clones, so repeat fires fetch only what changed.
+When a trigger fires, Fabro resolves the run target and selected workflow checkout, packages the workflow, and creates and starts the run. The created run records the exact checked-out target commit in its canonical target, so later inspection and automation creation preserve the target revision that actually ran. Repositories are cached server-side as bare clones, so repeat fires fetch only what changed.
 
 ## Triggers
 
@@ -117,7 +150,7 @@ The server fires each enabled schedule trigger at its next occurrence and create
 
 The `/automations` area lists automations with create, edit, delete, and Run actions. The create and edit forms require a Docker or Daytona environment. Migrated automations without an environment are shown as incomplete and cannot run until edited. Saves are revision-checked, so concurrent edits fail loudly instead of silently overwriting each other. The detail page shows the automation's configuration, its most recent schedule error, and its run history with status, time, and repo filters.
 
-To bootstrap an automation from work you have already run, open a run's actions menu and choose **Create automation from run** — the new-automation form is pre-filled from that run's repository and workflow. Runs that were created by an automation show **View automation** instead.
+To bootstrap an automation from work you have already run, open a run's actions menu and choose **Create automation from run** — the new-automation form is pre-filled from that run's target repository and workflow. Its workflow source defaults to the target checkout because normal run summaries do not retain the automation's mutable source coordinate. You can enable a remote workflow before saving. Runs that were created by an automation show **View automation** instead.
 
 ## API
 

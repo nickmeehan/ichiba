@@ -72,7 +72,7 @@ fabro [OPTIONS] [COMMAND]
 | `fabro attach`     | Attach to a running or finished workflow run                                                                        |
 | `fabro auth`       | Manage CLI authentication state                                                                                     |
 | `fabro completion` | Generate shell completions                                                                                          |
-| `fabro create`     | Create a workflow run (allocate run dir, persist spec)                                                              |
+| `fabro create`     | Register a local workflow version and create a submitted run                                                        |
 | `fabro deny`       | Deny pending workflow runs                                                                                          |
 | `fabro discord`    | Open the Discord community in the browser                                                                           |
 | `fabro docs`       | Open the docs website in the browser                                                                                |
@@ -94,7 +94,7 @@ fabro [OPTIONS] [COMMAND]
 | `fabro resume`     | Resume an interrupted workflow run                                                                                  |
 | `fabro rewind`     | Rewind a workflow run to an earlier checkpoint                                                                      |
 | `fabro rm`         | Remove one or more workflow runs                                                                                    |
-| `fabro run`        | Launch a workflow run                                                                                               |
+| `fabro run`        | Register a local workflow version, create a run, and start it                                                       |
 | `fabro sandbox`    | Sandbox operations (cp, ssh, preview)                                                                               |
 | `fabro secret`     | Manage server-owned secrets                                                                                         |
 | `fabro server`     | Server operations                                                                                                   |
@@ -334,7 +334,7 @@ fabro completion [OPTIONS] <SHELL>
 
 ### `fabro create`
 
-Create a workflow run (allocate run dir, persist spec)
+Register a local workflow version and create a submitted run
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro create [OPTIONS] <WORKFLOW>
@@ -342,9 +342,9 @@ fabro create [OPTIONS] <WORKFLOW>
 
 #### Arguments
 
-| Name       | Description                                         |
-| ---------- | --------------------------------------------------- |
-| `WORKFLOW` | Path to a .fabro workflow file or .toml task config |
+| Name       | Description                                                       |
+| ---------- | ----------------------------------------------------------------- |
+| `WORKFLOW` | Local workflow name, checkout path, .fabro file, or workflow TOML |
 
 #### Options
 
@@ -355,7 +355,7 @@ fabro create [OPTIONS] <WORKFLOW>
 | `--dry-run`                   | Execute with simulated LLM backend                              |
 | `--environment <environment>` | Named environment for agent tools                               |
 | `--goal <goal>`               | Override the workflow goal (available as {{ goal }} in prompts) |
-| `--goal-file <goal_file>`     | Read the workflow goal from a file                              |
+| `--goal-file <goal_file>`     | Read a per-run goal value from a local file                     |
 | `--label <key=value>`         | Attach a label to this run (repeatable, format: KEY=VALUE)      |
 | `--model <model>`             | Override default LLM model                                      |
 | `--parent <run>`              | Link this run to an existing orchestration parent run           |
@@ -1063,7 +1063,7 @@ fabro rm [OPTIONS] <RUNS>...
 
 ### `fabro run`
 
-Launch a workflow run
+Register a local workflow version, create a run, and start it
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro run [OPTIONS] <WORKFLOW>
@@ -1071,9 +1071,9 @@ fabro run [OPTIONS] <WORKFLOW>
 
 #### Arguments
 
-| Name       | Description                                         |
-| ---------- | --------------------------------------------------- |
-| `WORKFLOW` | Path to a .fabro workflow file or .toml task config |
+| Name       | Description                                                       |
+| ---------- | ----------------------------------------------------------------- |
+| `WORKFLOW` | Local workflow name, checkout path, .fabro file, or workflow TOML |
 
 #### Options
 
@@ -1084,7 +1084,7 @@ fabro run [OPTIONS] <WORKFLOW>
 | `--dry-run`                   | Execute with simulated LLM backend                              |
 | `--environment <environment>` | Named environment for agent tools                               |
 | `--goal <goal>`               | Override the workflow goal (available as {{ goal }} in prompts) |
-| `--goal-file <goal_file>`     | Read the workflow goal from a file                              |
+| `--goal-file <goal_file>`     | Read a per-run goal value from a local file                     |
 | `--label <key=value>`         | Attach a label to this run (repeatable, format: KEY=VALUE)      |
 | `--model <model>`             | Override default LLM model                                      |
 | `--parent <run>`              | Link this run to an existing orchestration parent run           |

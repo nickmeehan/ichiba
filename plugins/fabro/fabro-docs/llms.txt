@@ -129,6 +129,7 @@
 - [Retrieve Server Settings](https://docs.fabro.sh/api-reference/settings/retrieve-server-settings.md): Returns the server's current in-memory settings view as the typed `ServerSettings` payload.
 - [List Models](https://docs.fabro.sh/api-reference/models/list-models.md): Returns one row per provider/model offering from the catalog. Model IDs are unique within a provider; `(provider, id)` is the resource identity.
 - [Test Model](https://docs.fabro.sh/api-reference/models/test-model.md): Tests a model by sending a simple prompt and reporting pass/fail.
+- [Workflow Playground removed](https://docs.fabro.sh/changelog/2026-09-03.md)
 - [Docker images for Daytona snapshots](https://docs.fabro.sh/changelog/2026-08-27.md)
 - [Explicit succeed failure policy](https://docs.fabro.sh/changelog/2026-08-26.md)
 - [Model stylesheet templates and failure routing](https://docs.fabro.sh/changelog/2026-08-25.md)

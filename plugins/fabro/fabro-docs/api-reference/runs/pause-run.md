@@ -310,6 +310,11 @@ components:
           type:
             - string
             - 'null'
+        workflow_source:
+          description: Resolved workflow source for automation runs that declare one.
+          oneOf:
+            - $ref: '#/components/schemas/ResolvedAutomationGitWorkflowSource'
+            - type: 'null'
     RepositoryRef:
       description: Durable repository metadata for a run.
       type: object
@@ -636,6 +641,36 @@ components:
           description: >-
             Server-generated request identifier; matches the x-request-id
             response header.
+    ResolvedAutomationGitWorkflowSource:
+      description: >-
+        Workflow source coordinate and exact commit captured when an automation
+        run was created. The requested selectors remain available for audit
+        context while `resolved_sha` identifies the immutable source revision
+        that supplied the workflow bytes.
+      type: object
+      additionalProperties: false
+      required:
+        - repo
+        - branch
+        - resolved_sha
+      properties:
+        repo:
+          type: string
+          description: GitHub repository slug in `owner/name` form.
+        branch:
+          type: string
+          description: Required branch fallback and audit context.
+        tag:
+          type: string
+          description: Optional tag requested by the automation.
+        sha:
+          type: string
+          pattern: ^[0-9a-f]{40}$
+          description: Optional exact commit requested by the automation.
+        resolved_sha:
+          type: string
+          pattern: ^[0-9a-f]{40}$
+          description: Exact lowercase Git commit that supplied the workflow bytes.
     PrincipalUser:
       type: object
       required:

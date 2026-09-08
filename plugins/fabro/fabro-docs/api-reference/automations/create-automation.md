@@ -149,8 +149,13 @@ components:
           $ref: '#/components/schemas/RunTarget'
         workflow:
           type: string
-          description: Workflow slug or path resolved in the selected repository checkout.
+          description: >-
+            Workflow slug or path resolved in the run-target checkout when
+            `workflow_source` is omitted, or in the explicit workflow-source
+            checkout when present.
           example: dependency-update
+        workflow_source:
+          $ref: '#/components/schemas/AutomationGitWorkflowSource'
         triggers:
           type: array
           items:
@@ -207,8 +212,13 @@ components:
           $ref: '#/components/schemas/RunTarget'
         workflow:
           type: string
-          description: Workflow slug or path resolved in the selected repository checkout.
+          description: >-
+            Workflow slug or path resolved in the run-target checkout when
+            `workflow_source` is omitted, or in the explicit workflow-source
+            checkout when present.
           example: dependency-update
+        workflow_source:
+          $ref: '#/components/schemas/AutomationGitWorkflowSource'
         triggers:
           type: array
           items:
@@ -261,6 +271,52 @@ components:
             $ref: '#/components/schemas/NoneRunTarget'
           folder:
             $ref: '#/components/schemas/FolderRunTarget'
+    AutomationGitWorkflowSource:
+      description: >-
+        Explicit GitHub coordinate from which an automation acquires workflow
+        bytes. The branch is the fallback selector and audit context. An
+        optional tag overrides the branch, and an optional exact SHA overrides
+        both without requiring branch ancestry. This source is independent of
+        the run target and does not provide its working branch.
+      type: object
+      additionalProperties: false
+      required:
+        - repo
+        - branch
+      properties:
+        repo:
+          type: string
+          minLength: 3
+          maxLength: 140
+          pattern: ^[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9._-]+$
+          description: GitHub repository slug in `owner/name` form.
+          example: acme/workflows
+        branch:
+          type: string
+          minLength: 1
+          maxLength: 255
+          pattern: ^[A-Za-z0-9/._-]+$
+          description: >-
+            Required bare branch name used when neither tag nor SHA is present.
+            It is retained as context when an override is present and is not an
+            ancestry constraint.
+          example: main
+        tag:
+          type: string
+          minLength: 1
+          maxLength: 255
+          pattern: ^[A-Za-z0-9/._-]+$
+          description: >-
+            Optional bare tag name. Without `sha`, this tag is resolved whenever
+            the automation fires. Prefixes such as `refs/tags/` are rejected.
+          example: v1.2.3
+        sha:
+          type: string
+          pattern: ^[0-9A-Fa-f]{40}$
+          description: >-
+            Optional exact commit, authoritative over tag and branch. The server
+            lowercase-normalizes it and fetches it directly; it need not be
+            reachable from the named branch.
     AutomationTrigger:
       description: |
         Automation trigger configuration. Unknown `type` discriminator values

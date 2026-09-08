@@ -6,11 +6,31 @@
 
 > Configure workflow runs with TOML files
 
-A run config is a TOML file that bundles a workflow graph with all the settings needed to execute it — the goal, model, sandbox, prepare steps, inputs, and hooks. Instead of passing a dozen CLI flags, you check a `.toml` file into version control and launch with a single command:
+A workflow config is a TOML file that bundles a workflow graph with its
+execution behavior — the goal, model, prepare steps, inputs, hooks, and other
+workflow-owned settings. Instead of passing a dozen CLI flags, check
+`workflow.toml` into version control and launch it with a single command:
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro run run.toml
 ```
+
+`fabro run` and `fabro create` resolve and package the workflow locally,
+register its immutable workflow version and dependencies, and then ask the
+server to admit the intent and create a run from that version. Source parsing
+or packaging failures stop locally before registration; full effective-intent
+validation is authoritative at server admission. Use `fabro preflight` for
+explicit local validation without creating a run. `fabro create` stops with
+the run in the submitted state; `fabro run` performs the same create operation
+and then starts the run separately.
+
+The workflow can be selected by name from the current project or user workflow
+storage, by a path in another local checkout, or as a loose local file. Its
+source location does not choose the execution workspace: the directory where
+you invoke Fabro remains the target source. Clone-based environments derive a
+GitHub target from that caller directory, while a local environment receives
+the canonical caller directory directly. Fetching workflow definitions from a
+remote Git URL is not part of these commands.
 
 ## Minimal example
 
@@ -32,7 +52,10 @@ goal = "Implement the login feature"
 | `[workflow].graph` | No                   | Path to the Graphviz workflow file, relative to the TOML file's directory. Defaults to `workflow.fabro`.                      |
 | `[run].goal`       | No                   | What the workflow should accomplish. Passed to agents and available via `--goal` CLI flag or Graphviz graph `goal` attribute. |
 
-Goal precedence: CLI `--goal` > `[run].goal` > Graphviz graph attribute.
+Goal precedence: CLI `--goal` or `--goal-file` > `[run].goal` > Graphviz graph
+attribute. A CLI `--goal-file` is read on the invoking machine and sent as a
+per-run value; a goal file referenced by `workflow.toml` remains immutable
+workflow content.
 
 ## Full example
 
@@ -60,32 +83,6 @@ script = "git clone https://github.com/fabro-sh/fabro repo"
 
 [[run.prepare.steps]]
 script = "cd repo && npm install"
-
-[run.environment]
-id = "cloud"
-
-[environments.cloud]
-provider = "daytona"
-
-[environments.cloud.lifecycle]
-preserve = false
-auto_stop = "60m"
-
-[environments.cloud.labels]
-project = "fabro"
-env = "ci"
-
-[environments.cloud.image]
-dockerfile = "FROM node:20-slim\nRUN apt-get update && apt-get install -y git"
-
-[environments.cloud.resources]
-cpu = 4
-memory = "8GB"
-disk = "20GB"
-
-[environments.cloud.env]
-API_KEY = "{{ secrets.MY_API_KEY }}"
-NODE_ENV = "production"
 
 [run.integrations.github.permissions]
 contents = "write"
@@ -284,15 +281,16 @@ push = true
 | `enabled` | When `false`, Fabro skips metadata branch snapshots.                                                     |
 | `push`    | When `false`, Fabro writes metadata snapshots locally but does not push `fabro/meta/<id>` to the remote. |
 
-### `[run.environment]` and `[environments.<slug>]`
+### `[run.environment]` and server-managed environments
 
-Runs select a reusable named environment by slug. Environment catalogs can be
-defined in `settings.toml`, `.fabro/project.toml`, or `workflow.toml`.
+Runs select a reusable server-managed environment by slug. For `fabro run` and
+`fabro create`, use `--environment <slug>` to select it; omitting the flag
+selects `default`. Configure the catalog on the server rather than relying on
+the CLI machine's `settings.toml` or the source checkout's
+`.fabro/project.toml`, because those `environments` tables are not transmitted
+during intent creation.
 
-```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[run.environment]
-id = "ci"
-
+```toml title="server settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [environments.ci]
 provider = "docker" # local | docker | daytona
 
@@ -311,8 +309,8 @@ stop_on_terminal = true
 NODE_ENV = "production"
 ```
 
-Sparse run-level overrides live under `[run.environment.*]` and apply to the
-selected environment only:
+Workflow-owned sparse overrides can live under `[run.environment.*]` and apply
+to the selected server environment:
 
 ```toml theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [run.environment.resources]
@@ -370,7 +368,9 @@ issues = "read"
 
 Only requested permissions are included. The upper bound is the permission set granted to the installed GitHub App, and Fabro logs a warning and continues without `GITHUB_TOKEN` if the app is not configured or is not installed on the repository.
 
-This table follows the normal settings precedence order. A higher-precedence layer can set `permissions = {}` to clear inherited permissions and run without a GitHub token.
+This table follows the workflow settings merge rules. A higher-precedence
+workflow or CLI override can set `permissions = {}` to clear inherited
+permissions and run without a GitHub token.
 
 ### `[run.integrations.github].additional_repositories`
 
@@ -558,7 +558,7 @@ The `sandbox` transport runs the MCP server inside the workflow's sandbox. This 
 
 ### `[run.pull_request]`
 
-Automatically open a GitHub pull request when the workflow run completes successfully. Requires a [GitHub App](/integrations/github) to be configured.
+Automatically open a GitHub pull request when the workflow run completes successfully. Requires a [GitHub App](/integrations/github) to be configured and a clone-based Docker or Daytona environment; run creation rejects `enabled = true` on a Local environment.
 
 ```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [run.pull_request]
@@ -622,15 +622,15 @@ Absolute paths are used as-is.
 
 ## Precedence
 
-Settings can come from multiple sources. Fabro resolves them in this order (first match wins):
+For runs created by `fabro run` and `fabro create`, the CLI transmits sparse
+flags and immutable workflow content, not machine or project run defaults.
+Fabro resolves workflow behavior in this order (first match wins):
 
 | Source                                                          | Priority |
 | --------------------------------------------------------------- | -------- |
 | Node-level [stylesheet](/workflows/stylesheets)                 | Highest  |
 | CLI flags (`--model`, `--provider`, `--environment`)            |          |
 | Run config TOML (`workflow.toml` or equivalent)                 |          |
-| Project defaults (`.fabro/project.toml`)                        |          |
-| Machine defaults (`~/.fabro/settings.toml`)                     |          |
 | Graphviz graph attributes (`default_model`, `default_provider`) |          |
 | Built-in defaults                                               | Lowest   |
 
@@ -638,31 +638,32 @@ Settings can come from multiple sources. Fabro resolves them in this order (firs
   Stylesheet rules on individual nodes always take priority over run config values.
 </Note>
 
-### Project defaults (`.fabro/project.toml`)
+### Project and machine settings
 
-The `.fabro/project.toml` project config can set default values for any of the `[run.*]` sections described above. These defaults apply to all runs in the project unless the workflow config overrides them:
+`fabro run` and `fabro create` do not transmit `[run]` or `[environments]`
+from `.fabro/project.toml` or the CLI machine's `~/.fabro/settings.toml`.
+When either key is present, the CLI warns with the affected file and key names,
+but never includes the values in the warning or request. Move workflow-owned
+behavior into each `workflow.toml`, and configure placement in server-managed
+environments.
 
-```toml title=".fabro/project.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+In particular, automatic pull-request behavior for CLI-created runs belongs in
+the workflow:
+
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 _version = 1
 
-[run.model]
-name = "claude-sonnet-4-5"
+[workflow]
+graph = "workflow.fabro"
 
-[run.environment]
-id = "cloud"
-
-[environments.cloud]
-provider = "daytona"
-
-[environments.cloud.image]
-dockerfile = { path = "Dockerfile" }
+[run.pull_request]
+enabled = true
+draft = false
 ```
 
-Project defaults and workflow config values merge per the normative merge matrix: most fields merge by field (higher-precedence wins per key), TOML `run.inputs` tables replace wholesale, CLI input flags merge per key at highest precedence, environment `env` and `labels` merge by key, and `run.prepare.steps` replaces whole-list.
-
-### Machine defaults
-
-When running locally, the machine defaults at `~/.fabro/settings.toml` can set run-scoped defaults too. Same merge rules apply.
+There is no compatibility field in the create request and no global
+pull-request default supplied by the CLI. A server may still apply its own
+active configuration independently; the warning does not claim otherwise.
 
 ## Validation
 
@@ -671,6 +672,10 @@ Fabro validates the run config when it loads:
 * **`_version` check** — Only `_version = 1` (or missing, which defaults to `1`) is accepted. The legacy top-level `version` key is rejected with a rename hint.
 * **Unknown keys** — Any top-level key not in `[project]`, `[workflow]`, `[run]`, `[cli]`, `[server]`, or `_version` is rejected with a targeted rename hint pointing at the v2 replacement path.
 * **Variable check** — Undefined workflow or prompt template variables produce diagnostics. `fabro validate` reports them as warnings; run-style commands treat them as errors before creating or starting a run.
+
+The CLI also continues to parse and validate its active machine settings and a
+discovered source-project config before creation. Malformed or unreadable files
+remain hard local failures even though their run values are not transmitted.
 
 Use `fabro preflight` to validate a run config without executing it:
 

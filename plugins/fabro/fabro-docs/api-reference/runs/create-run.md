@@ -6,7 +6,7 @@
 
 > Creates a new workflow run in `submitted` status from either a self-contained legacy manifest or an immutable workflow-version intent. Creation does not start or schedule the run.
 
-Failures return the standard error body. The intent lane responds `404` (`workflow_version_not_found`, `environment_not_found`), `422` (`run_intent_invalid`, `target_invalid`, `target_environment_unsupported`, `workflow_version_unusable`, `run_compile_invalid`), `503` (`integration_unavailable`), or `500` (`workflow_version_store_error`, `credential_store_error`, `variable_store_error`, `run_persistence_failed`).
+Failures return the standard error body. The intent lane responds `404` (`workflow_version_not_found`, `environment_not_found`), `422` (`run_intent_invalid`, `target_invalid`, `target_environment_unsupported`, `pull_request_environment_unsupported`, `workflow_version_unusable`, `run_compile_invalid`), `503` (`integration_unavailable`), or `500` (`workflow_version_store_error`, `credential_store_error`, `variable_store_error`, `run_persistence_failed`).
 
 
 
@@ -82,7 +82,8 @@ paths:
         Failures return the standard error body. The intent lane responds `404`
         (`workflow_version_not_found`, `environment_not_found`), `422`
         (`run_intent_invalid`, `target_invalid`,
-        `target_environment_unsupported`, `workflow_version_unusable`,
+        `target_environment_unsupported`,
+        `pull_request_environment_unsupported`, `workflow_version_unusable`,
         `run_compile_invalid`), `503` (`integration_unavailable`), or `500`
         (`workflow_version_store_error`, `credential_store_error`,
         `variable_store_error`, `run_persistence_failed`).
@@ -398,6 +399,11 @@ components:
           type:
             - string
             - 'null'
+        workflow_source:
+          description: Resolved workflow source for automation runs that declare one.
+          oneOf:
+            - $ref: '#/components/schemas/ResolvedAutomationGitWorkflowSource'
+            - type: 'null'
     RepositoryRef:
       description: Durable repository metadata for a run.
       type: object
@@ -876,6 +882,53 @@ components:
           type: object
           additionalProperties:
             type: string
+        dry_run:
+          type: boolean
+          description: >-
+            Overrides `run.execution.mode`: true selects `dry_run`, false
+            selects `normal`, and omission inherits the lower-precedence
+            setting.
+        auto_approve:
+          type: boolean
+          description: >-
+            Overrides `run.execution.approval`: true selects `auto`, false
+            selects `prompt`, and omission inherits the lower-precedence
+            setting.
+        preserve_sandbox:
+          type: boolean
+          description: >-
+            Overrides `run.environment.lifecycle.preserve`; omission inherits
+            the lower-precedence setting.
+    ResolvedAutomationGitWorkflowSource:
+      description: >-
+        Workflow source coordinate and exact commit captured when an automation
+        run was created. The requested selectors remain available for audit
+        context while `resolved_sha` identifies the immutable source revision
+        that supplied the workflow bytes.
+      type: object
+      additionalProperties: false
+      required:
+        - repo
+        - branch
+        - resolved_sha
+      properties:
+        repo:
+          type: string
+          description: GitHub repository slug in `owner/name` form.
+        branch:
+          type: string
+          description: Required branch fallback and audit context.
+        tag:
+          type: string
+          description: Optional tag requested by the automation.
+        sha:
+          type: string
+          pattern: ^[0-9a-f]{40}$
+          description: Optional exact commit requested by the automation.
+        resolved_sha:
+          type: string
+          pattern: ^[0-9a-f]{40}$
+          description: Exact lowercase Git commit that supplied the workflow bytes.
     PrincipalUser:
       type: object
       required:
