@@ -24,26 +24,18 @@ Add the provider override and one or more model entries to `~/.fabro/settings.to
 _version = 1
 
 [llm.providers.litellm]
-enabled = true
 base_url = "http://localhost:4000/v1"
+default_model = "litellm-gpt-5"
+enabled = true
 
 [llm.providers.litellm.models."litellm-gpt-5"]
-api_id = "gpt-5"
 display_name = "LiteLLM GPT-5"
-family = "litellm"
-default = true
-
-[llm.providers.litellm.models."litellm-gpt-5".limits]
-context_window = 128000
-max_output = 8192
-
-[llm.providers.litellm.models."litellm-gpt-5".features]
-tools = true
-vision = false
-reasoning = false
+api_model = "gpt-5"
+limits = { context_tokens = 128000, max_output_tokens = 8192 }
+capabilities = { text = true, tools = true }
 ```
 
-`api_id` is the model name Fabro sends to LiteLLM. It should match a model name configured in your LiteLLM proxy.
+`api_model` is the model name Fabro sends to LiteLLM. It should match a model name configured in your LiteLLM proxy.
 
 ## Configure credentials
 
@@ -97,22 +89,14 @@ Declare each LiteLLM-routed model explicitly so Fabro knows its provider, contex
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [llm.providers.litellm.models."litellm-fast"]
-api_id = "fast-model"
 display_name = "LiteLLM Fast"
-family = "litellm"
 aliases = ["fast"]
-
-[llm.providers.litellm.models."litellm-fast".limits]
-context_window = 64000
-max_output = 4096
-
-[llm.providers.litellm.models."litellm-fast".features]
-tools = true
-vision = false
-reasoning = false
+api_model = "fast-model"
+limits = { context_tokens = 64000, max_output_tokens = 4096 }
+capabilities = { text = true, tools = true }
 ```
 
-Only one model for a provider should set `default = true`. You may also mark one small/cheap utility model with `small_default = true`; Fabro uses it for metadata tasks such as generated run titles and falls back to the provider default when it is omitted.
+The provider's `default_model` names its default. You may also mark one small utility model with `small_default = true`; Fabro uses it for metadata tasks such as generated run titles and falls back to the provider default when it is omitted.
 
 ## Troubleshooting
 
@@ -120,7 +104,7 @@ Only one model for a provider should set `default = true`. You may also mark one
 
 **Connection refused** — Confirm the LiteLLM proxy is running and that `base_url` is reachable from the Fabro process. For Docker deployments, `localhost` means the Fabro container unless you point it at a host or service name.
 
-**Unknown model from LiteLLM** — Check that the model's `api_id` matches the model name configured in LiteLLM, then run `fabro model test --model <fabro-model-id>`.
+**Unknown model from LiteLLM** — Check that the model's `api_model` matches the model name configured in LiteLLM, then run `fabro model test --model <fabro-model-id>`.
 
 ## Further reading
 

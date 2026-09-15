@@ -30,8 +30,8 @@ Add the provider override to `~/.fabro/settings.toml`:
 _version = 1
 
 [llm.providers.bedrock]
-enabled = true
 base_url = "https://bedrock-runtime.us-east-1.amazonaws.com"
+enabled = true
 ```
 
 The SigV4 signing region is derived from `base_url` — change it to your Region's endpoint (`https://bedrock-runtime.<region>.amazonaws.com`, FIPS and China endpoints included).
@@ -40,7 +40,7 @@ The SigV4 signing region is derived from `base_url` — change it to your Region
 
 Two auth modes, tried in order:
 
-**Bedrock API key** (simplest): store the key and Fabro sends it as a bearer token. The key is read from either `AWS_BEARER_TOKEN_BEDROCK` (AWS's canonical name, also honored by the AWS SDKs and CLI) or `BEDROCK_API_KEY` (Fabro's `<PROVIDER>_API_KEY` convention) — use whichever you prefer.
+**Bedrock API key** (simplest): store the key and Fabro sends it as a bearer token. The key is read from either `AWS_BEARER_TOKEN_BEDROCK` (AWS's canonical name, also honored by the AWS SDKs and CLI) or `BEDROCK_API_KEY` (the `<PROVIDER>_API_KEY` convention) — use whichever you prefer.
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro secret set AWS_BEARER_TOKEN_BEDROCK bedrock-api-key-...
@@ -50,22 +50,12 @@ fabro secret set BEDROCK_API_KEY bedrock-api-key-...
 
 Runs read the bearer token from the vault only. Workers start from a cleared environment and the bearer token is not on the inherited allowlist, so exporting it in the server's shell has no effect on runs. `fabro exec` and direct `fabro-llm` SDK usage do read it from process env.
 
-**AWS SigV4** (IAM-scoped): with no API key configured, Fabro signs each request using the AWS default credential chain — environment keys, shared profile, EC2/ECS instance roles, IRSA/web identity, SSO. Expiring session credentials refresh automatically. The catalog declares this as the `aws_sigv4` credential source:
+**AWS SigV4** (IAM-scoped): with no API key configured, Fabro signs each request using the AWS default credential chain — environment keys, shared profile, EC2/ECS instance roles, IRSA/web identity, SSO. Expiring session credentials refresh automatically.
 
-```toml theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[llm.providers.bedrock.auth]
-credentials = ["env:AWS_BEARER_TOKEN_BEDROCK", "env:BEDROCK_API_KEY", "vault:AWS_BEARER_TOKEN_BEDROCK", "vault:BEDROCK_API_KEY", "aws_sigv4"]
-```
-
-The key resolves from the process environment first (either name), then the server vault (`fabro secret set`), then falls back to SigV4 — so on a server, prefer `secret set`. To select a non-default AWS profile for SigV4, set `AWS_PROFILE` (it, and the rest of the AWS credential-chain variables, are passed through to workflow workers).
+The order is fixed by lithos-llm: `AWS_BEARER_TOKEN_BEDROCK`, then `BEDROCK_API_KEY`, then the AWS default chain. Each name is read from the process environment first and the server vault (`fabro secret set`) second — so on a server, prefer `secret set`. To select a non-default AWS profile for SigV4, set `AWS_PROFILE` (it, and the rest of the AWS credential-chain variables, are passed through to workflow workers).
 
 <Warning>
-  **Bearer-vs-SigV4 precedence.** Because the bearer key is tried before SigV4, setting `AWS_BEARER_TOKEN_BEDROCK` makes the `bedrock` (Converse) provider authenticate with that key too — not just the `bedrock-openai` mantle provider below. If your key is valid only for mantle (it lacks `bedrock:InvokeModel*` on the runtime), every Converse model then fails with *"Authentication failed."* To run Converse models on SigV4 while using a mantle-only bearer key for GPT-5.x, pin the Converse provider to SigV4 explicitly:
-
-  ```toml theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-  [llm.providers.bedrock.auth]
-  credentials = ["aws_sigv4"]
-  ```
+  **Bearer-vs-SigV4 precedence.** Because the bearer key is tried before SigV4, setting `AWS_BEARER_TOKEN_BEDROCK` makes the `bedrock` (Converse) provider authenticate with that key too — not just the `bedrock-openai` mantle provider below. If your key is valid only for mantle (it lacks `bedrock:InvokeModel*` on the runtime), every Converse model then fails with *"Authentication failed."* Use a key that covers both surfaces, or keep Converse on SigV4 by leaving both Bedrock secret names unset and enabling only `bedrock`.
 </Warning>
 
 ## Included models
@@ -86,7 +76,7 @@ The built-in catalog curates Converse-capable models, using cross-region inferen
 | `moonshotai.kimi-k2.5`, `zai.glm-5`               |                                                                                                                                                                                                                       |
 | `minimax.minimax-m2.5`, `nvidia.nemotron-3-super` |                                                                                                                                                                                                                       |
 
-Any other Converse-capable Bedrock model can be added as a settings model entry with `provider = "bedrock"` and the Bedrock model or inference-profile id as `api_id`.
+Any other Converse-capable Bedrock model can be added under `[llm.providers.bedrock.models."<model-id>"]` with the Bedrock model or inference-profile id as `api_model`.
 
 Not included on this provider: Claude Mythos 5 (Anthropic-Messages-only on `bedrock-mantle`, limited preview). OpenAI's frontier models live on the companion `bedrock-openai` provider below.
 
@@ -116,7 +106,7 @@ fabro run workflow.fabro --model deepseek.v3-2
 
 ## Prompt caching
 
-Claude models cache automatically when the catalog row declares `prompt_cache`: Fabro places Converse `cachePoint` blocks after the system prompt, the tool definitions, and the conversation prefix — the same placement as the direct Anthropic provider. Cache reads and writes price Anthropic-style via the per-model `billing_policy`.
+Claude models cache automatically when the catalog row declares `prompt_cache`: Fabro places Converse `cachePoint` blocks after the system prompt, the tool definitions, and the conversation prefix — the same placement as the direct Anthropic provider. Cache reads and writes price at the row's `cached_input_usd_micros_per_million` and `cache_write_usd_micros_per_million` rates.
 
 ## Converse extensions
 
@@ -145,7 +135,7 @@ Bedrock-specific request fields pass through verbatim via `provider_options.bedr
 
 **"data retention mode 'default' is not available for this model"** — Fable 5 / Mythos-class models require opting into data sharing first; see [Model access and approvals](#model-access-and-approvals).
 
-**"The provided model identifier is invalid"** — The wire id sent to Bedrock isn't a recognized model or inference-profile id. Set an explicit `api_id` (from `aws bedrock list-inference-profiles`) on the model entry.
+**"The provided model identifier is invalid"** — The wire id sent to Bedrock isn't a recognized model or inference-profile id. Set an explicit `api_model` (from `aws bedrock list-inference-profiles`) on the model entry.
 
 **`ValidationException` mentioning on-demand throughput** — The model requires an inference-profile id; use the `us.`/`global.`-prefixed id from the catalog rather than the bare model id.
 

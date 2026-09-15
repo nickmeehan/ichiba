@@ -8,7 +8,7 @@
 
 MCP ([Model Context Protocol](https://modelcontextprotocol.io/)) lets you connect external tool servers to Fabro agents. An MCP server exposes tools over a standardized protocol — databases, APIs, file systems, custom services — and Fabro discovers and registers them automatically. Agents call MCP tools the same way they call built-in tools.
 
-Fabro can also run as an MCP server. MCP clients can use Fabro's run-management tools to create, inspect, control, wait for, and read events from workflow runs through the authenticated `fabro` CLI.
+Fabro can also run as an MCP server. MCP clients can register reusable workflow versions and use Fabro's run-management tools to create, inspect, control, wait for, and read events from workflow runs through the authenticated `fabro` CLI.
 
 Workflow agents can opt in to that same run-management tool catalog with `[run.agent] fabro_tools = true`. This is not the same as configuring external MCP servers for the agent. When a workflow agent calls `fabro_run_create`, created runs are always [child runs](/execution/child-runs) of the current run; an explicit `parent_id` must match the current run ID.
 
@@ -40,40 +40,107 @@ fabro mcp init claude --name fabro-testing --server https://fabro-testing.exampl
 
 `fabro mcp init` keeps entries with other names and replaces only the entry that matches `--name`.
 
-| Tool                 | Purpose                                                                                                                                    |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `fabro_run_create`   | Create one or more workflow runs, optionally under a parent run, starting them by default.                                                 |
-| `fabro_run_search`   | Search runs by ID, parent, workflow, labels, status, archive state, and creation time.                                                     |
-| `fabro_run_get`      | Read-only inspection of a run: returns its summary, projection, and pending questions without mutating state.                              |
-| `fabro_run_interact` | Control a run: start, approve, deny, message, interrupt, cancel, archive, unarchive, link or unlink a parent, inspect or answer questions. |
-| `fabro_run_gather`   | Wait for runs to reach terminal states, returning current state on timeout.                                                                |
-| `fabro_run_pair`     | Inspect, start, message, end, or read transcript for a live run pairing session.                                                           |
-| `fabro_run_events`   | List, inspect, or search stored events for a run.                                                                                          |
+| Tool                            | Purpose                                                                                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `fabro_workflow_version_create` | Register supplied workflow contents and local dependencies as an immutable version ID, without creating a run.                             |
+| `fabro_run_create`              | Create one or more workflow runs, optionally under a parent run, starting them by default.                                                 |
+| `fabro_run_search`              | Search runs by ID, parent, workflow, labels, status, archive state, and creation time.                                                     |
+| `fabro_run_get`                 | Read-only inspection of a run: returns its summary, projection, and pending questions without mutating state.                              |
+| `fabro_run_interact`            | Control a run: start, approve, deny, message, interrupt, cancel, archive, unarchive, link or unlink a parent, inspect or answer questions. |
+| `fabro_run_gather`              | Wait for runs to reach terminal states, returning current state on timeout.                                                                |
+| `fabro_run_pair`                | Inspect, start, message, end, or read transcript for a live run pairing session.                                                           |
+| `fabro_run_events`              | List, inspect, or search stored events for a run.                                                                                          |
 
-For a simple create call, `fabro_run_create` accepts a workflow selector string:
+### Register workflow contents from a sandbox
 
-```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-{ "runs": ["sleeper"] }
-```
-
-Use the object form when you need create options:
+Use shell and read tools in your sandbox to acquire the workflow and all its local
+config, graph, prompt, script, import, and child-workflow files. For example, clone
+a repository with your sandbox's shell tool, then read `workflow.fabro` and its
+referenced `prompt.md`. Submit the actual contents:
 
 ```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 {
-  "runs": [
-    {
-      "workflow": "sleeper",
-      "auto_approve": true,
-      "dry_run": true,
-      "goal_file": "plans/ship-it.md",
-      "labels": { "source": "mcp" },
-      "start": true
-    }
-  ]
+  "entrypoint": "workflow.fabro",
+  "files": {
+    "workflow.fabro": "digraph W { start [shape=Mdiamond] work [prompt=\"@prompt.md\"] exit [shape=Msquare] start -> work -> exit }",
+    "prompt.md": "Review the implementation."
+  }
 }
 ```
 
-Use `goal` for inline goal text or `goal_file` to read the run goal from a file. They are mutually exclusive. Relative `goal_file` paths resolve from the run's `cwd`, or from the MCP server working directory when `cwd` is omitted.
+Call `fabro_workflow_version_create` with this object and keep the returned
+`workflow_version_id`. You can reuse it in a `RunIntent` submitted through the
+[Create Run API](/api-reference/runs/create-run). Registration packages and uploads
+child workflows before their parents; callers do not calculate dependency IDs.
+
+`entrypoint` is an exact supplied key, including when it has no extension. File
+values are text, never host paths or URLs to fetch. Missing references and paths
+that escape the supplied tree fail. The source tree is limited to 512 files,
+512 KiB per file, and 2 MiB of text; each resulting serialized version must also
+fit the existing 2 MiB API limit. Case-insensitive file and ancestor collisions
+are rejected before staging. Graph nesting through child workflows and imports
+is limited to 64 levels, including the entrypoint. A supplied sibling
+`workflow.toml` must be valid even when a graph is the entrypoint; a valid config
+that selects another graph is omitted. Collection follows declared file references; command
+`script` values remain literal text, and paths embedded in shell commands are not
+inspected or acquired.
+
+Registration resolves no runtime secrets, selects no environment, and starts no
+execution. It requires a user credential or a worker token with `agent:run_tools`;
+ordinary worker tokens and same-run Ask Fabro sessions cannot register versions.
+If an upload fails, retry the same contents: previously registered immutable
+versions remain reusable. Use the returned ID with `fabro_run_create`.
+
+### Create runs
+
+Call `fabro_run_create` with a registered workflow version ID and an independent
+workspace target. You can reuse the same ID for multiple runs without uploading
+again:
+
+```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+{
+  "runs": [{
+    "workflow_version_id": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "target": { "kind": "git", "repo": "acme/widgets", "branch": "main" },
+    "environment_id": "production",
+    "goal": "Review the checkout implementation.",
+    "args": {
+      "inputs": { "component": "checkout" },
+      "labels": { "source": "mcp" },
+      "auto_approve": false
+    },
+    "start": false
+  }]
+}
+```
+
+Standalone MCP calls require an explicit `target`: Git coordinates, `kind: none`
+for an empty workspace, or a server-local folder for a compatible Local environment.
+A folder path refers to the server's filesystem, not the MCP client's filesystem.
+Workflow content does not determine the target. Native workflow-agent calls may
+omit `target` to inherit the parent's execution target; see [Child Runs](/execution/child-runs).
+Supplying `parent_id` in standalone MCP does not enable that inheritance.
+
+`args` uses the same fields as RunIntent: `inputs`, `labels`, `model`, `provider`,
+`dry_run`, `auto_approve`, and `preserve_sandbox`. Omitted boolean overrides stay
+omitted; explicit `false` is preserved. `environment_id` selects a server environment;
+omission uses the server default. `title`, literal `goal`, and an exact `parent_id`
+are optional. Caller/project/machine run settings are not read by the tool.
+Workflow-owned settings remain in the registered `workflow.toml`.
+
+<Note>
+  Run creation accepts registered IDs only. Replace workflow strings and inline
+  sources with a preceding `fabro_workflow_version_create` call. Move flat run
+  options into `args`, use `environment_id` instead of `environment`, and send goal
+  text instead of `goal_file`. Obtain local or remote files using the caller's own
+  shell/read tools. Neither Fabro tool fetches remote sources or reads a caller path.
+</Note>
+
+Creation persists a submitted run. A separate start request follows by default;
+set `start: false` to start later. Batches contain 1–50 items and stop at the first
+failure. If creation succeeded before a start, summary lookup, or later item
+failed, the error includes the already-created run IDs. Inspect those runs before
+retrying to avoid creating duplicates.
 
 Run summaries returned by the MCP server include parent metadata. Use `parent_id` on `fabro_run_create` to create a child run, `parent_id` on `fabro_run_search` to list direct children, and the `link_parent` or `unlink_parent` actions on `fabro_run_interact` to change an existing run's parent. See [Child Runs](/execution/child-runs) for the orchestration model.
 

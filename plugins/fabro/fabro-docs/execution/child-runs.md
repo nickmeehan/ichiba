@@ -33,15 +33,16 @@ fabro_tools = true
 
 This exposes the same Fabro run tools available through [MCP](/agents/mcp):
 
-| Tool                 | Purpose                                                                                           |
-| -------------------- | ------------------------------------------------------------------------------------------------- |
-| `fabro_run_create`   | Create one or more child runs, starting them by default                                           |
-| `fabro_run_search`   | Search runs, including direct children by `parent_id`                                             |
-| `fabro_run_get`      | Inspect a run without mutating it                                                                 |
-| `fabro_run_interact` | Start, message, interrupt, cancel, archive, unarchive, link, unlink, inspect, or answer questions |
-| `fabro_run_gather`   | Wait for runs to reach terminal states                                                            |
-| `fabro_run_events`   | Read stored events for a run                                                                      |
-| `fabro_run_pair`     | Pair with an active API-mode agent stage                                                          |
+| Tool                            | Purpose                                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `fabro_workflow_version_create` | Register supplied workflow files and return an immutable version ID                               |
+| `fabro_run_create`              | Create one or more child runs, starting them by default                                           |
+| `fabro_run_search`              | Search runs, including direct children by `parent_id`                                             |
+| `fabro_run_get`                 | Inspect a run without mutating it                                                                 |
+| `fabro_run_interact`            | Start, message, interrupt, cancel, archive, unarchive, link, unlink, inspect, or answer questions |
+| `fabro_run_gather`              | Wait for runs to reach terminal states                                                            |
+| `fabro_run_events`              | Read stored events for a run                                                                      |
+| `fabro_run_pair`                | Pair with an active API-mode agent stage                                                          |
 
 <Note>
   When a workflow agent calls `fabro_run_create`, Fabro always parents the created runs to the current run. If the agent supplies `parent_id`, it must match the current run ID.
@@ -49,57 +50,69 @@ This exposes the same Fabro run tools available through [MCP](/agents/mcp):
 
 ## Create child runs
 
-The simplest `fabro_run_create` call names a workflow:
+Acquire workflow files with the agent's shell/read tools, then call
+`fabro_workflow_version_create` with their contents:
 
 ```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 {
-  "runs": ["implement-and-test"]
+  "entrypoint": "workflow.fabro",
+  "files": {
+    "workflow.fabro": "digraph Child { start [shape=Mdiamond] work [prompt=\"@prompt.md\"] exit [shape=Msquare] start -> work -> exit }",
+    "prompt.md": "Implement the requested change and run the relevant tests."
+  }
 }
 ```
 
-Use the object form to pass run options:
+Use the returned `workflow_version_id` in `fabro_run_create`:
 
 ```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 {
-  "runs": [
-    {
-      "workflow": "implement-and-test",
-      "goal": "Implement the checkout page refactor and run the test suite.",
-      "labels": {
-        "lane": "checkout",
-        "source": "parent-run"
-      },
-      "start": true
-    }
-  ]
+  "runs": [{
+    "workflow_version_id": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "goal": "Implement the checkout page refactor and run its tests.",
+    "args": { "labels": { "lane": "checkout", "source": "parent-run" } },
+    "start": true
+  }]
 }
 ```
 
-The parent can create several children in one call:
+A version can be reused for several children, each with its own goal, target, and
+`args`. When the version already exists, skip registration. Read goal files with
+the agent's read tool and pass literal `goal` text. Workflow names, paths, inline
+source objects, and `goal_file` are no longer run-create inputs.
 
-```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-{
-  "runs": [
-    {
-      "workflow": "implementation",
-      "goal_file": "plans/api.md",
-      "labels": { "lane": "api" }
-    },
-    {
-      "workflow": "implementation",
-      "goal_file": "plans/web.md",
-      "labels": { "lane": "web" }
-    },
-    {
-      "workflow": "review",
-      "goal": "Review the current branch for security and data-integrity risks.",
-      "labels": { "lane": "review" }
-    }
-  ]
-}
-```
+This flow works in Local, Docker, and Daytona environments. The agent can clone a
+remote workflow in its sandbox and submit the resulting contents. Fabro's native
+tool handler executes outside the sandbox, so registration treats file-map keys
+as virtual relative paths and never reads sandbox paths from the worker host.
+Include the workflow's referenced configuration, prompts, and child workflows in
+the supplied tree. See [MCP](/agents/mcp) for package limits.
 
-By default, `fabro_run_create` requests start for each created run. Set `"start": false` when the parent should create the child now and start it later.
+Workflow content and workspace target are independent. If `target` is omitted,
+a native child inherits the parent's canonical target: `none` or folder as-is,
+and a Git target's repository and current execution branch (normally
+`fabro/run/<parent-id>`). Push parent changes before creating the child; a child
+clone sees that branch's remote HEAD. The parent's original pinned SHA/tag is
+not inherited. If run branches are disabled, the original input branch is used;
+if an enabled execution branch is unavailable, send an explicit target.
+
+An explicit Git, `none`, or folder target overrides inheritance while the current
+run remains the forced parent. Set `sha` on an explicit Git target to pin a child.
+Server admission enforces folder access: Docker/Daytona parents cannot select a
+server-host folder, including by requesting a Local child environment.
+Standalone MCP always requires an explicit target, even with `parent_id`.
+
+Use `environment_id` to choose a server environment; omission uses the server
+default, not the parent's environment. Run overrides belong in canonical `args`:
+`inputs`, `labels`, `model`, `provider`, `auto_approve`, `dry_run`, and
+`preserve_sandbox`. Omission preserves workflow/server defaults; explicit `false`
+is not omitted. The tool does not apply caller, project, or machine run settings.
+Keep workflow-owned configuration in the registered `workflow.toml`.
+
+Creation and start remain separate operations. Set `start: false` to leave a
+child submitted. A batch stops on its first failure; if any runs have already
+been created, their IDs appear in the error so the parent can inspect them
+instead of recreating them blindly.
 
 ## Start and approval
 

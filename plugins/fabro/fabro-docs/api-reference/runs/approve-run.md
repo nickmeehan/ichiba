@@ -1065,12 +1065,13 @@ components:
         - approved
         - denied
     SandboxProviderKind:
-      description: Sandbox provider discriminator.
+      description: |
+        Sandbox provider kind. `local`, `docker`, and `daytona` are bundled
+        with the server; any other value names a sandbox-driver plugin
+        configured under `server.sandbox.providers.<kind>`.
       type: string
-      enum:
-        - local
-        - docker
-        - daytona
+      pattern: ^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$
+      example: docker
     RunSandboxRuntime:
       type: object
       required:

@@ -212,6 +212,7 @@ components:
       description: Native reasoning-effort level requested for an LLM call.
       type: string
       enum:
+        - minimal
         - low
         - medium
         - high

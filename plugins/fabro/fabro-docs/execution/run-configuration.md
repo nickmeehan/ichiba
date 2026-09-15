@@ -196,10 +196,10 @@ reasoning_effort = "high"
 speed = "fast"
 ```
 
-| Field              | Description                                                                                                                                      |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `reasoning_effort` | Native reasoning-effort value to request when the selected model allows it, such as `"low"`, `"medium"`, `"high"`, `"xhigh"`, or `"max"`.        |
-| `speed`            | Native speed value to request when the selected model declares it, such as `"fast"`. The standard speed is implicit and does not need to be set. |
+| Field              | Description                                                                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `reasoning_effort` | Native reasoning-effort value to request when the selected model allows it, such as `"minimal"`, `"low"`, `"medium"`, `"high"`, `"xhigh"`, or `"max"`. |
+| `speed`            | Native speed value to request when the selected model declares it, such as `"fast"`. The standard speed is implicit and does not need to be set.       |
 
 #### Fallback lists with splice
 
@@ -261,25 +261,14 @@ enabled = true
 push = true
 ```
 
-| Field     | Description                                                                                                                  |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `enabled` | When `false`, Fabro does not create the managed run branch or checkpoint commits. This also disables metadata branch writes. |
-| `push`    | When `false`, Fabro creates local checkpoint commits but does not push `fabro/run/<id>` to the remote.                       |
+| Field     | Description                                                                                            |
+| --------- | ------------------------------------------------------------------------------------------------------ |
+| `enabled` | When `false`, Fabro does not create the managed run branch or checkpoint commits.                      |
+| `push`    | When `false`, Fabro creates local checkpoint commits but does not push `fabro/run/<id>` to the remote. |
 
 ### `[run.meta_branch]`
 
-Configure Fabro's managed `fabro/meta/<id>` metadata branch.
-
-```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[run.meta_branch]
-enabled = true
-push = true
-```
-
-| Field     | Description                                                                                              |
-| --------- | -------------------------------------------------------------------------------------------------------- |
-| `enabled` | When `false`, Fabro skips metadata branch snapshots.                                                     |
-| `push`    | When `false`, Fabro writes metadata snapshots locally but does not push `fabro/meta/<id>` to the remote. |
+Metadata branches have been retired. Existing `enabled` and `push` settings in this table are accepted but ignored. Resolved settings and API responses omit `meta_branch`. You can remove the table from your configuration. Existing Git metadata branches remain untouched.
 
 ### `[run.environment]` and server-managed environments
 
@@ -428,11 +417,11 @@ skip_git_hooks = false
 commit_timeout = "30s"
 ```
 
-| Field            | Description                                                                                                                                                                                                                 |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclude_globs`  | Glob patterns for files to exclude from checkpoint commits. Uses git pathspec `:(glob,exclude)` syntax.                                                                                                                     |
-| `skip_git_hooks` | When `true`, Fabro-managed run-branch checkpoint commits bypass local Git commit hooks (e.g. `pre-commit`, `commit-msg`). Defaults to `false`. Does not affect Fabro workflow `[[run.hooks]]` or metadata-branch snapshots. |
-| `commit_timeout` | Max duration for the per-node run-branch checkpoint commit (e.g. `"30s"`, `"10m"`). This commit runs repository commit hooks unless `skip_git_hooks` is `true`. Defaults to `"30s"`.                                        |
+| Field            | Description                                                                                                                                                                                                                                                            |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclude_globs`  | Glob patterns for files to exclude from checkpoint commits. Uses git pathspec `:(glob,exclude)` syntax.                                                                                                                                                                |
+| `skip_git_hooks` | Accepted for compatibility. Fabro-managed run-branch checkpoint commits never run local Git commit hooks (e.g. `pre-commit`, `commit-msg`); the sandbox driver disables repository hooks on every git command it runs. Does not affect Fabro workflow `[[run.hooks]]`. |
+| `commit_timeout` | Accepted for compatibility. The per-node run-branch checkpoint commit runs under the sandbox driver's git command budget; no repository hook can prolong it.                                                                                                           |
 
 `exclude_globs` replaces across layers — the higher-precedence layer wins wholesale. `skip_git_hooks` and `commit_timeout` use normal override semantics: the highest layer that sets the field wins.
 
@@ -512,7 +501,7 @@ Configure workflow agent behavior that is not tied to a single stage.
 fabro_tools = true
 ```
 
-`fabro_tools` defaults to `false`. Set it to `true` only for runs whose agents should be able to use the same Fabro run-management MCP tool catalog exposed to human MCP clients: create, search, get, interact, gather, events, and pair.
+`fabro_tools` defaults to `false`. Set it to `true` only for runs whose agents should be able to use the same Fabro run-management MCP tool catalog exposed to human MCP clients: workflow version registration, create, search, get, interact, gather, events, and pair.
 
 One workflow-agent exception is intentional: `fabro_run_create` always creates [child runs](/execution/child-runs) parented to the current run. If an agent supplies `parent_id`, it must match the current run ID.
 

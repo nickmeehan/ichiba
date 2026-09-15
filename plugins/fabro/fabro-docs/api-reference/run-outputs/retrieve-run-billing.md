@@ -472,11 +472,12 @@ components:
       type: string
       example: anthropic
     BillingSpeed:
-      description: Optional provider-specific model speed tier used for cost estimates.
+      description: 'lithos `Speed`: the requested latency or cost tier.'
       type: string
       enum:
-        - standard
         - fast
+        - balanced
+        - economical
   headers:
     XRequestId:
       description: >

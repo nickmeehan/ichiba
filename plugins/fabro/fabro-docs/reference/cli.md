@@ -72,7 +72,7 @@ fabro [OPTIONS] [COMMAND]
 | `fabro attach`     | Attach to a running or finished workflow run                                                                        |
 | `fabro auth`       | Manage CLI authentication state                                                                                     |
 | `fabro completion` | Generate shell completions                                                                                          |
-| `fabro create`     | Register a local workflow version and create a submitted run                                                        |
+| `fabro create`     | Register a workflow version and create a submitted run                                                              |
 | `fabro deny`       | Deny pending workflow runs                                                                                          |
 | `fabro discord`    | Open the Discord community in the browser                                                                           |
 | `fabro docs`       | Open the docs website in the browser                                                                                |
@@ -94,7 +94,7 @@ fabro [OPTIONS] [COMMAND]
 | `fabro resume`     | Resume an interrupted workflow run                                                                                  |
 | `fabro rewind`     | Rewind a workflow run to an earlier checkpoint                                                                      |
 | `fabro rm`         | Remove one or more workflow runs                                                                                    |
-| `fabro run`        | Register a local workflow version, create a run, and start it                                                       |
+| `fabro run`        | Register a workflow version, create a run, and start it                                                             |
 | `fabro sandbox`    | Sandbox operations (cp, ssh, preview)                                                                               |
 | `fabro secret`     | Manage server-owned secrets                                                                                         |
 | `fabro server`     | Server operations                                                                                                   |
@@ -334,7 +334,7 @@ fabro completion [OPTIONS] <SHELL>
 
 ### `fabro create`
 
-Register a local workflow version and create a submitted run
+Register a workflow version and create a submitted run
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro create [OPTIONS] <WORKFLOW>
@@ -342,28 +342,34 @@ fabro create [OPTIONS] <WORKFLOW>
 
 #### Arguments
 
-| Name       | Description                                                       |
-| ---------- | ----------------------------------------------------------------- |
-| `WORKFLOW` | Local workflow name, checkout path, .fabro file, or workflow TOML |
+| Name       | Description                                        |
+| ---------- | -------------------------------------------------- |
+| `WORKFLOW` | Workflow name, path, or OWNER/REPO\[@REF]:WORKFLOW |
 
 #### Options
 
-| Option                        | Description                                                     |
-| ----------------------------- | --------------------------------------------------------------- |
-| `--auto-approve`              | Auto-approve all human gates                                    |
-| `-d, --detach`                | Run the workflow in the background and print the run ID         |
-| `--dry-run`                   | Execute with simulated LLM backend                              |
-| `--environment <environment>` | Named environment for agent tools                               |
-| `--goal <goal>`               | Override the workflow goal (available as {{ goal }} in prompts) |
-| `--goal-file <goal_file>`     | Read a per-run goal value from a local file                     |
-| `--label <key=value>`         | Attach a label to this run (repeatable, format: KEY=VALUE)      |
-| `--model <model>`             | Override default LLM model                                      |
-| `--parent <run>`              | Link this run to an existing orchestration parent run           |
-| `--preserve-sandbox`          | Keep the sandbox alive after the run finishes (for debugging)   |
-| `--provider <provider>`       | Override default LLM provider                                   |
-| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path   |
-| `-I, --input <key=value>`     | Override a workflow input value (repeatable, format: KEY=VALUE) |
-| `-v, --verbose`               | Enable verbose output                                           |
+| Option                           | Description                                                                                   |
+| -------------------------------- | --------------------------------------------------------------------------------------------- |
+| `--auto-approve`                 | Auto-approve all human gates                                                                  |
+| `-d, --detach`                   | Run the workflow in the background and print the run ID                                       |
+| `--dry-run`                      | Simulate execution; workflow source may still be fetched and uploaded                         |
+| `--environment <environment>`    | Named environment for agent tools                                                             |
+| `--goal <goal>`                  | Override the workflow goal (available as {{ goal }} in prompts)                               |
+| `--goal-file <goal_file>`        | Read a per-run goal value from a local file                                                   |
+| `--label <key=value>`            | Attach a label to this run (repeatable, format: KEY=VALUE)                                    |
+| `--model <model>`                | Override default LLM model                                                                    |
+| `--parent <run>`                 | Link this run to an existing orchestration parent run                                         |
+| `--preserve-sandbox`             | Keep the sandbox alive after the run finishes (for debugging)                                 |
+| `--provider <provider>`          | Override default LLM provider                                                                 |
+| `--server <server>`              | Fabro server target: http(s) URL or absolute Unix socket path                                 |
+| `--target-branch <branch>`       | Target working branch (default: remote default branch), pinned to its observed commit         |
+| `--target-from <path>`           | Observe this target directory instead of cwd; Folder targets require server filesystem access |
+| `--target-repo <owner/repo>`     | Target GitHub OWNER/REPO; the execution sandbox still needs its own clone credentials         |
+| `--target <owner/repo[@branch]>` | Target GitHub repository and optional working branch                                          |
+| `-I, --input <key=value>`        | Override a workflow input value (repeatable, format: KEY=VALUE)                               |
+| `-v, --verbose`                  | Enable verbose output                                                                         |
+| `--workflow-ref <ref>`           | Workflow branch, tag, HEAD (default), or full commit SHA; qualify ambiguous names             |
+| `--workflow-repo <owner/repo>`   | Acquire workflow source locally from a GitHub OWNER/REPO using native Git credentials         |
 
 ### `fabro deny`
 
@@ -695,14 +701,14 @@ fabro model test [OPTIONS]
 
 #### Options
 
-| Option                                  | Description                                                                           |
-| --------------------------------------- | ------------------------------------------------------------------------------------- |
-| `-j, --jobs <jobs>`                     | Number of model tests to run concurrently in bulk mode<br />Default: `4`              |
-| `-m, --model <model>`                   | Test a specific model                                                                 |
-| `-p, --provider <provider>`             | Filter by provider                                                                    |
-| `--reasoning-effort <reasoning_effort>` | Request a reasoning-effort level<br />Values: `low`, `medium`, `high`, `xhigh`, `max` |
-| `--server <server>`                     | Fabro server target: http(s) URL or absolute Unix socket path                         |
-| `--tools`                               | Run a multi-turn tool-use test                                                        |
+| Option                                  | Description                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------- |
+| `-j, --jobs <jobs>`                     | Number of model tests to run concurrently in bulk mode<br />Default: `4`  |
+| `-m, --model <model>`                   | Test a specific model                                                     |
+| `-p, --provider <provider>`             | Filter by provider                                                        |
+| `--reasoning-effort <reasoning_effort>` | Request a reasoning-effort level (minimal, low, medium, high, xhigh, max) |
+| `--server <server>`                     | Fabro server target: http(s) URL or absolute Unix socket path             |
+| `--tools`                               | Run a multi-turn tool-use test                                            |
 
 ### `fabro parent`
 
@@ -1063,7 +1069,7 @@ fabro rm [OPTIONS] <RUNS>...
 
 ### `fabro run`
 
-Register a local workflow version, create a run, and start it
+Register a workflow version, create a run, and start it
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro run [OPTIONS] <WORKFLOW>
@@ -1071,28 +1077,34 @@ fabro run [OPTIONS] <WORKFLOW>
 
 #### Arguments
 
-| Name       | Description                                                       |
-| ---------- | ----------------------------------------------------------------- |
-| `WORKFLOW` | Local workflow name, checkout path, .fabro file, or workflow TOML |
+| Name       | Description                                        |
+| ---------- | -------------------------------------------------- |
+| `WORKFLOW` | Workflow name, path, or OWNER/REPO\[@REF]:WORKFLOW |
 
 #### Options
 
-| Option                        | Description                                                     |
-| ----------------------------- | --------------------------------------------------------------- |
-| `--auto-approve`              | Auto-approve all human gates                                    |
-| `-d, --detach`                | Run the workflow in the background and print the run ID         |
-| `--dry-run`                   | Execute with simulated LLM backend                              |
-| `--environment <environment>` | Named environment for agent tools                               |
-| `--goal <goal>`               | Override the workflow goal (available as {{ goal }} in prompts) |
-| `--goal-file <goal_file>`     | Read a per-run goal value from a local file                     |
-| `--label <key=value>`         | Attach a label to this run (repeatable, format: KEY=VALUE)      |
-| `--model <model>`             | Override default LLM model                                      |
-| `--parent <run>`              | Link this run to an existing orchestration parent run           |
-| `--preserve-sandbox`          | Keep the sandbox alive after the run finishes (for debugging)   |
-| `--provider <provider>`       | Override default LLM provider                                   |
-| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path   |
-| `-I, --input <key=value>`     | Override a workflow input value (repeatable, format: KEY=VALUE) |
-| `-v, --verbose`               | Enable verbose output                                           |
+| Option                           | Description                                                                                   |
+| -------------------------------- | --------------------------------------------------------------------------------------------- |
+| `--auto-approve`                 | Auto-approve all human gates                                                                  |
+| `-d, --detach`                   | Run the workflow in the background and print the run ID                                       |
+| `--dry-run`                      | Simulate execution; workflow source may still be fetched and uploaded                         |
+| `--environment <environment>`    | Named environment for agent tools                                                             |
+| `--goal <goal>`                  | Override the workflow goal (available as {{ goal }} in prompts)                               |
+| `--goal-file <goal_file>`        | Read a per-run goal value from a local file                                                   |
+| `--label <key=value>`            | Attach a label to this run (repeatable, format: KEY=VALUE)                                    |
+| `--model <model>`                | Override default LLM model                                                                    |
+| `--parent <run>`                 | Link this run to an existing orchestration parent run                                         |
+| `--preserve-sandbox`             | Keep the sandbox alive after the run finishes (for debugging)                                 |
+| `--provider <provider>`          | Override default LLM provider                                                                 |
+| `--server <server>`              | Fabro server target: http(s) URL or absolute Unix socket path                                 |
+| `--target-branch <branch>`       | Target working branch (default: remote default branch), pinned to its observed commit         |
+| `--target-from <path>`           | Observe this target directory instead of cwd; Folder targets require server filesystem access |
+| `--target-repo <owner/repo>`     | Target GitHub OWNER/REPO; the execution sandbox still needs its own clone credentials         |
+| `--target <owner/repo[@branch]>` | Target GitHub repository and optional working branch                                          |
+| `-I, --input <key=value>`        | Override a workflow input value (repeatable, format: KEY=VALUE)                               |
+| `-v, --verbose`                  | Enable verbose output                                                                         |
+| `--workflow-ref <ref>`           | Workflow branch, tag, HEAD (default), or full commit SHA; qualify ambiguous names             |
+| `--workflow-repo <owner/repo>`   | Acquire workflow source locally from a GitHub OWNER/REPO using native Git credentials         |
 
 ### `fabro sandbox`
 

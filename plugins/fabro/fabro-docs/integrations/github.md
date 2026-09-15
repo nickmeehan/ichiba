@@ -32,7 +32,7 @@ The rest of this page describes the `app` strategy, which is required for browse
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **OAuth login**           | Users sign in to the web UI with their GitHub account                                                                                                                                                        |
 | **Private repo cloning**  | Daytona and Docker sandboxes clone private repositories using short-lived Installation Access Tokens                                                                                                         |
-| **Checkpoint pushing**    | After each workflow stage, Fabro pushes the run branch and metadata branch back to origin from inside the sandbox                                                                                            |
+| **Checkpoint pushing**    | After each workflow stage, Fabro pushes the run branch back to origin from inside the sandbox                                                                                                                |
 | **Auto-PR**               | When `[run.pull_request] enabled = true` in the [run config](/execution/run-configuration#runpull_request), Fabro opens a PR from the agent's working branch after a successful run                          |
 | **Auto-merge**            | When `[run.pull_request] auto_merge = true`, Fabro enables GitHub's auto-merge on created PRs so they merge automatically once required checks pass                                                          |
 | **Sandbox GITHUB\_TOKEN** | When `[run.integrations.github.permissions]` are declared at any layer (workflow, project, or user settings), Fabro mints a scoped Installation Access Token and injects it as `GITHUB_TOKEN` in the sandbox |
@@ -306,7 +306,7 @@ Behavior notes:
 
 Workflow authors may name any repository reachable by the server's GitHub App installation; Fabro applies no second server-side repository intersection. The token is scoped server-side to exactly the declared set — a request to an undeclared repository fails at GitHub, and Fabro never mints an unscoped installation-wide token. With `contents = "write"`, **any stage can push to any declared repository**. Declare the smallest repository set and the weakest permissions that work.
 
-Installation Access Tokens are short-lived. Fabro refreshes its own credentials before checkpoint pushes. For ACP/CLI agent turns launched with GitHub App push credentials, Fabro also re-mints the token and rewrites the sandbox's `origin` URL before the ACP process starts, then every 45 minutes for the lifetime of that turn. Refresh failures are logged and do not fail the stage.
+Installation Access Tokens are short-lived. Fabro's own pushes present a fresh token on each call. Git commands the agent runs inside the sandbox read the token through a credential store the sandbox driver configures for the checkout; the token never appears in the repository's remote URL or configuration. For ACP/CLI agent turns launched with GitHub App push credentials, Fabro re-mints the token and rewrites that store before the ACP process starts, then every 45 minutes for the lifetime of that turn. Refresh failures are logged and do not fail the stage.
 
 `FABRO_PUSH_CRED_REFRESH_AHEAD` defaults to enabled; set it to `0`, `false`, `off`, `no`, or an empty value to disable both turn-entry and background refresh. `FABRO_PUSH_CRED_REFRESH_INTERVAL_SECONDS` overrides the background interval, and `0` disables only the background loop. This refresh loop is ACP-specific; command and native/API agent stages do not run it. Reconnected sandboxes for resumed or parked runs currently lack the App credentials needed for ACP refresh, so the refresh is skipped there.
 
@@ -316,9 +316,13 @@ The permissions table follows the standard layer-merge order (workflow > project
 
 The upper bound on what Fabro will mint is whatever permissions the GitHub App installation has been granted. Fabro does **not** impose a separate server-side cap on the run-level `permissions` map: any value the App has been granted can be requested by run config. Operators must not run untrusted workflow, project, or user TOML against a broadly-scoped GitHub App installation. Preflight prints the resolved permission set so reviewers can see what each run will request.
 
+### Commit attribution
+
+Every commit a run creates is authored and committed by the run's GitHub credential identity. In App mode that is the App's bot account, `<slug>[bot] <id+slug[bot]@users.noreply.github.com>`, so GitHub attributes checkpoint commits and workflow-created commits to the App. In token mode it is the token's user with their GitHub noreply address. Fabro resolves the identity once per run and passes it to every prepare step, command stage, agent tool, and ACP agent as `GIT_AUTHOR_*` / `GIT_COMMITTER_*` variables, so a workflow that clones or initializes another repository commits as the same identity without configuring Git itself. `[run.git.author]` overrides either field; see [server configuration](/administration/server-configuration#rungitauthor-section).
+
 ### Checkpoint pushing
 
-After each workflow stage, Fabro [checkpoints](/execution/checkpoints) by pushing the run branch and metadata branch to origin. Before a successful run becomes terminal, the publish stage pushes the final commit again and treats failure as a run failure. Inside remote sandboxes, the git remote URL is configured with the Installation Access Token for authenticated pushing.
+After each workflow stage, Fabro [checkpoints](/execution/checkpoints) by pushing the run branch to origin. Before a successful run becomes terminal, the publish stage pushes the final commit again and treats failure as a run failure. Inside remote sandboxes, the git remote URL is configured with the Installation Access Token for authenticated pushing.
 
 When pull request creation is enabled, Fabro then checks that GitHub reports the run branch at the exact final commit before opening the PR. A failed final push, branch check, or PR creation marks the run as failed with `publish_failed`; the terminal run event is emitted only after this step finishes.
 

@@ -347,38 +347,28 @@ components:
           description: Maximum output tokens, if known.
           example: 128000
     ModelFeatures:
-      description: Capability flags for a model.
+      description: Capability flags for a model, from the lithos catalog.
       type: object
       required:
         - tools
         - vision
         - reasoning
-        - reasoning_effort
         - prompt_cache
-        - cache_control_breakpoints
-        - sampling_params
+        - sampling
       properties:
         tools:
           type: boolean
           description: Whether the model supports tool use.
         vision:
           type: boolean
-          description: Whether the model supports vision/image inputs.
+          description: Whether the model supports image inputs.
         reasoning:
           type: boolean
           description: Whether the model supports extended reasoning.
-        reasoning_effort:
-          $ref: '#/components/schemas/ReasoningEffortFeature'
         prompt_cache:
           type: boolean
           description: Whether the model endpoint supports prompt caching.
-        cache_control_breakpoints:
-          type: boolean
-          description: >-
-            Whether the endpoint only caches when the request marks the
-            cacheable prefix with Anthropic-style cache_control breakpoints
-            (e.g. Claude via OpenRouter).
-        sampling_params:
+        sampling:
           type: boolean
           description: >-
             Whether the model accepts classic sampling parameters (temperature,
@@ -425,21 +415,11 @@ components:
           format: double
           description: Cost per million cached input tokens in USD.
           example: 1.5
-    ReasoningEffortFeature:
-      description: >-
-        Whether the model endpoint supports a native reasoning-effort parameter.
-        `levels` accepts discrete effort levels; `always_adaptive` accepts
-        effort levels with natively always-on adaptive thinking; `none` has no
-        native effort parameter.
-      type: string
-      enum:
-        - levels
-        - always_adaptive
-        - none
     ReasoningEffort:
       description: Native reasoning-effort level requested for an LLM call.
       type: string
       enum:
+        - minimal
         - low
         - medium
         - high

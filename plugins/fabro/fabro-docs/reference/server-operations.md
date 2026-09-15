@@ -150,10 +150,20 @@ its snapshot, so make the rollback boundary explicit before restoring it.
 
 ## Submitting runs
 
-Workflows are submitted via the REST API and executed in the background. The exact request body is documented in the API reference:
+Register the workflow content, create a run from that version, then request execution. This example uses a clone-based default environment and an empty workspace target; add the authentication headers required by your server:
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-curl -X POST http://localhost:3000/api/v1/runs
+version_id=$(curl --fail-with-body -sS http://localhost:3000/api/v1/workflow-versions \
+  -H 'Content-Type: application/json' \
+  -d '{"entrypoint":"workflow.fabro","files":{"workflow.fabro":"digraph Demo { start [shape=Mdiamond]; exit [shape=Msquare]; start -> exit; }"},"workflow_dependencies":{}}' \
+  | jq -r '.workflow_version_id')
+
+run_id=$(curl --fail-with-body -sS http://localhost:3000/api/v1/runs \
+  -H 'Content-Type: application/json' \
+  -d "$(jq -n --arg id "$version_id" '{workflow_version_id:$id,target:{kind:"none"},args:{}}')" \
+  | jq -r '.id')
+
+curl --fail-with-body -X POST "http://localhost:3000/api/v1/runs/$run_id/start"
 ```
 
 The server returns immediately with a run ID. After a start request, a background scheduler promotes `runnable` runs to `running` in FIFO order, up to the concurrency limit. Parent-generated [child runs](/execution/child-runs) can remain `pending` until a user approves them.

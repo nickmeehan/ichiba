@@ -48,8 +48,8 @@ Add the provider override to the settings file used by the Fabro server. Include
 _version = 1
 
 [llm.providers.modal]
-enabled = true
 base_url = "https://your-endpoint.modal.run/v1"
+enabled = true
 ```
 
 The endpoint URL is not built into Fabro because Modal assigns it to your Shared API or Auto Endpoint.
@@ -116,45 +116,25 @@ digraph Example {
 
 ## Direct SDK environment credentials
 
-The built-in Modal provider reads its two headers from the Fabro vault. `EnvCredentialSource` does not configure Modal automatically because Modal uses two headers instead of one API-key reference.
+The built-in Modal provider authenticates with two headers, `Modal-Key` and `Modal-Secret`, read from the secrets `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET`. Direct SDK use reads the same two names from the process environment.
 
-For direct SDK use, enable Modal and set its endpoint URL in the catalog:
+For direct SDK use, enable Modal and set its endpoint URL in the `[llm]` overlay, then build the client with `fabro_llm::build_client` over a `VaultCredentialSource` whose vault holds both secrets. The catalog you pass to the client must be built from the same settings file with `fabro_llm::build_catalog`.
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [llm.providers.modal]
-enabled = true
 base_url = "https://your-endpoint.modal.run/v1"
-```
-
-Then read both environment variables explicitly and create a typed credential after constructing `catalog` from those settings:
-
-```rust theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-use fabro_auth::ApiCredential;
-use fabro_llm::client::Client;
-use std::collections::HashMap;
-
-let credential = ApiCredential::with_extra_headers(
-    "modal",
-    HashMap::from([
-        ("Modal-Key".to_string(), std::env::var("MODAL_TOKEN_ID")?),
-        (
-            "Modal-Secret".to_string(),
-            std::env::var("MODAL_TOKEN_SECRET")?,
-        ),
-    ]),
-);
-let client = Client::from_credentials(vec![credential], catalog).await?;
+enabled = true
 ```
 
 ## Costs
 
-Fabro estimates Shared API costs from Modal's published Kimi K3 prices. Completion and reasoning tokens use the output rate. Modal responses do not include an authoritative charge, so Fabro reports `cost_source = "estimated"`.
+Fabro estimates Shared API costs from Modal's published Kimi K3 prices. Completion and reasoning tokens use the output rate. Modal responses do not include an authoritative charge, so Fabro reports the cost source as `catalog`.
 
 Dedicated Auto Endpoints use Modal compute billing instead of the Shared API token prices. The Fabro estimate does not represent that compute bill.
 
 ## Troubleshooting
 
-**"provider 'modal' uses openai\_compatible adapter but does not configure base\_url"** — Add the Modal endpoint URL under `[llm.providers.modal]`. Include `/v1`.
+**Modal requests fail with 404** — Add the Modal endpoint URL as `base_url` under `[llm.providers.modal]`. Include `/v1`.
 
 **Modal is not configured** — Set both `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` in the target server vault. One value is not sufficient.
 

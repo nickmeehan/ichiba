@@ -129,9 +129,9 @@ Set either `image.docker` or `image.dockerfile`. `image.docker` can name any ima
 dockerfile = "FROM node:20-slim\nRUN apt-get update && apt-get install -y git"
 ```
 
-Fabro computes an internal snapshot name and looks up that snapshot in Daytona. If it does not exist, Fabro creates it automatically and polls until it reaches `Active` state for up to 30 minutes. A Dockerfile can be inline content or `{ path = "..." }`; paths are resolved relative to the TOML file that declares them and are bundled into run manifests. If the snapshot already exists, Fabro reuses it immediately.
+The sandbox driver builds the image or Dockerfile into a Daytona snapshot named by its inputs (the image reference or Dockerfile text, the resources, and the Daytona API key) and creates the sandbox from it. If that snapshot already exists, it is reused immediately; otherwise the driver builds it and waits for it to reach `Active` state. A Dockerfile can be inline content or `{ path = "..." }`; paths are resolved relative to the TOML file that declares them and are bundled into run manifests.
 
-The exact `image.docker` value is part of the snapshot identity. Prefer a digest such as `registry.example.com/team/image@sha256:...` when the image must be reproducible. If a mutable tag moves without its text changing, Fabro continues to reuse the existing snapshot.
+The exact `image.docker` value is part of the snapshot identity. Prefer a digest such as `registry.example.com/team/image@sha256:...` when the image must be reproducible. If a mutable tag moves without its text changing, the existing snapshot continues to be reused.
 
 <Note>
   If neither image source is configured, sandboxes are created from the `daytona-medium` snapshot, which includes standard dev tools such as Git. To force a new Dockerfile snapshot, change the Dockerfile text, for example by adding a comment.
@@ -240,11 +240,11 @@ If doctor reports missing scopes, regenerate the Daytona key with `write:snapsho
 
 ### Custom snapshot did not roll
 
-Custom Daytona snapshot names are computed from the image reference or Dockerfile, resource hints, tenant scope, and Daytona API key. For `image.docker`, use an immutable digest and update it when the image changes. For `image.dockerfile`, change the Dockerfile text under the selected `[environments.<slug>.image]`.
+Custom Daytona snapshot names (`sandbox-driver-<hex>`) are computed by the sandbox driver from the image reference or Dockerfile, the resources, and the Daytona API key. For `image.docker`, use an immutable digest and update it when the image changes. For `image.dockerfile`, change the Dockerfile text under the selected `[environments.<slug>.image]`.
 
 ### "Timed out waiting for snapshot to become active"
 
-Snapshot creation took longer than 30 minutes. This can happen with large Dockerfiles. Check the snapshot status in the Daytona dashboard — it may still be building. Subsequent runs will reuse the snapshot once it's active.
+Snapshot creation took longer than the sandbox driver's build budget. This can happen with large Dockerfiles. Check the snapshot status in the Daytona dashboard — it may still be building. Subsequent runs will reuse the snapshot once it's active.
 
 ### Git clone fails for private repositories
 

@@ -47,7 +47,7 @@ export FIREWORKS_API_KEY=fw_...
 
 ## Included models
 
-The built-in catalog gives Fireworks offerings the same human-facing model slugs used by other providers. Fireworks account-scoped model paths remain opaque `api_id` values:
+The built-in catalog gives Fireworks offerings the same human-facing model slugs used by other providers. Fireworks account-scoped model paths remain opaque `api_model` values:
 
 | Fabro model slug                                                                     | Fireworks API ID / notes                                                         |
 | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
@@ -62,21 +62,14 @@ The built-in catalog gives Fireworks offerings the same human-facing model slugs
 | `gpt-oss-120b`                                                                       | `accounts/fireworks/models/gpt-oss-120b`                                         |
 | `gpt-oss-20b`                                                                        | `accounts/fireworks/models/gpt-oss-20b`; provider small default                  |
 
-Any other Fireworks serverless model can be added under the provider. Choose a stable Fabro model slug as the table key and put the Fireworks account-scoped path in `api_id` (dots in upstream model names become `p`, e.g. `glm-5.2` → `glm-5p2`):
+Any other Fireworks serverless model can be added under the provider. Choose a stable Fabro model slug as the table key and put the Fireworks account-scoped path in `api_model` (dots in upstream model names become `p`, e.g. `glm-5.2` → `glm-5p2`):
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [llm.providers.fireworks.models."llama-4-maverick"]
-api_id = "accounts/fireworks/models/llama4-maverick-instruct-basic"
 display_name = "Llama 4 Maverick"
-family = "llama-4"
-
-[llm.providers.fireworks.models."llama-4-maverick".limits]
-context_window = 1000000
-
-[llm.providers.fireworks.models."llama-4-maverick".features]
-tools = true
-vision = false
-reasoning = false
+api_model = "accounts/fireworks/models/llama4-maverick-instruct-basic"
+limits = { context_tokens = 1000000, max_output_tokens = 16384 }
+capabilities = { text = true, tools = true }
 ```
 
 Note that Fireworks' `GET /v1/models` endpoint only returns a featured subset of serverless models; a model absent from that list may still be servable. Verify custom additions with `fabro model test`.
@@ -120,7 +113,7 @@ Fireworks caches prompt prefixes automatically — no cache breakpoints or reque
 
 ## Costs
 
-Catalog prices mirror [Fireworks serverless pricing](https://docs.fireworks.ai/serverless/pricing). Fireworks does not return in-band billing, so Fabro reports `cost_source = "estimated"` from catalog rates. `kimi-k3-fast` uses the published 50% Fast tier premium. Other Fast model variants and the Priority service tier are not included in the built-in catalog.
+Catalog prices mirror [Fireworks serverless pricing](https://docs.fireworks.ai/serverless/pricing). Fireworks does not return in-band billing, so Fabro reports the cost source as `catalog`. `kimi-k3-fast` uses the published 50% Fast tier premium. Other Fast model variants and the Priority service tier are not included in the built-in catalog.
 
 ## Troubleshooting
 
@@ -130,7 +123,7 @@ Catalog prices mirror [Fireworks serverless pricing](https://docs.fireworks.ai/s
 
 **402 / insufficient credits** — Serverless inference requires prepaid credit; check your balance in the [Fireworks billing dashboard](https://app.fireworks.ai/settings/billing).
 
-**Unknown model** — Confirm the model's `api_id` matches a Fireworks account-scoped model or router path exactly (`accounts/fireworks/models/...` or `accounts/fireworks/routers/...`), then run `fabro model test --model <fabro-model-id>`. Remember that `GET /v1/models` only lists a featured subset, so absence from that list is not conclusive.
+**Unknown model** — Confirm the model's `api_model` matches a Fireworks account-scoped model or router path exactly (`accounts/fireworks/models/...` or `accounts/fireworks/routers/...`), then run `fabro model test --model <fabro-model-id>`. Remember that `GET /v1/models` only lists a featured subset, so absence from that list is not conclusive.
 
 ## Further reading
 

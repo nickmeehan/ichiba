@@ -43,7 +43,7 @@ Call `wait` again to receive the new turn's result. Call `close_agent` when the 
 
 ## Depth limits
 
-Sub-agents can themselves spawn sub-agents, creating a hierarchy. `max_subagent_depth` limits how deep that tree can grow. By default the depth limit is `1`.
+Sub-agents can themselves spawn sub-agents, creating a hierarchy. The coding agent limits how many child sessions a stage can hold open at once and how deep the tree can grow; the defaults keep one level of children.
 
 If a child tries to exceed the limit, `spawn_agent` returns an error immediately.
 

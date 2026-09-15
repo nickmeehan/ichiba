@@ -155,7 +155,7 @@ components:
           pattern: ^[a-z0-9][a-z0-9-]{0,62}$
           example: docker
         provider:
-          $ref: '#/components/schemas/EnvironmentProvider'
+          $ref: '#/components/schemas/SandboxProviderKind'
         cwd:
           type:
             - string
@@ -203,7 +203,7 @@ components:
           description: Stable revision used with `If-Match` for optimistic concurrency.
           example: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
         provider:
-          $ref: '#/components/schemas/EnvironmentProvider'
+          $ref: '#/components/schemas/SandboxProviderKind'
         cwd:
           type:
             - string
@@ -259,13 +259,14 @@ components:
             failure responses only.
           items:
             type: string
-    EnvironmentProvider:
-      description: Desired environment provider.
+    SandboxProviderKind:
+      description: |
+        Sandbox provider kind. `local`, `docker`, and `daytona` are bundled
+        with the server; any other value names a sandbox-driver plugin
+        configured under `server.sandbox.providers.<kind>`.
       type: string
-      enum:
-        - local
-        - docker
-        - daytona
+      pattern: ^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$
+      example: docker
     EnvironmentApiImageSettings:
       description: >-
         REST-safe environment image settings. Dockerfile sources are

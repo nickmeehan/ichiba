@@ -47,7 +47,7 @@ export OPENROUTER_API_KEY=sk-or-v1-...
 
 ## Included models
 
-The built-in catalog gives OpenRouter offerings the same human-facing model slugs used by direct providers. Vendor-namespaced OpenRouter IDs remain opaque `api_id` values:
+The built-in catalog gives OpenRouter offerings the same human-facing model slugs used by direct providers. Vendor-namespaced OpenRouter IDs remain opaque `api_model` values:
 
 | Fabro model slug                                                                     | OpenRouter API ID / notes                                               |
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
@@ -63,21 +63,14 @@ The built-in catalog gives OpenRouter offerings the same human-facing model slug
 | `minimax-m2.7`, `mimo-v2.5-pro`                                                      | Vendor-prefixed API IDs                                                 |
 | `nemotron-3-super-120b-a12b`, `devstral-2512`                                        | Vendor-prefixed API IDs                                                 |
 
-Any other OpenRouter model can be added under the provider. Choose a stable Fabro model slug as the table key and put OpenRouter's exact vendor/model string in `api_id`:
+Any other OpenRouter model can be added under the provider. Choose a stable Fabro model slug as the table key and put OpenRouter's exact vendor/model string in `api_model`:
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [llm.providers.openrouter.models."llama-4-maverick"]
-api_id = "meta-llama/llama-4-maverick"
 display_name = "Llama 4 Maverick"
-family = "llama-4"
-
-[llm.providers.openrouter.models."llama-4-maverick".limits]
-context_window = 1000000
-
-[llm.providers.openrouter.models."llama-4-maverick".features]
-tools = true
-vision = false
-reasoning = false
+api_model = "meta-llama/llama-4-maverick"
+limits = { context_tokens = 1000000, max_output_tokens = 16384 }
+capabilities = { text = true, tools = true }
 ```
 
 ## Use OpenRouter models
@@ -115,7 +108,7 @@ digraph Example {
 
 ## Cost telemetry
 
-Every OpenRouter response includes an inline `usage.cost` with authoritative USD billing. Fabro surfaces it as `cost_usd` with `cost_source = "authoritative"` on completion responses. Other providers populate the same fields from catalog price estimates with `cost_source = "estimated"`.
+Every OpenRouter response includes an inline `usage.cost` with authoritative USD billing. Fabro surfaces it as the response `cost` with source `provider`. Other providers populate the same field from catalog price estimates with source `catalog`.
 
 The catalog prices on OpenRouter model rows are best-effort estimates used only before the authoritative figure arrives (for example, mid-stream rollups).
 
@@ -137,10 +130,10 @@ OpenRouter's [provider routing preferences](https://openrouter.ai/docs/guides/ro
 
 ## Attribution headers
 
-Fabro does not send OpenRouter's optional attribution headers (`HTTP-Referer`, `X-Title`) by default, so self-hosted installations stay anonymous on OpenRouter's public app leaderboard. Workflow runs do send `x-session-id: <run-id>` for request grouping; an explicit provider `extra_headers` value for that header takes precedence. To opt in to attribution:
+Fabro does not send OpenRouter's optional attribution headers (`HTTP-Referer`, `X-Title`) by default, so self-hosted installations stay anonymous on OpenRouter's public app leaderboard. Workflow runs do send `x-session-id: <run-id>` for request grouping; an explicit provider `default_headers` value for that header takes precedence. To opt in to attribution:
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[llm.providers.openrouter.extra_headers]
+[llm.providers.openrouter.default_headers]
 "HTTP-Referer" = "https://your-site.example"
 "X-Title" = "Your App"
 ```
@@ -153,7 +146,7 @@ Fabro does not send OpenRouter's optional attribution headers (`HTTP-Referer`, `
 
 **402 / insufficient credits** — Paid OpenRouter models require prepaid credit; check your balance at [openrouter.ai/credits](https://openrouter.ai/credits).
 
-**Unknown model** — Confirm the model's `api_id` matches an OpenRouter slug exactly (including the vendor prefix), then run `fabro model test --model <fabro-model-id>`.
+**Unknown model** — Confirm the model's `api_model` matches an OpenRouter slug exactly (including the vendor prefix), then run `fabro model test --model <fabro-model-id>`.
 
 ## Further reading
 

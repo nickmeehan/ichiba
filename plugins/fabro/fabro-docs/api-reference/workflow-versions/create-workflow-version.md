@@ -4,7 +4,7 @@
 
 # Create Workflow Version
 
-> Validates and stores an immutable workflow package in content-addressed storage. Repeating the same canonical content returns the same identifier.
+> Validates and stores an immutable workflow package in content-addressed storage. Repeating the same canonical content returns the same identifier. Requires an authenticated user or a worker token with the `agent:run_tools` capability. Ordinary worker tokens cannot register versions. Registration creates no run and starts no execution.
 
 
 
@@ -74,7 +74,9 @@ paths:
       description: >-
         Validates and stores an immutable workflow package in content-addressed
         storage. Repeating the same canonical content returns the same
-        identifier.
+        identifier. Requires an authenticated user or a worker token with the
+        `agent:run_tools` capability. Ordinary worker tokens cannot register
+        versions. Registration creates no run and starts no execution.
       operationId: createWorkflowVersion
       requestBody:
         required: true

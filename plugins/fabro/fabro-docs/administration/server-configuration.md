@@ -184,9 +184,10 @@ The GitHub OAuth client ID still lives under `[server.integrations.github].clien
 
 ### `[server.sandbox.providers]` section
 
-Controls which sandbox providers the server may launch. Missing provider entries default to
-`enabled = true` for backward compatibility. Disabling a provider rejects new runs whose effective
-provider is disabled; dry-run Docker/Daytona runs use the local provider and are governed by
+Controls which sandbox providers the server may launch, keyed by provider kind. The bundled
+providers `local`, `docker`, and `daytona` run inside the server and default to `enabled = true`
+when their entry is missing. Disabling a provider rejects new runs whose effective provider is
+disabled; dry-run Docker/Daytona runs use the local provider and are governed by
 `server.sandbox.providers.local.enabled`.
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
@@ -199,6 +200,34 @@ enabled = true
 [server.sandbox.providers.daytona]
 enabled = true
 ```
+
+Any other key names a [sandbox-driver](https://github.com/lithoscomputer/sandbox-driver) plugin:
+an executable that speaks the sandbox-driver JSON-RPC protocol on stdin and stdout. The kind must
+be lowercase ASCII letters, digits, and interior hyphens. The plugin starts with a scrubbed
+environment: only `env` and the ambient variables listed in `inherit_env` reach it. Bundled
+providers reject these plugin keys.
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[server.sandbox.providers.e2b]
+enabled = true
+path = "/opt/fabro/plugins/fabro-sandbox-e2b"   # default: `fabro-sandbox-<kind>` on PATH
+sha256 = "0123…cdef"                            # pin the executable; `dev = true` skips it
+args = []
+inherit_env = ["PATH"]
+
+[server.sandbox.providers.e2b.env]
+E2B_API_URL = "https://api.e2b.example"
+```
+
+| Key           | Description                                                   | Default                          |
+| ------------- | ------------------------------------------------------------- | -------------------------------- |
+| `enabled`     | Whether runs may select this provider                         | `true`                           |
+| `path`        | Plugin executable path                                        | `fabro-sandbox-<kind>` on `PATH` |
+| `sha256`      | Pinned SHA-256 of the executable, hex                         | none                             |
+| `dev`         | Allow launching without a checksum                            | `false`                          |
+| `args`        | Arguments passed to the executable                            | `[]`                             |
+| `env`         | Complete environment for the plugin, apart from `inherit_env` | `{}`                             |
+| `inherit_env` | Ambient variables forwarded from the server process           | `[]`                             |
 
 ### `[server.slatedb]` section
 
@@ -281,11 +310,11 @@ Vault values and their migration backups retain Fabro's plaintext-at-rest behavi
 
 The `[run.*]` sections in `settings.toml` act as defaults for every run.
 
-On a same-machine setup, `settings.toml` is the shared machine-default layer under `workflow.toml` and `.fabro/project.toml`.
+Run creation uses the registered workflow version's `workflow.toml` above the server defaults, with explicit `RunIntent` arguments at highest precedence. The same rules apply to local and remote clients. Project and user config are not submitted to the create endpoint. Manifest-based preflight, validation, and graph previews still accept their bundled configuration layers.
 
-On a remote setup, the client bundles workflow, project, and user config into the run manifest. The server then layers those bundled client configs over its own local defaults for run-shaped fields. Server-owned values like `[server.storage]`, `[server.api]`, `[server.web]`, and `[server.scheduler]` always come from the server machine's own `settings.toml` or `fabro server start` flags.
+Server-owned values like `[server.storage]`, `[server.api]`, `[server.web]`, and `[server.scheduler]` come from the server machine's `settings.toml` or `fabro server start` flags. Environments and MCP server references resolve against the server's catalogs.
 
-Merge rules follow the normative matrix: TOML `[run.inputs]` tables replace wholesale, CLI `-I` / `--input` values replayed from run manifests merge per key at highest precedence, environment `env` and `labels` merge by key, `[run.prepare.steps]` replaces whole-list, and `[[run.hooks]]` merge by optional `id`. Most other fields use "higher-precedence wins" field-wise merging.
+Merge rules follow the normative matrix: TOML `[run.inputs]` tables replace wholesale, explicit intent inputs merge per key at highest precedence, environment `env` and `labels` merge by key, `[run.prepare.steps]` replaces whole-list, and `[[run.hooks]]` merge by optional `id`. Most other fields use "higher-precedence wins" field-wise merging.
 
 ### `[server.logging]` section
 
@@ -304,12 +333,22 @@ The CLI has its own `[cli.logging]` section.
 
 ### `[run.git.author]` section
 
-Customize the git author identity used for checkpoint commits. When not set, defaults to `fabro` / `fabro@local`.
+Override the Git author and committer identity for every commit a run creates: Fabro's own checkpoint and metadata commits, and any `git commit` a prepare step, command stage, or agent tool runs inside the sandbox. Fabro resolves one identity per run and injects it as `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` into every workflow command, so the primary checkout, additional clones, and repositories a workflow clones itself all commit as the same identity. It does not write to any Git configuration file.
 
-| Key     | Description      | Default         |
-| ------- | ---------------- | --------------- |
-| `name`  | Git author name  | `"fabro"`       |
-| `email` | Git author email | `"fabro@local"` |
+When a field is not set, Fabro derives it from the run's GitHub credential:
+
+| Credential                      | Name                   | Email                                       |
+| ------------------------------- | ---------------------- | ------------------------------------------- |
+| GitHub App (`strategy = "app"`) | `<slug>[bot]`          | `<id>+<slug>[bot]@users.noreply.github.com` |
+| Token (`strategy = "token"`)    | the token's user login | `<id>+<login>@users.noreply.github.com`     |
+| None                            | `Fabro`                | `noreply@fabro.sh`                          |
+
+Setting both `name` and `email` skips the credential lookup. Setting one field overlays it on the derived identity. A lookup failure for the selected credential fails the run at setup; Fabro never silently switches to another author. The resolved identity is recorded in the run's event stream as `git.identity.resolved` and in the run state as `git_identity`.
+
+| Key     | Description                    | Default                                  |
+| ------- | ------------------------------ | ---------------------------------------- |
+| `name`  | Git author and committer name  | derived from the run's GitHub credential |
+| `email` | Git author and committer email | derived from the run's GitHub credential |
 
 ### `[server.integrations.github]` section
 

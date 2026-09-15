@@ -4,9 +4,9 @@
 
 # Create Run
 
-> Creates a new workflow run in `submitted` status from either a self-contained legacy manifest or an immutable workflow-version intent. Creation does not start or schedule the run.
+> Creates a new workflow run in `submitted` status from an immutable workflow-version intent. Creation does not start or schedule the run.
 
-Failures return the standard error body. The intent lane responds `404` (`workflow_version_not_found`, `environment_not_found`), `422` (`run_intent_invalid`, `target_invalid`, `target_environment_unsupported`, `pull_request_environment_unsupported`, `workflow_version_unusable`, `run_compile_invalid`), `503` (`integration_unavailable`), or `500` (`workflow_version_store_error`, `credential_store_error`, `variable_store_error`, `run_persistence_failed`).
+Failures return the standard error body. The endpoint responds `404` (`workflow_version_not_found`, `environment_not_found`), `422` (`run_intent_invalid`, `target_invalid`, `target_environment_unsupported`, `pull_request_environment_unsupported`, `workflow_version_unusable`, `run_compile_invalid`), `503` (`integration_unavailable`), or `500` (`workflow_version_store_error`, `credential_store_error`, `variable_store_error`, `run_persistence_failed`).
 
 
 
@@ -74,12 +74,11 @@ paths:
         - Runs
       summary: Create Run
       description: >-
-        Creates a new workflow run in `submitted` status from either a
-        self-contained legacy manifest or an immutable workflow-version intent.
-        Creation does not start or schedule the run.
+        Creates a new workflow run in `submitted` status from an immutable
+        workflow-version intent. Creation does not start or schedule the run.
 
 
-        Failures return the standard error body. The intent lane responds `404`
+        Failures return the standard error body. The endpoint responds `404`
         (`workflow_version_not_found`, `environment_not_found`), `422`
         (`run_intent_invalid`, `target_invalid`,
         `target_environment_unsupported`,
@@ -93,7 +92,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateRunRequest'
+              $ref: '#/components/schemas/RunIntent'
       responses:
         '201':
           description: Run created
@@ -102,7 +101,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Run'
         '400':
-          description: Invalid JSON or legacy manifest
+          description: Invalid JSON
           headers:
             x-request-id:
               $ref: '#/components/headers/XRequestId'
@@ -112,13 +111,36 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    CreateRunRequest:
+    RunIntent:
       description: >-
-        Transitional create body used while callers migrate independently from
-        self-contained manifests to immutable workflow-version intents.
-      oneOf:
-        - $ref: '#/components/schemas/RunManifest'
-        - $ref: '#/components/schemas/RunIntent'
+        A request to create, but not start, one run from an immutable workflow
+        version and an explicit workspace target.
+      type: object
+      additionalProperties: false
+      required:
+        - workflow_version_id
+        - target
+        - args
+      properties:
+        workflow_version_id:
+          $ref: '#/components/schemas/WorkflowVersionId'
+        target:
+          $ref: '#/components/schemas/RunTarget'
+        args:
+          $ref: '#/components/schemas/RunIntentArgs'
+        environment_id:
+          type: string
+          description: Server environment catalog ID. Omission selects `default`.
+        parent_id:
+          type: string
+          description: Optional orchestration parent run ID.
+        title:
+          type: string
+          maxLength: 100
+          description: Optional explicit run title, normalized by the server.
+        goal:
+          type: string
+          description: Optional inline goal override.
     Run:
       description: Canonical public run shape.
       type: object
@@ -273,87 +295,67 @@ components:
             failure responses only.
           items:
             type: string
-    RunManifest:
-      description: Self-contained workflow run manifest.
-      type: object
-      required:
-        - version
-        - cwd
-        - target
-        - workflows
-      properties:
-        version:
-          type: integer
-          description: Manifest schema version.
-          example: 1
-        parent_id:
-          type:
-            - string
-            - 'null'
-          description: >-
-            Optional orchestration parent run ID. Fork and rewind lineage use
-            separate fields and should not set this value.
-          example: 01HV6D7S5YF4Z4B2M7K4N0Q6T8
-        title:
-          type:
-            - string
-            - 'null'
-          maxLength: 100
-          description: >-
-            Optional explicit run title. The server trims leading/trailing
-            whitespace, rejects blank values, rejects control characters and
-            newline characters, and requires at most 100 characters.
-          example: Add rate limiting to auth endpoints
-        cwd:
-          type: string
-          description: CLI working directory at invocation time.
-          example: /tmp/project
-        git:
-          $ref: '#/components/schemas/GitContext'
-        goal:
-          $ref: '#/components/schemas/ManifestGoal'
-        args:
-          $ref: '#/components/schemas/ManifestArgs'
-        target:
-          $ref: '#/components/schemas/ManifestTarget'
-        configs:
-          type: array
-          items:
-            $ref: '#/components/schemas/ManifestConfig'
-        workflows:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/ManifestWorkflow'
-    RunIntent:
+    WorkflowVersionId:
       description: >-
-        A request to create, but not start, one run from an immutable workflow
-        version and an explicit workspace target.
+        SHA-256 identity of validated canonical workflow-version bytes. Hex
+        input is case-insensitive; Fabro emits the canonical lowercase form.
+      type: string
+      pattern: ^[0-9A-Fa-f]{64}$
+      example: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+    RunTarget:
+      description: Workspace content and location requested for a run.
+      oneOf:
+        - $ref: '#/components/schemas/GitRunTarget'
+        - $ref: '#/components/schemas/NoneRunTarget'
+        - $ref: '#/components/schemas/FolderRunTarget'
+      discriminator:
+        propertyName: kind
+        mapping:
+          git:
+            $ref: '#/components/schemas/GitRunTarget'
+          none:
+            $ref: '#/components/schemas/NoneRunTarget'
+          folder:
+            $ref: '#/components/schemas/FolderRunTarget'
+    RunIntentArgs:
+      description: Structured run overrides accepted by workflow-version creation.
       type: object
       additionalProperties: false
-      required:
-        - workflow_version_id
-        - target
-        - args
       properties:
-        workflow_version_id:
-          $ref: '#/components/schemas/WorkflowVersionId'
-        target:
-          $ref: '#/components/schemas/RunTarget'
-        args:
-          $ref: '#/components/schemas/RunIntentArgs'
-        environment_id:
+        model:
           type: string
-          description: Server environment catalog ID. Omission selects `default`.
-        parent_id:
+        provider:
           type: string
-          description: Optional orchestration parent run ID.
-        title:
-          type: string
-          maxLength: 100
-          description: Optional explicit run title, normalized by the server.
-        goal:
-          type: string
-          description: Optional inline goal override.
+          description: LLM provider; this does not select the sandbox environment.
+        inputs:
+          type: object
+          additionalProperties:
+            anyOf:
+              - type: string
+              - type: number
+              - type: integer
+              - type: boolean
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+        dry_run:
+          type: boolean
+          description: >-
+            Overrides `run.execution.mode`: true selects `dry_run`, false
+            selects `normal`, and omission inherits the lower-precedence
+            setting.
+        auto_approve:
+          type: boolean
+          description: >-
+            Overrides `run.execution.approval`: true selects `auto`, false
+            selects `prompt`, and omission inherits the lower-precedence
+            setting.
+        preserve_sandbox:
+          type: boolean
+          description: >-
+            Overrides `run.environment.lifecycle.preserve`; omission inherits
+            the lower-precedence setting.
     WorkflowRef:
       type: object
       required:
@@ -730,175 +732,84 @@ components:
           description: >-
             Server-generated request identifier; matches the x-request-id
             response header.
-    GitContext:
-      description: Observable git state captured before the run starts.
-      type: object
-      required:
-        - origin_url
-        - branch
-        - dirty
-      properties:
-        origin_url:
-          type: string
-          description: Remote origin URL with any embedded credentials removed.
-          example: https://github.com/acme/my-app.git
-        branch:
-          type: string
-          description: Current branch name.
-          example: feature/foo
-        sha:
-          type:
-            - string
-            - 'null'
-          description: Current commit SHA, when known.
-          example: abc123def
-        dirty:
-          $ref: '#/components/schemas/DirtyStatus'
-    ManifestGoal:
-      description: Resolved goal kind and content.
-      type: object
-      required:
-        - type
-        - text
-      properties:
-        type:
-          type: string
-          enum:
-            - value
-            - file
-            - graph
-        text:
-          type: string
-          description: Resolved goal content.
-    ManifestArgs:
-      description: Sparse command-local args that affect run settings.
-      type: object
-      properties:
-        model:
-          type: string
-        provider:
-          type: string
-        environment:
-          type: string
-          description: Named environment slug to select for the run.
-        verbose:
-          type: boolean
-        dry_run:
-          type: boolean
-        auto_approve:
-          type: boolean
-        preserve_sandbox:
-          type: boolean
-        label:
-          type: array
-          items:
-            type: string
-        input:
-          type: array
-          description: Raw repeated CLI input overrides, each in `KEY=VALUE` form.
-          items:
-            type: string
-    ManifestTarget:
-      type: object
-      required:
-        - path
-      properties:
-        path:
-          type: string
-          description: Resolved path that keys into the workflows map.
-          example: .fabro/workflows/smoke/workflow.fabro
-    ManifestConfig:
-      type: object
-      required:
-        - type
-      properties:
-        type:
-          type: string
-          enum:
-            - project
-            - user
-        path:
-          type:
-            - string
-            - 'null'
-        source:
-          type:
-            - string
-            - 'null'
-    ManifestWorkflow:
-      type: object
-      required:
-        - source
-      properties:
-        source:
-          type: string
-        config:
-          $ref: '#/components/schemas/ManifestWorkflowConfig'
-        files:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/ManifestFileEntry'
-    WorkflowVersionId:
+    GitRunTarget:
       description: >-
-        SHA-256 identity of validated canonical workflow-version bytes. Hex
-        input is case-insensitive; Fabro emits the canonical lowercase form.
-      type: string
-      pattern: ^[0-9A-Fa-f]{64}$
-      example: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
-    RunTarget:
-      description: Workspace content and location requested for a run.
-      oneOf:
-        - $ref: '#/components/schemas/GitRunTarget'
-        - $ref: '#/components/schemas/NoneRunTarget'
-        - $ref: '#/components/schemas/FolderRunTarget'
-      discriminator:
-        propertyName: kind
-        mapping:
-          git:
-            $ref: '#/components/schemas/GitRunTarget'
-          none:
-            $ref: '#/components/schemas/NoneRunTarget'
-          folder:
-            $ref: '#/components/schemas/FolderRunTarget'
-    RunIntentArgs:
-      description: Structured run overrides accepted by workflow-version creation.
+        Public github.com repository target. The branch names the attached
+        working branch. An optional tag selects a release at worker start, and
+        an optional exact SHA is authoritative when both are present.
       type: object
       additionalProperties: false
+      required:
+        - kind
+        - repo
+        - branch
       properties:
-        model:
+        kind:
           type: string
-        provider:
+          enum:
+            - git
+        repo:
           type: string
-          description: LLM provider; this does not select the sandbox environment.
-        inputs:
-          type: object
-          additionalProperties:
-            anyOf:
-              - type: string
-              - type: number
-              - type: integer
-              - type: boolean
-        labels:
-          type: object
-          additionalProperties:
-            type: string
-        dry_run:
-          type: boolean
+          description: GitHub repository slug in `owner/name` form.
+          example: acme/my-app
+        branch:
+          type: string
+          description: Required attached working branch name, preserved exactly.
+          example: feature/foo
+        tag:
+          type: string
+          minLength: 1
           description: >-
-            Overrides `run.execution.mode`: true selects `dry_run`, false
-            selects `normal`, and omission inherits the lower-precedence
-            setting.
-        auto_approve:
-          type: boolean
+            Optional bare tag name. Prefixes such as `refs/tags/` and `tags/`
+            are rejected. Without `sha`, the worker resolves this tag when the
+            sandbox starts and fails if it is unavailable.
+          example: v1.2.3
+        sha:
+          type: string
+          pattern: ^[0-9A-Fa-f]{40}$
           description: >-
-            Overrides `run.execution.approval`: true selects `auto`, false
-            selects `prompt`, and omission inherits the lower-precedence
-            setting.
-        preserve_sandbox:
-          type: boolean
-          description: >-
-            Overrides `run.environment.lifecycle.preserve`; omission inherits
-            the lower-precedence setting.
+            Optional exact commit. The server lowercase-normalizes its syntax
+            but does not resolve it, prove branch ancestry, or prove that it
+            matches an accompanying tag. When present, this exact commit wins.
+    NoneRunTarget:
+      description: >-
+        Empty workspace with no repository. Docker and Daytona accept this
+        target and suppress cloning even when workflow settings enable it. Local
+        environments reject it; Local scratch allocation is a separate future
+        capability.
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+      properties:
+        kind:
+          type: string
+          enum:
+            - none
+    FolderRunTarget:
+      description: >-
+        Existing directory on the Fabro server, executed in place by a Local
+        environment. The submitted path must be absolute and name an existing
+        directory; Fabro resolves symlinks and persists its canonical UTF-8
+        path. This target is intended for trusted single-tenant deployments.
+        Docker and Daytona environments always reject it. This target does not
+        add Local Git cloning or Local scratch workspaces. Folder runs execute
+        in place without Fabro Git checkpoints, so fork and rewind are
+        unavailable.
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - path
+      properties:
+        kind:
+          type: string
+          enum:
+            - folder
+        path:
+          type: string
+          minLength: 1
+          description: Absolute path on the Fabro server, not on the API caller's machine.
     ResolvedAutomationGitWorkflowSource:
       description: >-
         Workflow source coordinate and exact commit captured when an automation
@@ -1175,111 +1086,6 @@ components:
           type: integer
           format: uint64
           minimum: 0
-    DirtyStatus:
-      type: string
-      enum:
-        - clean
-        - dirty
-        - unknown
-    ManifestWorkflowConfig:
-      type: object
-      required:
-        - path
-        - source
-      properties:
-        path:
-          type: string
-        source:
-          type: string
-    ManifestFileEntry:
-      description: A bundled file with discovery metadata.
-      type: object
-      required:
-        - content
-        - ref
-      properties:
-        content:
-          type: string
-        ref:
-          $ref: '#/components/schemas/ManifestFileRef'
-    GitRunTarget:
-      description: >-
-        Public github.com repository target. The branch names the attached
-        working branch. An optional tag selects a release at worker start, and
-        an optional exact SHA is authoritative when both are present.
-      type: object
-      additionalProperties: false
-      required:
-        - kind
-        - repo
-        - branch
-      properties:
-        kind:
-          type: string
-          enum:
-            - git
-        repo:
-          type: string
-          description: GitHub repository slug in `owner/name` form.
-          example: acme/my-app
-        branch:
-          type: string
-          description: Required attached working branch name, preserved exactly.
-          example: feature/foo
-        tag:
-          type: string
-          minLength: 1
-          description: >-
-            Optional bare tag name. Prefixes such as `refs/tags/` and `tags/`
-            are rejected. Without `sha`, the worker resolves this tag when the
-            sandbox starts and fails if it is unavailable.
-          example: v1.2.3
-        sha:
-          type: string
-          pattern: ^[0-9A-Fa-f]{40}$
-          description: >-
-            Optional exact commit. The server lowercase-normalizes its syntax
-            but does not resolve it, prove branch ancestry, or prove that it
-            matches an accompanying tag. When present, this exact commit wins.
-    NoneRunTarget:
-      description: >-
-        Empty workspace with no repository. Docker and Daytona accept this
-        target and suppress cloning even when workflow settings enable it. Local
-        environments reject it; Local scratch allocation is a separate future
-        capability.
-      type: object
-      additionalProperties: false
-      required:
-        - kind
-      properties:
-        kind:
-          type: string
-          enum:
-            - none
-    FolderRunTarget:
-      description: >-
-        Existing directory on the Fabro server, executed in place by a Local
-        environment. The submitted path must be absolute and name an existing
-        directory; Fabro resolves symlinks and persists its canonical UTF-8
-        path. This target is intended for trusted single-tenant deployments.
-        Docker and Daytona environments always reject it. This target does not
-        add Local Git cloning or Local scratch workspaces. Folder runs execute
-        in place without Fabro Git checkpoints, so fork and rewind are
-        unavailable.
-      type: object
-      additionalProperties: false
-      required:
-        - kind
-        - path
-      properties:
-        kind:
-          type: string
-          enum:
-            - folder
-        path:
-          type: string
-          minLength: 1
-          description: Absolute path on the Fabro server, not on the API caller's machine.
     IdpIdentity:
       type: object
       required:
@@ -1426,12 +1232,13 @@ components:
         - approved
         - denied
     SandboxProviderKind:
-      description: Sandbox provider discriminator.
+      description: |
+        Sandbox provider kind. `local`, `docker`, and `daytona` are bundled
+        with the server; any other value names a sandbox-driver plugin
+        configured under `server.sandbox.providers.<kind>`.
       type: string
-      enum:
-        - local
-        - docker
-        - daytona
+      pattern: ^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$
+      example: docker
     RunSandboxRuntime:
       type: object
       required:
@@ -1470,24 +1277,6 @@ components:
             - string
             - 'null'
         primary_repo_link:
-          type:
-            - string
-            - 'null'
-    ManifestFileRef:
-      type: object
-      required:
-        - type
-        - original
-      properties:
-        type:
-          type: string
-          enum:
-            - file_inline
-            - import
-            - dockerfile
-        original:
-          type: string
-        from:
           type:
             - string
             - 'null'

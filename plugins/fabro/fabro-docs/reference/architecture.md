@@ -50,7 +50,7 @@ Key server config options:
 
 ### Run lifecycle
 
-1. **Submit** — `POST /api/v1/runs` with a Graphviz workflow source. The run is created with status `submitted` and the response returns immediately with the run ID.
+1. **Submit** — Register immutable workflow content with `POST /api/v1/workflow-versions`, then submit `POST /api/v1/runs` with its `workflow_version_id` and an explicit target. The run is created with status `submitted` and the response returns immediately with the run ID.
 2. **Start request** — `POST /api/v1/runs/{id}/start` moves normal runs to `runnable`. Parent-generated [child runs](/execution/child-runs) may move to `pending` with `approval_required`.
 3. **Approve if needed** — `POST /api/v1/runs/{id}/approve` moves an approval-gated run to `runnable`; `deny` fails it with `approval_denied`.
 4. **Schedule** — A background scheduler promotes `runnable` runs to `running` in FIFO order, up to the concurrency limit.

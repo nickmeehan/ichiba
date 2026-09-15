@@ -207,7 +207,7 @@ components:
         - env
       properties:
         provider:
-          $ref: '#/components/schemas/EnvironmentProvider'
+          $ref: '#/components/schemas/SandboxProviderKind'
         cwd:
           type:
             - string
@@ -244,7 +244,6 @@ components:
         - checkpoint
         - clone
         - run_branch
-        - meta_branch
         - environment
         - notifications
         - interviews
@@ -283,8 +282,6 @@ components:
           $ref: '#/components/schemas/RunCloneSettings'
         run_branch:
           $ref: '#/components/schemas/RunBranchSettings'
-        meta_branch:
-          $ref: '#/components/schemas/RunMetaBranchSettings'
         environment:
           $ref: '#/components/schemas/RunEnvironmentSettings'
         notifications:
@@ -343,13 +340,14 @@ components:
       type: object
       additionalProperties:
         type: string
-    EnvironmentProvider:
-      description: Desired environment provider.
+    SandboxProviderKind:
+      description: |
+        Sandbox provider kind. `local`, `docker`, and `daytona` are bundled
+        with the server; any other value names a sandbox-driver plugin
+        configured under `server.sandbox.providers.<kind>`.
       type: string
-      enum:
-        - local
-        - docker
-        - daytona
+      pattern: ^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$
+      example: docker
     EnvironmentImageSettings:
       type: object
       required:
@@ -493,9 +491,10 @@ components:
           type: boolean
           default: false
           description: |
-            When true, Fabro-managed run-branch checkpoint commits bypass
-            local Git commit hooks. Does not affect Fabro `[[run.hooks]]`
-            or metadata-branch snapshots. Defaults to false.
+            Accepted for compatibility. Fabro-managed run-branch checkpoint
+            commits never run local Git commit hooks: the sandbox driver
+            disables repository hooks on every git command it runs. Does not
+            affect Fabro `[[run.hooks]]`. Defaults to false.
     RunCloneSettings:
       type: object
       required:
@@ -510,16 +509,6 @@ components:
           default: 100
           description: Git history depth. Set to 0 to clone full history.
     RunBranchSettings:
-      type: object
-      required:
-        - enabled
-        - push
-      properties:
-        enabled:
-          type: boolean
-        push:
-          type: boolean
-    RunMetaBranchSettings:
       type: object
       required:
         - enabled
@@ -544,7 +533,7 @@ components:
         id:
           type: string
         provider:
-          $ref: '#/components/schemas/EnvironmentProvider'
+          $ref: '#/components/schemas/SandboxProviderKind'
         cwd:
           type:
             - string

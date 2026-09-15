@@ -441,17 +441,19 @@ components:
       description: Native reasoning-effort level requested for an LLM call.
       type: string
       enum:
+        - minimal
         - low
         - medium
         - high
         - xhigh
         - max
     BillingSpeed:
-      description: Optional provider-specific model speed tier used for cost estimates.
+      description: 'lithos `Speed`: the requested latency or cost tier.'
       type: string
       enum:
-        - standard
         - fast
+        - balanced
+        - economical
   headers:
     XRequestId:
       description: >

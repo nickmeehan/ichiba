@@ -273,18 +273,13 @@ components:
           items:
             type: string
     ServerSandboxProvidersSettings:
+      description: |
+        Sandbox provider policy keyed by provider kind. The bundled kinds
+        (`local`, `docker`, `daytona`) are always present; any other key names
+        a sandbox-driver plugin and carries its launch settings.
       type: object
-      required:
-        - local
-        - docker
-        - daytona
-      properties:
-        local:
-          $ref: '#/components/schemas/ServerSandboxProviderSettings'
-        docker:
-          $ref: '#/components/schemas/ServerSandboxProviderSettings'
-        daytona:
-          $ref: '#/components/schemas/ServerSandboxProviderSettings'
+      additionalProperties:
+        $ref: '#/components/schemas/ServerSandboxProviderSettings'
     ObjectStoreSettings:
       oneOf:
         - $ref: '#/components/schemas/ObjectStoreLocalSettings'
@@ -343,6 +338,8 @@ components:
       properties:
         enabled:
           type: boolean
+        plugin:
+          $ref: '#/components/schemas/SandboxPluginSettings'
     ObjectStoreLocalSettings:
       type: object
       required:
@@ -392,11 +389,38 @@ components:
           oneOf:
             - $ref: '#/components/schemas/WebhookStrategy'
             - type: 'null'
+    SandboxPluginSettings:
+      description: How the server launches a sandbox-driver plugin executable.
+      type: object
+      properties:
+        path:
+          type: string
+          description: Executable path. Absent means `fabro-sandbox-<kind>` on `PATH`.
+        sha256:
+          type: string
+          description: Pinned SHA-256 of the executable, hex.
+        dev:
+          type: boolean
+          description: Allow launching without a checksum.
+        args:
+          type: array
+          items:
+            type: string
+        env:
+          $ref: '#/components/schemas/StringMap'
+        inherit_env:
+          type: array
+          items:
+            type: string
     WebhookStrategy:
       type: string
       enum:
         - tailscale_funnel
         - server_url
+    StringMap:
+      type: object
+      additionalProperties:
+        type: string
   securitySchemes:
     BearerAuth:
       type: http
