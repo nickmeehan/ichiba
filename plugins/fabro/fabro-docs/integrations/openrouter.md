@@ -6,7 +6,7 @@
 
 > Route Fabro models through OpenRouter's multi-provider gateway
 
-[OpenRouter](https://openrouter.ai/) is an aggregator that fronts hundreds of models behind one OpenAI-compatible API. Fabro ships a disabled `openrouter` provider entry with a curated model catalog, so you can opt in from `settings.toml` without changing Fabro code.
+[OpenRouter](https://openrouter.ai/) is an aggregator that fronts hundreds of models behind one OpenAI-compatible API. Fabro ships an enabled `openrouter` provider entry with a curated model catalog; it needs only an API key, and `settings.toml` can adjust it without changing Fabro code.
 
 ## Prerequisites
 

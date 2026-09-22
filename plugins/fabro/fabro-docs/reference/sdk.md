@@ -452,7 +452,7 @@ let result = client.complete_with_context(request, context).await;
 
 ### Provider adapters
 
-Providers are lithos adapters selected by the catalog `adapter` id: `anthropic`, `openai`, `gemini`, `openai-compatible`, and `bedrock`. A new OpenAI-compatible endpoint needs a catalog entry, not code.
+A provider names one lithos adapter in `adapter` (`http`, the default, or `bedrock`) and lists the wire codecs its host speaks in `codecs` (`openai-chat`, the default, `openai-responses`, `anthropic-messages`, `gemini-generate`, or `bedrock-converse`). A new OpenAI-compatible endpoint needs a catalog entry, not code.
 
 To add a custom transport, implement the lithos `ProviderAdapter` trait and register it with `ClientOptions::with_adapter`. `fabro_llm::gateway::GatewayAdapter` is Fabro's own example: it posts each request to a Fabro server's completions endpoint, which returns lithos `Response` JSON and streams lithos `StreamEvent` JSON verbatim.
 

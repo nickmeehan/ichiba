@@ -53,8 +53,8 @@ tags:
     description: Workflow definitions and execution
   - name: Workflow Versions
     description: Immutable, content-addressed workflow packages
-  - name: Billing
-    description: Token counts and billed totals
+  - name: Usage
+    description: Token counts and costs
   - name: Insights
     description: SQL query editor and history
   - name: Models
@@ -130,7 +130,7 @@ components:
         - source_directory
         - timestamps
         - timing
-        - billing
+        - usage
         - size
         - ask_fabro
         - diff
@@ -200,10 +200,11 @@ components:
           description: |
             Run-level timing rollup. Wall time is the run's clock duration;
             active timing sums work across stage visits.
-        billing:
-          oneOf:
-            - $ref: '#/components/schemas/RunBillingSummary'
-            - type: 'null'
+        usage:
+          $ref: '#/components/schemas/Usage'
+          description: >-
+            The run's usage summed across every stage visit so far: the
+            conclusion's total once the run ended, else the sum of the stages'.
         size:
           $ref: '#/components/schemas/RunSize'
         ask_fabro:
@@ -506,16 +507,20 @@ components:
           minimum: 0
           description: Equals `inference_time_ms + tool_time_ms`.
           example: 180000
-    RunBillingSummary:
+    Usage:
+      description: >-
+        lithos `Usage`: token counts and, when known, what they cost. `cost` is
+        absent when there is no cost data, never zero. A sum has a cost only
+        when every part that used tokens was priced; its `source` is the parts'
+        shared source, or `application` when they differ.
       type: object
       required:
-        - total_usd_micros
+        - tokens
       properties:
-        total_usd_micros:
-          type:
-            - integer
-            - 'null'
-          format: int64
+        tokens:
+          $ref: '#/components/schemas/TokenCounts'
+        cost:
+          $ref: '#/components/schemas/Cost'
     RunSize:
       type: string
       enum:
@@ -524,7 +529,7 @@ components:
         - M
         - L
         - XL
-      description: Run size bucket derived from current best-effort billed usage.
+      description: Run size bucket derived from the run's current cost.
     AskFabro:
       description: Readiness and defaults for starting an Ask Fabro session on this run.
       type: object
@@ -917,6 +922,58 @@ components:
           type: integer
           format: uint64
           minimum: 0
+    TokenCounts:
+      description: >
+        lithos `TokenCounts`: five disjoint token buckets. Every token is
+        counted in exactly one, so their plain sum is the total. `input`
+        excludes cache reads and writes, while `output` excludes reasoning
+        tokens when the provider reports them separately. A bucket that is
+        absent reads as zero.
+      type: object
+      properties:
+        input:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Prompt tokens that were neither read from nor written to a cache.
+        output:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Completion tokens that are not reasoning tokens.
+        reasoning:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Completion tokens spent on reasoning, priced at the output rate.
+        cache_read:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Prompt tokens served from a provider cache.
+        cache_write:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Prompt tokens written into a provider cache.
+    Cost:
+      description: 'lithos `Cost`: a USD amount in micros and where it came from.'
+      type: object
+      required:
+        - usd_micros
+        - source
+      properties:
+        usd_micros:
+          type: integer
+          format: uint64
+          minimum: 0
+        source:
+          $ref: '#/components/schemas/CostSource'
     IdpIdentity:
       type: object
       required:
@@ -1111,6 +1168,16 @@ components:
           type:
             - string
             - 'null'
+    CostSource:
+      type: string
+      description: >
+        Where a cost came from: `catalog` (estimated from catalog prices),
+        `provider` (the provider's own reported cost), or `application` (a sum
+        the caller assembled from differently sourced parts).
+      enum:
+        - catalog
+        - provider
+        - application
     PendingReason:
       description: Reason a pre-execution run is pending instead of runnable.
       type: string

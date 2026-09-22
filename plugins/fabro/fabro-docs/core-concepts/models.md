@@ -83,13 +83,11 @@ Claude Fable 5 is available as an explicit model but is not the default Anthropi
 
 Fabro's catalog is the [lithos-llm](https://docs.rs/lithos-llm) built-in catalog. The `[llm]` table in settings is a second layer over it: a lithos catalog overlay that adds providers and models or changes existing entries. Later layers win. Tables merge key by key and every other value replaces. Models are nested under their provider, so two providers can expose the same model id without overwriting each other.
 
-Provider and model facts use lithos field names: `adapter`, `codec`, `base_url`, `auth`, `enabled`, `limits`, `capabilities`, `pricing`, `small_default`, `probe`, `family`, and the cutoffs. The coding harness a model expects lives under `metadata.agent`, a namespace lithos ships and other agents such as Pebble read too. See [Settings Configuration](/reference/user-configuration#llm) for every key.
+Provider and model facts use lithos field names: `adapter`, `codecs`, `base_url`, `auth`, `enabled`, `limits`, `capabilities`, `pricing`, `small_default`, `probe`, `family`, and the cutoffs. The coding harness a model expects lives under `metadata.agent`, a namespace lithos ships and other agents such as Pebble read too. See [Settings Configuration](/reference/user-configuration#llm) for every key.
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [llm.providers.proxy]
 display_name = "Acme Gateway"
-adapter = "openai-compatible"
-codec = "openai-chat"
 base_url = "https://llm-gateway.example.com/v1"
 auth = { type = "bearer" }
 aliases = ["gateway"]

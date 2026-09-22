@@ -53,8 +53,8 @@ tags:
     description: Workflow definitions and execution
   - name: Workflow Versions
     description: Immutable, content-addressed workflow packages
-  - name: Billing
-    description: Token counts and billed totals
+  - name: Usage
+    description: Token counts and costs
   - name: Insights
     description: SQL query editor and history
   - name: Models
@@ -184,7 +184,7 @@ components:
         - status
         - node_id
         - visit
-        - billing
+        - usage
       properties:
         id:
           $ref: '#/components/schemas/StageId'
@@ -270,14 +270,14 @@ components:
           format: date-time
           description: Wall-clock time the latest attempt of this stage started, if known.
           example: '2026-04-29T12:34:56Z'
-        billing:
-          $ref: '#/components/schemas/BilledTokenCounts'
+        usage:
+          $ref: '#/components/schemas/Usage'
           description: >-
-            Token counts for this stage execution alone. `total_usd_micros` is
-            the provider-reported cost when there is one, otherwise the server
-            catalog's price for these tokens — the same pricing the
-            `/runs/{id}/billing` rows use. All-zero counts mean the stage made
-            no model calls. Unlike the billing rows, which sum every visit of a
+            Usage for this stage execution alone. `cost` sums what lithos-llm
+            attached to each answer: the provider's reported cost when there is
+            one, otherwise the catalog's price for the route — the same figures
+            the `/runs/{id}/usage` rows sum. All-zero counts mean the stage made
+            no model calls. Unlike the usage rows, which sum every visit of a
             node, this covers only this visit.
     PaginationMeta:
       description: Pagination metadata included in every paginated response.
@@ -387,56 +387,22 @@ components:
             - type: 'null'
         speed:
           oneOf:
-            - $ref: '#/components/schemas/BillingSpeed'
+            - $ref: '#/components/schemas/Speed'
             - type: 'null'
-    BilledTokenCounts:
-      description: Token counts with optional billed USD micros totals.
+    Usage:
+      description: >-
+        lithos `Usage`: token counts and, when known, what they cost. `cost` is
+        absent when there is no cost data, never zero. A sum has a cost only
+        when every part that used tokens was priced; its `source` is the parts'
+        shared source, or `application` when they differ.
       type: object
       required:
-        - input_tokens
-        - output_tokens
-        - total_tokens
-        - reasoning_tokens
-        - cache_read_tokens
-        - cache_write_tokens
+        - tokens
       properties:
-        input_tokens:
-          type: integer
-          format: int64
-          description: Number of input tokens consumed.
-          example: 28640
-        output_tokens:
-          type: integer
-          format: int64
-          description: Number of output tokens generated.
-          example: 8750
-        total_tokens:
-          type: integer
-          format: int64
-          description: Total billable tokens aggregated across categories.
-          example: 37390
-        reasoning_tokens:
-          type: integer
-          format: int64
-          description: Number of reasoning tokens.
-          example: 1200
-        cache_read_tokens:
-          type: integer
-          format: int64
-          description: Number of cache read tokens.
-          example: 4800
-        cache_write_tokens:
-          type: integer
-          format: int64
-          description: Number of cache write tokens.
-          example: 1500
-        total_usd_micros:
-          type:
-            - integer
-            - 'null'
-          format: int64
-          description: Billed USD amount in micros.
-          example: 720000
+        tokens:
+          $ref: '#/components/schemas/TokenCounts'
+        cost:
+          $ref: '#/components/schemas/Cost'
     ReasoningEffort:
       description: Native reasoning-effort level requested for an LLM call.
       type: string
@@ -447,13 +413,75 @@ components:
         - high
         - xhigh
         - max
-    BillingSpeed:
+    Speed:
       description: 'lithos `Speed`: the requested latency or cost tier.'
       type: string
       enum:
         - fast
         - balanced
         - economical
+    TokenCounts:
+      description: >
+        lithos `TokenCounts`: five disjoint token buckets. Every token is
+        counted in exactly one, so their plain sum is the total. `input`
+        excludes cache reads and writes, while `output` excludes reasoning
+        tokens when the provider reports them separately. A bucket that is
+        absent reads as zero.
+      type: object
+      properties:
+        input:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Prompt tokens that were neither read from nor written to a cache.
+        output:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Completion tokens that are not reasoning tokens.
+        reasoning:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Completion tokens spent on reasoning, priced at the output rate.
+        cache_read:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Prompt tokens served from a provider cache.
+        cache_write:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Prompt tokens written into a provider cache.
+    Cost:
+      description: 'lithos `Cost`: a USD amount in micros and where it came from.'
+      type: object
+      required:
+        - usd_micros
+        - source
+      properties:
+        usd_micros:
+          type: integer
+          format: uint64
+          minimum: 0
+        source:
+          $ref: '#/components/schemas/CostSource'
+    CostSource:
+      type: string
+      description: >
+        Where a cost came from: `catalog` (estimated from catalog prices),
+        `provider` (the provider's own reported cost), or `application` (a sum
+        the caller assembled from differently sourced parts).
+      enum:
+        - catalog
+        - provider
+        - application
   headers:
     XRequestId:
       description: >

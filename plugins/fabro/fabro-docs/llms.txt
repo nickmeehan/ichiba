@@ -104,7 +104,7 @@
 - [Preview URL](https://docs.fabro.sh/api-reference/human-in-the-loop/preview-url.md): Generates a preview URL for a port exposed by the run's sandbox environment.
 - [List Run Artifacts](https://docs.fabro.sh/api-reference/run-internals/list-run-artifacts.md): Lists captured artifact files for a run.
 - [Download Run Artifacts](https://docs.fabro.sh/api-reference/run-internals/download-run-artifacts.md): Streams a ZIP archive with the latest captured version of each artifact path. Stage order, retry number, and then stage ID determine the latest version, matching the artifacts page. Captures from the graph's boundary nodes are excluded, identified by their `start` and `exit` handler type rather than…
-- [Retrieve Run Billing](https://docs.fabro.sh/api-reference/run-outputs/retrieve-run-billing.md): Returns token counts and billed totals broken down by stage and model for a specific run.
+- [Retrieve Run Usage](https://docs.fabro.sh/api-reference/run-outputs/retrieve-run-usage.md): Returns token counts and costs broken down by stage and model for a specific run.
 - [Retrieve Run Checkpoint](https://docs.fabro.sh/api-reference/run-internals/retrieve-run-checkpoint.md): Returns the latest checkpoint data for a run, or null if no checkpoint has been recorded yet.
 - [List Run Stages](https://docs.fabro.sh/api-reference/run-internals/list-run-stages.md): Returns the ordered list of stages in a run's workflow graph with their current status and timing. Stages are bounded by the workflow graph size, typically fewer than 20.
 - [List Stage Events](https://docs.fabro.sh/api-reference/run-internals/list-stage-events.md): Returns a paginated JSON list of stored run events scoped to a single stage visit.

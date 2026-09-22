@@ -65,7 +65,7 @@ fabro [OPTIONS] [COMMAND]
 
 | Command            | Description                                                                                                         |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| `fabro approve`    | Approve pending workflow runs                                                                                       |
+| `fabro approve`    | Approve a pending run for execution                                                                                 |
 | `fabro archive`    | Mark terminal runs as archived (reviewed, no further action needed). Archived runs are hidden from default listings |
 | `fabro artifact`   | Inspect and copy run artifacts (screenshots, reports, traces)                                                       |
 | `fabro ask`        | Ask Fabro a read-only question about a run                                                                          |
@@ -73,7 +73,7 @@ fabro [OPTIONS] [COMMAND]
 | `fabro auth`       | Manage CLI authentication state                                                                                     |
 | `fabro completion` | Generate shell completions                                                                                          |
 | `fabro create`     | Register a workflow version and create a submitted run                                                              |
-| `fabro deny`       | Deny pending workflow runs                                                                                          |
+| `fabro deny`       | Deny execution of a pending run                                                                                     |
 | `fabro discord`    | Open the Discord community in the browser                                                                           |
 | `fabro docs`       | Open the docs website in the browser                                                                                |
 | `fabro doctor`     | Check environment and integration health                                                                            |
@@ -113,7 +113,7 @@ fabro [OPTIONS] [COMMAND]
 
 ### `fabro approve`
 
-Approve pending workflow runs
+Approve a pending run for execution
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro approve [OPTIONS] <RUNS>...
@@ -373,7 +373,7 @@ fabro create [OPTIONS] <WORKFLOW>
 
 ### `fabro deny`
 
-Deny pending workflow runs
+Deny execution of a pending run
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro deny [OPTIONS] <RUNS>...

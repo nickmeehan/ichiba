@@ -2,15 +2,15 @@
 > Fetch the complete documentation index at: https://docs.fabro.sh/llms.txt
 > Use this file to discover all available pages before exploring further.
 
-# Retrieve Run Billing
+# Retrieve Run Usage
 
-> Returns token counts and billed totals broken down by stage and model for a specific run.
+> Returns token counts and costs broken down by stage and model for a specific run.
 
 
 
 ## OpenAPI
 
-````yaml /api-reference/fabro-api.yaml get /api/v1/runs/{id}/billing
+````yaml /api-reference/fabro-api.yaml get /api/v1/runs/{id}/usage
 openapi: 3.1.0
 info:
   title: Fabro Run API
@@ -53,8 +53,8 @@ tags:
     description: Workflow definitions and execution
   - name: Workflow Versions
     description: Immutable, content-addressed workflow packages
-  - name: Billing
-    description: Token counts and billed totals
+  - name: Usage
+    description: Token counts and costs
   - name: Insights
     description: SQL query editor and history
   - name: Models
@@ -66,24 +66,24 @@ tags:
   - name: System
     description: Server runtime, maintenance, and event streaming
 paths:
-  /api/v1/runs/{id}/billing:
+  /api/v1/runs/{id}/usage:
     get:
       tags:
         - Run Outputs
-      summary: Retrieve Run Billing
+      summary: Retrieve Run Usage
       description: >-
-        Returns token counts and billed totals broken down by stage and model
-        for a specific run.
-      operationId: retrieveRunBilling
+        Returns token counts and costs broken down by stage and model for a
+        specific run.
+      operationId: retrieveRunUsage
       parameters:
         - $ref: '#/components/parameters/RunId'
       responses:
         '200':
-          description: Billing data
+          description: Usage data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RunBilling'
+                $ref: '#/components/schemas/RunUsage'
         '404':
           description: Run not found
           headers:
@@ -104,8 +104,8 @@ components:
         type: string
       example: 01JNQVR7M0EJ5GKAT2SC4ERS1Z
   schemas:
-    RunBilling:
-      description: Complete billing breakdown for a single run.
+    RunUsage:
+      description: Complete usage breakdown for a single run.
       type: object
       required:
         - stages
@@ -115,17 +115,17 @@ components:
         stages:
           type: array
           description: >-
-            Per-node billing breakdown. Each row sums billing and runtime across
-            all visits of that node.
+            Per-node usage breakdown. Each row sums usage and runtime across all
+            visits of that node.
           items:
-            $ref: '#/components/schemas/RunBillingStage'
+            $ref: '#/components/schemas/RunUsageStage'
         totals:
-          $ref: '#/components/schemas/RunBillingTotals'
+          $ref: '#/components/schemas/RunUsageTotals'
         by_model:
           type: array
-          description: Billing grouped by model.
+          description: Usage grouped by model.
           items:
-            $ref: '#/components/schemas/BillingByModel'
+            $ref: '#/components/schemas/UsageByModel'
     ErrorResponse:
       description: Standard error response containing one or more error entries.
       type: object
@@ -159,28 +159,28 @@ components:
             failure responses only.
           items:
             type: string
-    RunBillingStage:
+    RunUsageStage:
       description: >-
-        Token counts and billed totals for one workflow node within a run. Rows
-        are grouped by node; billing and timing sum every visit of that node.
+        Token counts and cost for one workflow node within a run. Rows are
+        grouped by node; usage and timing sum every visit of that node.
       type: object
       required:
         - stage
         - model
-        - billing
+        - usage
         - timing
       properties:
         stage:
-          $ref: '#/components/schemas/BillingStageRef'
+          $ref: '#/components/schemas/UsageStageRef'
         model:
           description: >-
             Latest usage-bearing visit model for this node; null when no visit
             used an LLM model.
           oneOf:
-            - $ref: '#/components/schemas/BillingModelRef'
+            - $ref: '#/components/schemas/UsageModelRef'
             - type: 'null'
-        billing:
-          $ref: '#/components/schemas/BilledTokenCounts'
+        usage:
+          $ref: '#/components/schemas/Usage'
         timing:
           $ref: '#/components/schemas/StageTiming'
           description: |
@@ -200,70 +200,39 @@ components:
           description: >-
             Lifecycle state of the stage. Use to detect in-flight rows for
             client-side runtime ticking.
-    RunBillingTotals:
-      description: Aggregate billing totals across all stages of a run.
+    RunUsageTotals:
+      description: Aggregate usage totals across all stages of a run.
       type: object
       required:
         - timing
-        - input_tokens
-        - output_tokens
-        - total_tokens
-        - reasoning_tokens
-        - cache_read_tokens
-        - cache_write_tokens
+        - usage
       properties:
         timing:
           $ref: '#/components/schemas/RunTiming'
           description: |
             Run-level timing rollup. `wall_time_ms` is summed across stage
             visits; active timing sums work across visits.
-        input_tokens:
-          type: integer
-          description: Total input tokens consumed.
-          example: 71540
-        output_tokens:
-          type: integer
-          description: Total output tokens generated.
-          example: 21080
-        total_tokens:
-          type: integer
-          description: Total tokens aggregated across all billing categories.
-          example: 92620
-        reasoning_tokens:
-          type: integer
-          description: Total reasoning tokens.
-          example: 3400
-        cache_read_tokens:
-          type: integer
-          description: Total cache read tokens.
-          example: 22000
-        cache_write_tokens:
-          type: integer
-          description: Total cache write tokens.
-          example: 4500
-        total_usd_micros:
-          type:
-            - integer
-            - 'null'
-          format: int64
-          description: Total billed USD amount in micros.
-          example: 2260000
-    BillingByModel:
-      description: Billing statistics grouped by model.
+        usage:
+          $ref: '#/components/schemas/Usage'
+          description: >-
+            Tokens and cost summed across every stage visit. The cost is known
+            only when every visit that used tokens was priced.
+    UsageByModel:
+      description: Usage grouped by model.
       type: object
       required:
         - model
         - stages
-        - billing
+        - usage
       properties:
         model:
-          $ref: '#/components/schemas/BillingModelRef'
+          $ref: '#/components/schemas/UsageModelRef'
         stages:
           type: integer
           description: Number of usage-bearing stage visits that used this model.
           example: 2
-        billing:
-          $ref: '#/components/schemas/BilledTokenCounts'
+        usage:
+          $ref: '#/components/schemas/Usage'
     ErrorResponseEntry:
       description: A single error entry in an error response.
       type: object
@@ -294,8 +263,8 @@ components:
           description: >-
             Server-generated request identifier; matches the x-request-id
             response header.
-    BillingStageRef:
-      description: Reference to a workflow node in a billing stage row.
+    UsageStageRef:
+      description: Reference to a workflow node in a usage stage row.
       type: object
       required:
         - id
@@ -309,8 +278,10 @@ components:
           type: string
           description: Human-readable stage name.
           example: Propose Changes
-    BillingModelRef:
-      description: Provider-qualified billing model identity used for cost estimates.
+    UsageModelRef:
+      description: >-
+        Provider-qualified model identity a usage is grouped under. Carries the
+        requested speed tier because providers price tiers differently.
       type: object
       required:
         - provider
@@ -322,56 +293,22 @@ components:
           type: string
         speed:
           oneOf:
-            - $ref: '#/components/schemas/BillingSpeed'
+            - $ref: '#/components/schemas/Speed'
             - type: 'null'
-    BilledTokenCounts:
-      description: Token counts with optional billed USD micros totals.
+    Usage:
+      description: >-
+        lithos `Usage`: token counts and, when known, what they cost. `cost` is
+        absent when there is no cost data, never zero. A sum has a cost only
+        when every part that used tokens was priced; its `source` is the parts'
+        shared source, or `application` when they differ.
       type: object
       required:
-        - input_tokens
-        - output_tokens
-        - total_tokens
-        - reasoning_tokens
-        - cache_read_tokens
-        - cache_write_tokens
+        - tokens
       properties:
-        input_tokens:
-          type: integer
-          format: int64
-          description: Number of input tokens consumed.
-          example: 28640
-        output_tokens:
-          type: integer
-          format: int64
-          description: Number of output tokens generated.
-          example: 8750
-        total_tokens:
-          type: integer
-          format: int64
-          description: Total billable tokens aggregated across categories.
-          example: 37390
-        reasoning_tokens:
-          type: integer
-          format: int64
-          description: Number of reasoning tokens.
-          example: 1200
-        cache_read_tokens:
-          type: integer
-          format: int64
-          description: Number of cache read tokens.
-          example: 4800
-        cache_write_tokens:
-          type: integer
-          format: int64
-          description: Number of cache write tokens.
-          example: 1500
-        total_usd_micros:
-          type:
-            - integer
-            - 'null'
-          format: int64
-          description: Billed USD amount in micros.
-          example: 720000
+        tokens:
+          $ref: '#/components/schemas/TokenCounts'
+        cost:
+          $ref: '#/components/schemas/Cost'
     StageTiming:
       description: |
         Timing breakdown for one stage visit. Fields are all milliseconds.
@@ -471,13 +408,75 @@ components:
       description: LLM provider identifier.
       type: string
       example: anthropic
-    BillingSpeed:
+    Speed:
       description: 'lithos `Speed`: the requested latency or cost tier.'
       type: string
       enum:
         - fast
         - balanced
         - economical
+    TokenCounts:
+      description: >
+        lithos `TokenCounts`: five disjoint token buckets. Every token is
+        counted in exactly one, so their plain sum is the total. `input`
+        excludes cache reads and writes, while `output` excludes reasoning
+        tokens when the provider reports them separately. A bucket that is
+        absent reads as zero.
+      type: object
+      properties:
+        input:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Prompt tokens that were neither read from nor written to a cache.
+        output:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Completion tokens that are not reasoning tokens.
+        reasoning:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Completion tokens spent on reasoning, priced at the output rate.
+        cache_read:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Prompt tokens served from a provider cache.
+        cache_write:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Prompt tokens written into a provider cache.
+    Cost:
+      description: 'lithos `Cost`: a USD amount in micros and where it came from.'
+      type: object
+      required:
+        - usd_micros
+        - source
+      properties:
+        usd_micros:
+          type: integer
+          format: uint64
+          minimum: 0
+        source:
+          $ref: '#/components/schemas/CostSource'
+    CostSource:
+      type: string
+      description: >
+        Where a cost came from: `catalog` (estimated from catalog prices),
+        `provider` (the provider's own reported cost), or `application` (a sum
+        the caller assembled from differently sourced parts).
+      enum:
+        - catalog
+        - provider
+        - application
   headers:
     XRequestId:
       description: >

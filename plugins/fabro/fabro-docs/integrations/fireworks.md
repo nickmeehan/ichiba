@@ -6,7 +6,7 @@
 
 > Run open-weights models on Fireworks AI's serverless inference platform
 
-[Fireworks AI](https://fireworks.ai/) serves open-weights models (Kimi, DeepSeek, GLM, Qwen, GPT-OSS, and more) behind an OpenAI-compatible API. Fabro ships a disabled `fireworks` provider entry with a curated model catalog, so you can opt in from `settings.toml` without changing Fabro code.
+[Fireworks AI](https://fireworks.ai/) serves open-weights models (Kimi, DeepSeek, GLM, Qwen, GPT-OSS, and more) behind an OpenAI-compatible API. Fabro ships an enabled `fireworks` provider entry with a curated model catalog; it needs only an API key, and `settings.toml` can adjust it without changing Fabro code.
 
 ## Prerequisites
 

@@ -57,8 +57,8 @@ tags:
     description: Workflow definitions and execution
   - name: Workflow Versions
     description: Immutable, content-addressed workflow packages
-  - name: Billing
-    description: Token counts and billed totals
+  - name: Usage
+    description: Token counts and costs
   - name: Insights
     description: SQL query editor and history
   - name: Models

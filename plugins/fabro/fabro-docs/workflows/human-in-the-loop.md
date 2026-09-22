@@ -22,6 +22,14 @@ approve -> skip      [label="[S] Skip"]
 
 When execution reaches the gate, the user sees the previous stage's output followed by the node's label ("Approve Plan") and the available options. In the CLI, this appears as an interactive menu. In the web UI, blocked runs show an interview dock on the run page where the user can answer the pending question.
 
+<Note>
+  `fabro approve` and `fabro deny` grant or deny permission to **start a run** waiting
+  for execution approval. To answer a human gate during execution, run
+  `fabro attach <run>` for an interactive prompt or use the run page's interview dock.
+  API clients can list pending questions with `GET /api/v1/runs/{id}/questions` and
+  answer a specific question with `POST /api/v1/runs/{id}/questions/{qid}/answer`.
+</Note>
+
 ### Keyboard accelerators
 
 The prefixes `[A]`, `[R]`, `[S]` in edge labels serve as keyboard accelerators. Fabro supports three formats:
