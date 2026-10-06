@@ -39,3 +39,6 @@ Fabro replaces the prompt-wait-review loop with version-controlled workflow grap
     Understand how Fabro configures and runs LLM agents within workflows.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

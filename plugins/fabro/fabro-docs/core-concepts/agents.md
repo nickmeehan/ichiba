@@ -59,14 +59,14 @@ The legacy `acp_command` attribute is rejected; use `acp.command` for shell comm
 
 ### Comparison
 
-| Capability                 | API backend                          | ACP backend                       |
-| -------------------------- | ------------------------------------ | --------------------------------- |
-| Tools                      | Fabro built-in tools + MCP           | ACP agent's own tool set          |
-| Session caching            | Supported (`fidelity` + `thread_id`) | Agent-dependent                   |
-| Sub-agents                 | Supported                            | Not supported through Fabro tools |
-| Provider failover          | Supported                            | Not supported                     |
-| Model/provider credentials | Resolved by Fabro                    | Not used by Fabro                 |
-| File tracking              | Tool call events                     | `git diff` before/after           |
+| Capability | API backend | ACP backend |
+| - | - | - |
+| Tools | Fabro built-in tools + MCP | ACP agent's own tool set |
+| Session caching | Supported (`fidelity` + `thread_id`) | Agent-dependent |
+| Sub-agents | Supported | Not supported through Fabro tools |
+| Provider failover | Supported | Not supported |
+| Model/provider credentials | Resolved by Fabro | Not used by Fabro |
+| File tracking | Tool call events | `git diff` before/after |
 
 ### When to use the ACP backend
 
@@ -79,16 +79,16 @@ The legacy `acp_command` attribute is rejected; use `acp.command` for shell comm
 
 Agents have access to a set of built-in tools for interacting with the codebase and environment:
 
-| Tool         | Description                                       |
-| ------------ | ------------------------------------------------- |
-| `shell`      | Run commands as Bash source via `bash -c`         |
-| `read_file`  | Read file contents with optional offset and limit |
-| `write_file` | Create or overwrite a file                        |
-| `edit_file`  | Make targeted edits to an existing file           |
-| `grep`       | Search file contents with regex patterns          |
-| `glob`       | Find files by name pattern                        |
-| `web_search` | Search the web                                    |
-| `web_fetch`  | Fetch and summarize a URL                         |
+| Tool | Description |
+| - | - |
+| `shell` | Run commands as Bash source via `bash -c` |
+| `read_file` | Read file contents with optional offset and limit |
+| `write_file` | Create or overwrite a file |
+| `edit_file` | Make targeted edits to an existing file |
+| `grep` | Search file contents with regex patterns |
+| `glob` | Find files by name pattern |
+| `web_search` | Search the web |
+| `web_fetch` | Fetch and summarize a URL |
 
 Additional tools can be added via [MCP servers](/agents/mcp) for integrations like databases, APIs, or custom services.
 
@@ -145,3 +145,6 @@ See [Hooks](/agents/hooks) for details.
     Delegate subtasks to child agent sessions.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

@@ -98,18 +98,18 @@ Fabro uses this order:
 
 A `model_stylesheet` on an imported graph is ignored and produces an `imported_model_stylesheet_ignored` warning. Put the stylesheet on the root graph. A root stylesheet can target imported nodes by their generated IDs, classes, or shapes.
 
-If an input or variable is unavailable, `fabro validate` reports `template_undefined_variable`. It skips stylesheet syntax and model checks for that validation pass. Run-style commands treat the same diagnostic as an error before they create or start a run.
+If an input or variable is unavailable, `fabro validate` reports `attractor.unbound_input` as a warning and leaves the stylesheet unrendered, so its syntax and model checks wait for the values. Run-style commands refuse the workflow with `unsupported.template.unbound_input` before they create or start a run.
 
 ## Selectors
 
 Each rule starts with a selector that determines which nodes it applies to:
 
-| Selector  | Syntax                        | Matches                        | Specificity |
-| --------- | ----------------------------- | ------------------------------ | ----------- |
-| Universal | `*`                           | All nodes                      | 0           |
-| Shape     | `box`, `tab`, `hexagon`, etc. | Nodes with that Graphviz shape | 1           |
-| Class     | `.classname`                  | Nodes with `class="classname"` | 2           |
-| ID        | `#nodeid`                     | The node with that specific ID | 3           |
+| Selector | Syntax | Matches | Specificity |
+| - | - | - | - |
+| Universal | `*` | All nodes | 0 |
+| Shape | `box`, `tab`, `hexagon`, etc. | Nodes with that Graphviz shape | 1 |
+| Class | `.classname` | Nodes with `class="classname"` | 2 |
+| ID | `#nodeid` | The node with that specific ID | 3 |
 
 ### Assigning classes
 
@@ -125,13 +125,13 @@ This node matches both `.coding` and `.critical` rules.
 
 Stylesheets support five properties:
 
-| Property           | Description                                                                                                                                                                                                                                     | Example                                   |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| `model`            | Model ID or alias                                                                                                                                                                                                                               | `claude-sonnet-4-5`, `opus`, `gemini-pro` |
-| `provider`         | Provider name (optional — auto-inferred from the model catalog when omitted)                                                                                                                                                                    | `anthropic`, `openai`, `gemini`           |
-| `reasoning_effort` | Reasoning effort level                                                                                                                                                                                                                          | `low`, `medium`, `high`                   |
-| `speed`            | Output speed mode. `fast` enables Anthropic's fast mode for up to 2.5x faster output at higher cost.                                                                                                                                            | `fast`                                    |
-| `backend`          | Agent execution backend — `api` (default) runs Fabro's own tool loop, `cli` delegates to a legacy external CLI tool, and `acp` runs an Agent Client Protocol stdio agent in the active sandbox. See [Backends](/core-concepts/agents#backends). | `api`, `cli`, `acp`                       |
+| Property | Description | Example |
+| - | - | - |
+| `model` | Model ID or alias | `claude-sonnet-4-5`, `opus`, `gemini-pro` |
+| `provider` | Provider name (optional — auto-inferred from the model catalog when omitted) | `anthropic`, `openai`, `gemini` |
+| `reasoning_effort` | Reasoning effort level | `low`, `medium`, `high` |
+| `speed` | Output speed mode. `fast` enables Anthropic's fast mode for up to 2.5x faster output at higher cost. | `fast` |
+| `backend` | Agent execution backend — `api` (default) runs Fabro's own tool loop, `cli` delegates to a legacy external CLI tool, and `acp` runs an Agent Client Protocol stdio agent in the active sandbox. See [Backends](/core-concepts/agents#backends). | `api`, `cli`, `acp` |
 
 See [Models](/core-concepts/models) for the full list of model IDs and aliases.
 
@@ -201,3 +201,6 @@ This stylesheet:
 * Routes `.coding` nodes to Sonnet
 * Routes `.review` nodes to Gemini for independent critique
 * Routes the `final_check` node to Opus for maximum quality
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

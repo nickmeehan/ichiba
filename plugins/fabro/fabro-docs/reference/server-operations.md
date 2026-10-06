@@ -31,9 +31,9 @@ When Fabro can construct a direct install URL, the token is embedded in the URL 
 The `Object store` step offers two wizard-managed modes:
 
 * `Local disk` for a host-local object-store root, detected by default and editable before continuing
-* `AWS S3` for one shared bucket with fixed `slatedb/` and `artifacts/` prefixes
+* `AWS S3` for one bucket with the fixed `artifacts/` prefix
 
-The wizard's manual-credential path stores only `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in `server.env`. It does not collect STS/session tokens or S3-compatible endpoint settings. If you need MinIO, Cloudflare R2, path-style options, or custom endpoints, finish install with local defaults and then edit `[server.slatedb]` / `[server.artifacts]` in `settings.toml` manually.
+The wizard's manual-credential path stores only `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in `server.env`. It does not collect STS/session tokens or S3-compatible endpoint settings. If you need MinIO, Cloudflare R2, path-style options, or custom endpoints, finish install with local defaults and then edit `[server.artifacts]` in `settings.toml` manually.
 
 When you finish the wizard, the server writes `~/.fabro/settings.toml` and exits cleanly. Start it again to boot in configured mode:
 
@@ -47,106 +47,61 @@ For headless or scripted environments where no browser is available, run `fabro 
 
 Common flags:
 
-| Flag                    | Default               | Description                                                           |
-| ----------------------- | --------------------- | --------------------------------------------------------------------- |
-| `--bind`                | `~/.fabro/fabro.sock` | Address to bind: `IP` or `IP:port` for TCP, or a path for Unix socket |
-| `--model`               | —                     | Override default LLM model                                            |
-| `--environment`         | —                     | Override default environment slug                                     |
-| `--max-concurrent-runs` | `5`                   | Maximum concurrent run executions                                     |
+| Flag | Default | Description |
+| - | - | - |
+| `--bind` | `~/.fabro/fabro.sock` | Address to bind: `IP` or `IP:port` for TCP, or a path for Unix socket |
+| `--model` | — | Override default LLM model |
+| `--environment` | — | Override default environment slug |
+| `--max-concurrent-runs` | `5` | Maximum concurrent run executions |
 
 See [Server Configuration](/administration/server-configuration) for the full `settings.toml` reference.
 
-### SQLite blob storage activation
+### Upgrading from SlateDB
 
-On startup, Fabro activates SQLite as the only live content-addressed blob
-store before it opens routes, schedulers, workers, webhooks, reapers, or the
-ready callback. The activation inventories the exact legacy SlateDB blob
-prefix and run history, then checks disk headroom for the rows not yet
-imported, any required blob backup, and the projected post-import database
-snapshot required by run-history activation. A warm restart with no pending
-imports or backups only needs a small fixed headroom; on filesystems whose free
-space cannot be determined the check is skipped with a warning. Fabro then
-imports in bounded transactions, compares every legacy blob byte-for-byte with
-SQLite, runs a live SQLite integrity check, and attempts a final WAL truncate
-checkpoint. A busy final truncate logs a warning and startup continues so a
-later checkpoint can finish after the blocking reader exits.
-Boots that import new rows additionally re-verify every
-legacy blob against SQLite and validate every SQLite blob row independently.
-Any failure stops startup. Warm boots that import no rows skip that full target
-scan: the import pass has already byte-compared every retained legacy row, and
-SQLite-only blobs are hash-validated when read. Rows committed by an interrupted
-import are retained so the next startup can resume, but the legacy source is
-never modified and there is no fallback or dual read/write path.
+Fabro stores current run history and content-addressed blobs in SQLite.
+Upgrading from a release that stored these in SlateDB does not automatically
+import them, so those older runs are not available in the current application.
 
-For a non-empty legacy inventory, the first activation also creates the
-private sibling backup
-`fabro.sqlite3.pre-blob-activation.bak`. Fabro writes the staging database
-inside a private same-directory area, applies owner-only permissions, flushes
-and validates it, then publishes the backup without overwriting an existing file.
-A valid retained backup is revalidated on every warm restart and is preserved
-as the original pre-activation safety artifact. If any legacy row is already
-present in SQLite, a missing retained backup stops startup rather than silently
-moving that rollback boundary forward. It is not a promise that an
-older binary can safely resume after the activated server has accepted new
-work; recovery after that boundary is forward-only. Empty legacy inventories
-do not need this backup.
+The upgrade leaves existing SlateDB run history and blobs in their original
+local storage directory or object-store location. Retain that data if you may
+need to recover historical runs using a reader compatible with the older
+storage format.
 
-Keep both the unchanged legacy `blobs/sha256` prefix and the private activation
-backup for at least 30 consecutive calendar days after the first successful
-production activation. Cleanup is eligible only after a successful cold
-activation, a later warm restart that revalidates the backup and byte-compares
-every retained legacy blob against SQLite, and 30 days of production observation
-with no unresolved inventory, import, verification, integrity, backup, or
-checkpoint failure. Scott must review that evidence and explicitly authorize a
-separate cleanup change. Day 30 is only the earliest eligibility date; nothing
-is deleted automatically, and incomplete evidence extends the support window.
+Artifact files use the separate local or S3 object store configured through
+`[server.artifacts]` in [Server Configuration](/administration/server-configuration).
 
-### SQLite run-history activation
+#### Legacy SlateDB settings
 
-Immediately after blob activation, and still before routes, schedulers,
-workers, webhooks, reapers, or readiness are exposed, Fabro activates SQLite
-as the sole authority for run existence, run events, and each run's current
-projected row. The activation strictly validates and fingerprints the exact
-legacy SlateDB run-event key/value stream, imports each complete run in its own
-transaction, verifies every legacy history as an exact SQLite prefix, replays
-and verifies every SQLite run independently, and runs a full SQLite integrity
-check. It attempts a final WAL truncate checkpoint, but a blocking reader only
-produces a warning because committed activation data remains durable in the
-WAL. A source fingerprint or count change after activation stops startup. There
-is no fallback or dual-read/write mode.
+When Fabro loads active server settings that still contain `[server.slatedb]`,
+it backs up the settings file and removes that section and its subtables.
+For `settings.toml`, the backup is
+`settings.toml.server-slatedb-migration.bak` beside the original file. Existing
+backups are preserved; further backups use numbered suffixes such as
+`settings.toml.server-slatedb-migration.1.bak`. A warning identifies the
+rewritten file and its backup. Other settings are preserved by this cleanup,
+and subsequent loads do nothing once the section is absent.
 
-For a non-empty legacy run history, the first activation creates and validates
-the private sibling backup
-`fabro.sqlite3.pre-run-history-activation.bak` before importing anything. The
-backup is published without overwriting an existing file and is revalidated
-on every restart. If import progress exists but that retained backup is
-missing, startup stops. An empty legacy source is accepted without a backup
-only when SQLite also has no unmarked run data. The activation marker stores
-the source identity and first-success timestamp; retries preserve that
-timestamp and repeat source, destination, backup, and integrity checks.
+This cleanup changes configuration only. The settings backup contains no run
+history or blobs.
 
-After activation, creating a run commits `run.created`, the run's current row,
-and its existence atomically. Later appends update the event log and current
-row in one transaction, and live streams advance only after commit. Deleting
-a migrated run commits a tombstone with the SQL deletion so the retained
-legacy source cannot resurrect it during a restart.
+### SQLite schema upgrades
 
-Keep the unchanged legacy `runs/*/events/*` data and the private activation
-backup for at least 30 consecutive calendar days after the persisted
-first-success timestamp. Cleanup also requires successful cold and warm
-activation evidence, production observation, backup and restore validation,
-deletion/restart coverage, and explicit approval for a separate cleanup
-change. Nothing is deleted automatically. The run-history activation backup
-represents the database immediately before run-history import and can be used
-to retry or recover the activation with a binary that knows the activated
-schema. It is not a binary-downgrade artifact because it already contains the
-new SQL migrations.
+On startup, Fabro applies pending SQLite schema migrations before serving
+normal traffic. Before changing a database that has previously applied
+migrations, it writes a snapshot beside the database as
+`fabro.sqlite3.pre-migration.bak`. A fresh database or a restart with no pending
+migrations does not create a new snapshot. Each later schema upgrade replaces
+this snapshot; failure to create it stops the upgrade.
 
-To return to the older binary, stop the server and restore the database's
-`.pre-migration.bak` snapshot instead, then remove any `-wal` and `-shm`
-siblings before starting the older binary. That snapshot was taken before the
-new migrations were applied. Either recovery path loses writes accepted after
-its snapshot, so make the rollback boundary explicit before restoring it.
+The Petri transition drops the former SQL `run_events` table and its activation
+bookkeeping. Those events are not converted into Petri run history. Current
+runs use Petri records and Fabro platform records in SQLite.
+
+For a database rollback, stop the server and restore the `.pre-migration.bak`
+snapshot, then remove any `-wal` and `-shm` siblings before starting the
+corresponding older binary. The snapshot holds the database state immediately
+before the most recent schema upgrade. Restoring it loses database writes
+accepted after that snapshot.
 
 ## Submitting runs
 
@@ -272,3 +227,6 @@ See [User Configuration](/reference/user-configuration#cli-target-section) for t
     The workflow engine and architecture.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

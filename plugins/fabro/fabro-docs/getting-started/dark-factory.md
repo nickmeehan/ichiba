@@ -34,13 +34,13 @@ The dark factory isn't a single tool or practice. It's a set of capabilities tha
 
 The dark factory doesn't eliminate engineering judgment. It redirects it:
 
-| Before                  | After                          |
-| ----------------------- | ------------------------------ |
-| Writing code            | Defining workflows and prompts |
-| Reviewing diffs         | Defining verification criteria |
-| Debugging test failures | Designing fix loops            |
-| Watching agent sessions | Inspecting run traces          |
-| Manual quality checks   | Tuning goal gates and evals    |
+| Before | After |
+| - | - |
+| Writing code | Defining workflows and prompts |
+| Reviewing diffs | Defining verification criteria |
+| Debugging test failures | Designing fix loops |
+| Watching agent sessions | Inspecting run traces |
+| Manual quality checks | Tuning goal gates and evals |
 
 The goal is to spend your time on the parts that require human judgment — what to build, how to verify it, and when something doesn't look right — while the factory handles the rest.
 
@@ -63,3 +63,6 @@ The goal is to spend your time on the parts that require human judgment — what
     Inspect event streams, logs, and exported run state.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

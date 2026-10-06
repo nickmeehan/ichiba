@@ -118,3 +118,6 @@ The tradeoff is cost and latency — you're making 4x the LLM calls. Use single-
 <Card title="Sub-Workflows" icon="arrow-right" href="/tutorials/sub-workflow">
   Delegate to reusable child workflows with the supervisor pattern.
 </Card>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

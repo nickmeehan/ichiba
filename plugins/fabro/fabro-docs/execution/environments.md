@@ -213,20 +213,20 @@ Install seeds a `default` environment into SQLite. It is a normal persisted envi
 
 ## Provider mappings
 
-| Environment field                  | Local                                 | Docker                     | Daytona                                               |
-| ---------------------------------- | ------------------------------------- | -------------------------- | ----------------------------------------------------- |
-| `image.docker`                     | Ignored                               | Docker image               | Snapshot base image; Fabro computes the snapshot name |
-| `image.dockerfile`                 | Ignored                               | Warning; ignored           | Snapshot Dockerfile; Fabro computes the snapshot name |
-| `resources.cpu`                    | Warning; ignored                      | `cpu_quota = cpu * 100000` | Snapshot CPU                                          |
-| `resources.memory`                 | Warning; ignored                      | Container memory limit     | Snapshot memory                                       |
-| `resources.disk`                   | Warning; ignored                      | Warning; ignored           | Snapshot disk                                         |
-| `network.mode = "allow_all"`       | Host network                          | Docker default bridge      | Daytona allow-all                                     |
-| `network.mode = "block"`           | Error                                 | Docker `none` network      | Daytona block                                         |
-| `network.mode = "cidr_allow_list"` | Error                                 | Error                      | Daytona CIDR allow-list                               |
-| `labels`                           | Warning; ignored                      | Warning; ignored           | Daytona labels                                        |
-| `lifecycle.auto_stop`              | Warning; ignored                      | Warning; ignored           | Daytona auto-stop                                     |
-| `env`                              | Process environment overlay           | Container environment      | Sandbox environment                                   |
-| `cwd`                              | Server-side command working directory | Warning; ignored           | Warning; ignored                                      |
+| Environment field | Local | Docker | Daytona |
+| - | - | - | - |
+| `image.docker` | Ignored | Docker image | Snapshot base image; Fabro computes the snapshot name |
+| `image.dockerfile` | Ignored | Warning; ignored | Snapshot Dockerfile; Fabro computes the snapshot name |
+| `resources.cpu` | Warning; ignored | `cpu_quota = cpu * 100000` | Snapshot CPU |
+| `resources.memory` | Warning; ignored | Container memory limit | Snapshot memory |
+| `resources.disk` | Warning; ignored | Warning; ignored | Snapshot disk |
+| `network.mode = "allow_all"` | Host network | Docker default bridge | Daytona allow-all |
+| `network.mode = "block"` | Error | Docker `none` network | Daytona block |
+| `network.mode = "cidr_allow_list"` | Error | Error | Daytona CIDR allow-list |
+| `labels` | Warning; ignored | Warning; ignored | Daytona labels |
+| `lifecycle.auto_stop` | Warning; ignored | Warning; ignored | Daytona auto-stop |
+| `env` | Process environment overlay | Container environment | Sandbox environment |
+| `cwd` | Server-side command working directory | Warning; ignored | Warning; ignored |
 
 ## Local
 
@@ -300,3 +300,6 @@ auto_stop = "30m"
 mode = "cidr_allow_list"
 allow = ["208.80.154.232/32", "10.0.0.0/8"]
 ```
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

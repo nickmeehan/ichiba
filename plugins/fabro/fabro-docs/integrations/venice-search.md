@@ -81,3 +81,6 @@ See the [`web_search` tool reference](/agents/tools#web_search) for parameters a
     Direct Brave Search backend, preferred whenever its key is configured.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

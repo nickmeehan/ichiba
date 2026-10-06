@@ -134,12 +134,12 @@ The engine tracks how many times each node has been visited. When `gate` has bee
 
 This workflow uses four node types:
 
-| Node        | Shape           | What it does               |
-| ----------- | --------------- | -------------------------- |
-| `plan`      | `tab`           | Single LLM call, no tools  |
-| `implement` | `box` (default) | Agent with tool access     |
-| `validate`  | `parallelogram` | Runs a shell script        |
-| `gate`      | `diamond`       | Routes based on conditions |
+| Node | Shape | What it does |
+| - | - | - |
+| `plan` | `tab` | Single LLM call, no tools |
+| `implement` | `box` (default) | Agent with tool access |
+| `validate` | `parallelogram` | Runs a shell script |
+| `gate` | `diamond` | Routes based on conditions |
 
 ## What you've learned
 
@@ -155,3 +155,6 @@ This workflow uses four node types:
 <Card title="Parallel Review" icon="arrow-right" href="/tutorials/parallel-review">
   Fan out to concurrent branches and merge the results.
 </Card>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

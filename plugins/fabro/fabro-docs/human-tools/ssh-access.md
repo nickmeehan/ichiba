@@ -68,3 +68,6 @@ SSH credentials are temporary and expire after **60 minutes** by default. With `
 
 * SSH access is **Daytona-only**.
 * SSH access is currently available only from the **CLI**. The API server and web UI do not yet expose an SSH endpoint.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

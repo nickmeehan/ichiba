@@ -12,14 +12,14 @@ Failures are inevitable when orchestrating LLM-powered workflows — models hit 
 
 When a node fails, Fabro classifies the failure into one of six categories. These classes drive retry decisions, circuit breaker logic, and edge routing.
 
-| Class              | Description                                                   | Examples                                                    |
-| ------------------ | ------------------------------------------------------------- | ----------------------------------------------------------- |
-| `transient_infra`  | Temporary infrastructure problem — likely to resolve on retry | Rate limits, timeouts, network errors, 5xx responses        |
-| `deterministic`    | Permanent failure — retrying won't help                       | Authentication errors, bad configuration, invalid requests  |
-| `budget_exhausted` | Resource limit reached                                        | Context length exceeded, token/turn limits, quota exhausted |
-| `compilation_loop` | Reserved for loop detection                                   | —                                                           |
-| `canceled`         | User or system cancellation                                   | Cancel signal, abort                                        |
-| `structural`       | Reserved for scope enforcement                                | Write scope violations                                      |
+| Class | Description | Examples |
+| - | - | - |
+| `transient_infra` | Temporary infrastructure problem — likely to resolve on retry | Rate limits, timeouts, network errors, 5xx responses |
+| `deterministic` | Permanent failure — retrying won't help | Authentication errors, bad configuration, invalid requests |
+| `budget_exhausted` | Resource limit reached | Context length exceeded, token/turn limits, quota exhausted |
+| `compilation_loop` | Reserved for loop detection | — |
+| `canceled` | User or system cancellation | Cancel signal, abort |
+| `structural` | Reserved for scope enforcement | Write scope violations |
 
 Classification happens automatically. Fabro inspects SDK error types, HTTP status codes, and error message patterns to assign the right class. The `failure_class` is written to [context](/execution/context) after each stage, so you can route on it in edge conditions:
 
@@ -98,13 +98,13 @@ Fabro retries failures at three levels: **LLM retries** handle transient API err
 
 Every LLM call (within an agent session or a one-shot prompt node) has a built-in retry loop for transient API errors. This is invisible to the workflow — it happens inside the model call itself.
 
-| Setting            | Default                 |
-| ------------------ | ----------------------- |
-| Max retries        | 3                       |
-| Initial delay      | 1 second                |
-| Backoff multiplier | 2x                      |
-| Max delay          | 60 seconds              |
-| Jitter             | 0.5x–1.5x random factor |
+| Setting | Default |
+| - | - |
+| Max retries | 3 |
+| Initial delay | 1 second |
+| Backoff multiplier | 2x |
+| Max delay | 60 seconds |
+| Jitter | 0.5x–1.5x random factor |
 
 Only transient errors are retried: rate limits, server errors (5xx), timeouts, network failures, and stream interruptions. Permanent errors like authentication failures or invalid requests fail immediately.
 
@@ -126,13 +126,13 @@ Set a retry policy on a node with the `retry_policy` attribute:
 implement [retry_policy="standard"]
 ```
 
-| Policy       | Max attempts | Initial delay | Backoff        | Typical delays            |
-| ------------ | ------------ | ------------- | -------------- | ------------------------- |
-| `none`       | 1            | —             | —              | No retries                |
-| `standard`   | 5            | 200ms         | 2x exponential | 200ms, 400ms, 800ms, 1.6s |
-| `aggressive` | 5            | 500ms         | 2x exponential | 500ms, 1s, 2s, 4s         |
-| `linear`     | 3            | 500ms         | 1x (constant)  | 500ms, 500ms              |
-| `patient`    | 3            | 2s            | 3x exponential | 2s, 6s                    |
+| Policy | Max attempts | Initial delay | Backoff | Typical delays |
+| - | - | - | - | - |
+| `none` | 1 | — | — | No retries |
+| `standard` | 5 | 200ms | 2x exponential | 200ms, 400ms, 800ms, 1.6s |
+| `aggressive` | 5 | 500ms | 2x exponential | 500ms, 1s, 2s, 4s |
+| `linear` | 3 | 500ms | 1x (constant) | 500ms, 500ms |
+| `patient` | 3 | 2s | 3x exponential | 2s, 6s |
 
 All policies apply random jitter (0.5x–1.5x) and cap individual delays at 60 seconds.
 
@@ -189,19 +189,19 @@ The primary provider and model were already resolved and persisted when the run 
 
 Failover is a superset of LLM retry eligibility:
 
-| Error type            | LLM retry | Provider failover |
-| --------------------- | --------- | ----------------- |
-| Rate limit            | Yes       | Yes               |
-| Server error (5xx)    | Yes       | Yes               |
-| Timeout / network     | Yes       | Yes               |
-| Quota exceeded        | No        | Yes               |
-| Authentication (401)  | No        | Yes               |
-| Access denied (403)   | No        | Yes               |
-| Model not found (404) | No        | Yes               |
-| Model refusal         | No        | Yes               |
-| Invalid request (400) | No        | No                |
-| Context length (413)  | No        | No                |
-| Content filter        | No        | No                |
+| Error type | LLM retry | Provider failover |
+| - | - | - |
+| Rate limit | Yes | Yes |
+| Server error (5xx) | Yes | Yes |
+| Timeout / network | Yes | Yes |
+| Quota exceeded | No | Yes |
+| Authentication (401) | No | Yes |
+| Access denied (403) | No | Yes |
+| Model not found (404) | No | Yes |
+| Model refusal | No | Yes |
+| Invalid request (400) | No | No |
+| Context length (413) | No | No |
+| Content filter | No | No |
 
 Quota errors are the key distinction — they aren't retried against the same provider (the quota won't reset) but *are* eligible for failover to a provider with its own quota.
 
@@ -220,10 +220,10 @@ digraph Example {
 }
 ```
 
-| Context                    | Default              |
-| -------------------------- | -------------------- |
-| Normal runs                | Disabled (unlimited) |
-| Dry runs (`--dry-run`)     | 10                   |
+| Context | Default |
+| - | - |
+| Normal runs | Disabled (unlimited) |
+| Dry runs (`--dry-run`) | 10 |
 | Explicit `max_node_visits` | The configured value |
 
 When a node hits the limit, the run fails immediately:
@@ -335,10 +335,10 @@ goal gate unsatisfied for node verify and no retry target
 
 Fabro runs a background watchdog that monitors event activity. If no events are emitted for longer than the **stall timeout**, the run is canceled. This catches cases where a handler hangs indefinitely without producing errors.
 
-| Setting         | Default                   |
-| --------------- | ------------------------- |
+| Setting | Default |
+| - | - |
 | `stall_timeout` | 1800 seconds (30 minutes) |
-| Set to `0`      | Disables the watchdog     |
+| Set to `0` | Disables the watchdog |
 
 ```dot title="example.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph Example {
@@ -371,3 +371,6 @@ The run also terminates immediately for:
 * **Goal gate failure with no retry target** — a required gate was unsatisfied at the exit node
 * **Stall timeout** — no events for too long
 * **Cancellation** — user or system cancel signal
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

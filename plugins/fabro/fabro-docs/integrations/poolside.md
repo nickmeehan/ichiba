@@ -40,10 +40,10 @@ The provider sends OpenAI-compatible Chat Completions requests to `https://infer
 
 ## Included models
 
-| Fabro model ID  | Poolside API model ID    |   Context | Max output | Role                                                    |
-| --------------- | ------------------------ | --------: | ---------: | ------------------------------------------------------- |
-| `laguna-s-2.1`  | `poolside/laguna-s-2.1`  | 1,048,576 |    131,072 | Provider default; aliases `laguna`, `laguna-s`          |
-| `laguna-xs-2.1` | `poolside/laguna-xs-2.1` |   262,144 |     32,768 | Small default and connectivity probe; alias `laguna-xs` |
+| Fabro model ID | Poolside API model ID | Context | Max output | Role |
+| - | - | -: | -: | - |
+| `laguna-s-2.1` | `poolside/laguna-s-2.1` | 1,048,576 | 131,072 | Provider default; aliases `laguna`, `laguna-s` |
+| `laguna-xs-2.1` | `poolside/laguna-xs-2.1` | 262,144 | 32,768 | Small default and connectivity probe; alias `laguna-xs` |
 
 Both models support text input, tool calling, native reasoning, streaming, and automatic prompt-cache usage reporting. They do not support image input.
 
@@ -113,10 +113,10 @@ fabro run workflow.fabro --model poolside/laguna-s-2.1
 
 OpenRouter returns authoritative in-band cost telemetry. Its current paid rates per million input, output, and cache-read tokens are:
 
-| Model                    |  Input | Output | Cache read |
-| ------------------------ | -----: | -----: | ---------: |
-| `poolside/laguna-s-2.1`  | \$0.10 | \$0.20 |     \$0.01 |
-| `poolside/laguna-xs-2.1` | \$0.06 | \$0.12 |     \$0.03 |
+| Model | Input | Output | Cache read |
+| - | -: | -: | -: |
+| `poolside/laguna-s-2.1` | \$0.10 | \$0.20 | \$0.01 |
+| `poolside/laguna-xs-2.1` | \$0.06 | \$0.12 | \$0.03 |
 
 The XS rate reflects OpenRouter's current promotional discount and can change. Fabro prefers OpenRouter's authoritative `usage.cost` over catalog estimates.
 
@@ -141,3 +141,6 @@ Fabro does not include promotional `:free` OpenRouter variants in the built-in c
     Current model capabilities, weights, context windows, and release information.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

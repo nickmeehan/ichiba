@@ -263,6 +263,12 @@ components:
           description: >-
             Server-generated request identifier; matches the x-request-id
             response header.
+        meta:
+          type: object
+          additionalProperties: true
+          description: >-
+            Optional structured details specific to the error `code`, for
+            clients that act on them. Each code documents the members it sets.
     UsageStageRef:
       description: Reference to a workflow node in a usage stage row.
       type: object
@@ -503,3 +509,5 @@ components:
         verifies and decodes the cookie before authenticating the request.
 
 ````
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

@@ -103,7 +103,6 @@ components:
         - sandbox
         - storage
         - artifacts
-        - slatedb
         - scheduler
         - logging
         - integrations
@@ -122,8 +121,6 @@ components:
           $ref: '#/components/schemas/ServerStorageSettings'
         artifacts:
           $ref: '#/components/schemas/ServerArtifactsSettings'
-        slatedb:
-          $ref: '#/components/schemas/ServerSlateDbSettings'
         scheduler:
           $ref: '#/components/schemas/ServerSchedulerSettings'
         logging:
@@ -189,22 +186,6 @@ components:
           type: string
         store:
           $ref: '#/components/schemas/ObjectStoreSettings'
-    ServerSlateDbSettings:
-      type: object
-      required:
-        - prefix
-        - store
-        - flush_interval
-        - disk_cache
-      properties:
-        prefix:
-          type: string
-        store:
-          $ref: '#/components/schemas/ObjectStoreSettings'
-        flush_interval:
-          type: string
-        disk_cache:
-          type: boolean
     ServerSchedulerSettings:
       type: object
       required:
@@ -395,7 +376,7 @@ components:
       properties:
         path:
           type: string
-          description: Executable path. Absent means `fabro-sandbox-<kind>` on `PATH`.
+          description: Executable path. Absent means `sandbox-driver-<kind>` on `PATH`.
         sha256:
           type: string
           description: Pinned SHA-256 of the executable, hex.
@@ -438,3 +419,5 @@ components:
         verifies and decodes the cookie before authenticating the request.
 
 ````
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

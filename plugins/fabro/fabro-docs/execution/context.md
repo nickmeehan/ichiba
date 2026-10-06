@@ -35,11 +35,11 @@ Each handler type writes specific keys into the context after execution:
 
 ### Agent and prompt nodes
 
-| Key                  | Value                                         |
-| -------------------- | --------------------------------------------- |
-| `last_stage`         | The node ID of the stage that just completed  |
-| `last_response`      | Truncated LLM response (first 200 characters) |
-| `response.{node_id}` | Full LLM response text                        |
+| Key | Value |
+| - | - |
+| `last_stage` | The node ID of the stage that just completed |
+| `last_response` | Truncated LLM response (first 200 characters) |
+| `response.{node_id}` | Full LLM response text |
 
 Agents can also emit arbitrary context updates by including a JSON object with a `context_updates` field in their response. See [Transitions](/workflows/transitions#agent-transitions).
 
@@ -50,27 +50,27 @@ presents its document URL as the primary question link. See
 
 ### Command nodes
 
-| Key              | Value                                                                                                                                                                  |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Key | Value |
+| - | - |
 | `command.output` | The command's ordered output stream. Durable context stores this as a `blob://sha256/...` ref after the command completes; downstream prompts resolve it back to text. |
 
 ### Human gates
 
-| Key                          | Value                                                              |
-| ---------------------------- | ------------------------------------------------------------------ |
-| `human.gate.selected`        | The accelerator key (e.g. `"A"`) or `"freeform"`                   |
-| `human.gate.label`           | The full label of the selected edge                                |
-| `human.gate.text`            | The user's freeform text (if applicable)                           |
-| `human.gate.<node>.question` | The question text for a specific human gate node                   |
-| `human.gate.<node>.answer`   | The answer text for a specific human gate node                     |
-| `human.gate.<node>.label`    | The selected label for a specific human gate node, when applicable |
+| Key | Value |
+| - | - |
+| `human.gate.selected` | The accelerator key (e.g. `"A"`) or `"freeform"` |
+| `human.gate.label` | The full label of the selected edge |
+| `human.gate.text` | The user's freeform text (if applicable) |
+| `human.gate.<node>.question` | The question text for a specific human gate node |
+| `human.gate.<node>.answer` | The answer text for a specific human gate node |
+| `human.gate.<node>.label` | The selected label for a specific human gate node, when applicable |
 
 ### Parallel fan-out and fan-in
 
-| Key                     | Value                                                                                                                                                                     |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `parallel.results`      | Ordered branch results. Each entry contains `id`, `index`, optional `item_label`, `status`, and the branch's isolated `context_updates`. Legacy results may omit `index`. |
-| `parallel.branch_count` | Number of branches dispatched. For `for_each`, this is the runtime array length.                                                                                          |
+| Key | Value |
+| - | - |
+| `parallel.results` | Ordered branch results. Each entry contains `id`, `index`, optional `item_label`, `status`, and the branch's isolated `context_updates`. Legacy results may omit `index`. |
+| `parallel.branch_count` | Number of branches dispatched. For `for_each`, this is the runtime array length. |
 
 Branch updates remain nested inside `parallel.results`; they are not merged into top-level context. Prompted fan-in nodes can synthesize the complete result array, while promptless fan-in nodes act as barriers.
 
@@ -97,21 +97,21 @@ result. The item itself is not copied into `parallel.results`.
 
 The engine sets several keys automatically. These are prefixed with `internal.` and are excluded from preambles:
 
-| Key                              | Value                                                            |
-| -------------------------------- | ---------------------------------------------------------------- |
-| `internal.run_id`                | Unique identifier for this run                                   |
-| `internal.work_dir`              | Working directory path                                           |
-| `internal.fidelity`              | The resolved fidelity mode for the current node                  |
-| `internal.thread_id`             | Thread ID for shared-conversation nodes (or null)                |
-| `internal.node_visit_count`      | How many times the current node has been visited                 |
-| `internal.retry_count.{node_id}` | Number of retry attempts used by a node                          |
-| `outcome`                        | Status of the last completed stage (`succeeded`, `failed`, etc.) |
-| `failure_class`                  | Classification of the last failure (if any)                      |
-| `failure_signature`              | Deduplication signature for the last failure                     |
-| `preferred_label`                | Label selected by a human gate or agent routing directive        |
-| `current_node`                   | ID of the node currently executing                               |
-| `graph.goal`                     | The workflow's goal attribute                                    |
-| `graph.{attr}`                   | All graph-level attributes, mirrored into context                |
+| Key | Value |
+| - | - |
+| `internal.run_id` | Unique identifier for this run |
+| `internal.work_dir` | Working directory path |
+| `internal.fidelity` | The resolved fidelity mode for the current node |
+| `internal.thread_id` | Thread ID for shared-conversation nodes (or null) |
+| `internal.node_visit_count` | How many times the current node has been visited |
+| `internal.retry_count.{node_id}` | Number of retry attempts used by a node |
+| `outcome` | Status of the last completed stage (`succeeded`, `failed`, etc.) |
+| `failure_class` | Classification of the last failure (if any) |
+| `failure_signature` | Deduplication signature for the last failure |
+| `preferred_label` | Label selected by a human gate or agent routing directive |
+| `current_node` | ID of the node currently executing |
+| `graph.goal` | The workflow's goal attribute |
+| `graph.{attr}` | All graph-level attributes, mirrored into context |
 
 ## Using context in conditions
 
@@ -135,14 +135,14 @@ gate -> improve
 
 When a new agent or prompt node starts, Fabro assembles a **preamble** — a summary of what happened in prior stages. The **fidelity** setting controls how detailed this preamble is.
 
-| Fidelity         | Behavior                                                                                         |
-| ---------------- | ------------------------------------------------------------------------------------------------ |
-| `full`           | No preamble. The agent continues in the same conversation thread, seeing complete prior context. |
-| `compact`        | Nested-bullet summary with handler-specific details (default).                                   |
-| `summary:high`   | Detailed per-stage Markdown report.                                                              |
-| `summary:medium` | Moderate detail with outcomes and notable findings (\~1500 token target).                        |
-| `summary:low`    | Brief summary with just outcomes per stage (\~600 token target).                                 |
-| `truncate`       | Minimal — only the goal and run ID.                                                              |
+| Fidelity | Behavior |
+| - | - |
+| `full` | No preamble. The agent continues in the same conversation thread, seeing complete prior context. |
+| `compact` | Nested-bullet summary with handler-specific details (default). |
+| `summary:high` | Detailed per-stage Markdown report. |
+| `summary:medium` | Moderate detail with outcomes and notable findings (\~1500 token target). |
+| `summary:low` | Brief summary with just outcomes per stage (\~600 token target). |
+| `truncate` | Minimal — only the goal and run ID. |
 
 ### Setting fidelity
 
@@ -293,8 +293,11 @@ Compaction failures are **non-fatal**. If the summarization LLM call fails, Fabr
 
 Compaction emits three events to the [event stream](/execution/observability#event-stream):
 
-| Event                                    | When                                         | Key fields                                                                                         |
-| ---------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Event | When | Key fields |
+| - | - | - |
 | `Agent.Warning` (kind: `context_window`) | Token estimate exceeds 80% of context window | `kind`, `message`, `details` (contains `estimated_tokens`, `context_window_size`, `usage_percent`) |
-| `Agent.CompactionStarted`                | Compaction begins                            | `estimated_tokens`, `context_window_size`                                                          |
-| `Agent.CompactionCompleted`              | Summary generated and history replaced       | `original_turn_count`, `preserved_turn_count`, `summary_token_estimate`, `tracked_file_count`      |
+| `Agent.CompactionStarted` | Compaction begins | `estimated_tokens`, `context_window_size` |
+| `Agent.CompactionCompleted` | Summary generated and history replaced | `original_turn_count`, `preserved_turn_count`, `summary_token_estimate`, `tracked_file_count` |
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

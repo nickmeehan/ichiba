@@ -10,11 +10,11 @@ Permissions control which tools an agent can use without human approval. Fabro u
 
 ## Permission levels
 
-| Level        | Auto-approved tools                                                         | Prompted tools                                |
-| ------------ | --------------------------------------------------------------------------- | --------------------------------------------- |
-| `read-only`  | `read_file`, `read_many_files`, `grep`, `glob`, `list_dir`, sub-agent tools | Everything else requires approval             |
-| `read-write` | All read tools + `write_file`, `edit_file`, `apply_patch`, sub-agent tools  | `shell`, `web_search`, `web_fetch`, MCP tools |
-| `full`       | All tools including `shell`, `web_search`, `web_fetch`, MCP tools           | None                                          |
+| Level | Auto-approved tools | Prompted tools |
+| - | - | - |
+| `read-only` | `read_file`, `read_many_files`, `grep`, `glob`, `list_dir`, sub-agent tools | Everything else requires approval |
+| `read-write` | All read tools + `write_file`, `edit_file`, `apply_patch`, sub-agent tools | `shell`, `web_search`, `web_fetch`, MCP tools |
+| `full` | All tools including `shell`, `web_search`, `web_fetch`, MCP tools | None |
 
 The default permission level is `read-write`.
 
@@ -22,12 +22,12 @@ The default permission level is `read-write`.
 
 Every tool is classified into one of four categories that determine which permission level auto-approves it:
 
-| Category | Tools                                                        | Minimum level |
-| -------- | ------------------------------------------------------------ | ------------- |
-| read     | `read_file`, `read_many_files`, `grep`, `glob`, `list_dir`   | `read-only`   |
-| write    | `write_file`, `edit_file`, `apply_patch`                     | `read-write`  |
-| subagent | `spawn_agent`, `send_input`, `wait`, `close_agent`           | `read-only`   |
-| shell    | `shell`, `web_search`, `web_fetch`, MCP tools, unknown tools | `full`        |
+| Category | Tools | Minimum level |
+| - | - | - |
+| read | `read_file`, `read_many_files`, `grep`, `glob`, `list_dir` | `read-only` |
+| write | `write_file`, `edit_file`, `apply_patch` | `read-write` |
+| subagent | `spawn_agent`, `send_input`, `wait`, `close_agent` | `read-only` |
+| shell | `shell`, `web_search`, `web_fetch`, MCP tools, unknown tools | `full` |
 
 Unknown tools (including MCP tools) default to the `shell` category, requiring `full` permission for auto-approval.
 
@@ -118,3 +118,6 @@ For CLI-backed workflow agents, each provider handles auto-approval differently:
     Sub-agents inherit their parent's permission level.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

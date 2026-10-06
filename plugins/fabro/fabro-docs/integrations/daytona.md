@@ -10,13 +10,13 @@
 
 ## What the Daytona integration enables
 
-| Feature                   | How it's used                                                                                          |
-| ------------------------- | ------------------------------------------------------------------------------------------------------ |
-| **Sandboxed execution**   | Agent tool calls (shell commands, file edits, grep, glob) run inside a cloud VM instead of on the host |
-| **Snapshots**             | Pre-built environment images so each run starts with dependencies already installed                    |
-| **SSH access**            | Connect to a running sandbox for live debugging                                                        |
-| **Network controls**      | Restrict agent egress with block-all or CIDR-based allow lists                                         |
-| **MCP sandbox transport** | Run [MCP servers](/agents/mcp#sandbox) inside the sandbox — e.g., Playwright for browser automation    |
+| Feature | How it's used |
+| - | - |
+| **Sandboxed execution** | Agent tool calls (shell commands, file edits, grep, glob) run inside a cloud VM instead of on the host |
+| **Snapshots** | Pre-built environment images so each run starts with dependencies already installed |
+| **SSH access** | Connect to a running sandbox for live debugging |
+| **Network controls** | Restrict agent egress with block-all or CIDR-based allow lists |
+| **MCP sandbox transport** | Run [MCP servers](/agents/mcp#sandbox) inside the sandbox — e.g., Playwright for browser automation |
 
 ## Prerequisites
 
@@ -259,3 +259,6 @@ digraph Example {
     graph [stall_timeout="1200"]
 }
 ```
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

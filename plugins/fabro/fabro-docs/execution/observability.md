@@ -55,17 +55,17 @@ Each serialized event envelope has a stable JSON shape:
 
 Envelope fields:
 
-| Field               | Description                                         |
-| ------------------- | --------------------------------------------------- |
-| `id`                | Unique event id                                     |
-| `ts`                | UTC timestamp                                       |
-| `run_id`            | Workflow run id                                     |
-| `event`             | Event name                                          |
-| `session_id`        | Session that emitted the event, when applicable     |
+| Field | Description |
+| - | - |
+| `id` | Unique event id |
+| `ts` | UTC timestamp |
+| `run_id` | Workflow run id |
+| `event` | Event name |
+| `session_id` | Session that emitted the event, when applicable |
 | `parent_session_id` | Immediate parent session for forwarded child events |
-| `node_id`           | Node or branch id, when applicable                  |
-| `node_label`        | Human-facing label for `node_id`, when applicable   |
-| `properties`        | Event-specific payload                              |
+| `node_id` | Node or branch id, when applicable |
+| `node_label` | Human-facing label for `node_id`, when applicable |
+| `properties` | Event-specific payload |
 
 Only `id`, `ts`, `run_id`, and `event` are always present. Optional fields are omitted when they do not apply.
 
@@ -98,15 +98,15 @@ If you need files on disk for offline analysis, `fabro dump` exports `events.jso
 
 Common categories include:
 
-| Category            | Example events                                                              |
-| ------------------- | --------------------------------------------------------------------------- |
-| Run lifecycle       | `run.started`, `run.completed`, `run.failed`, `run.notice`                  |
-| Stage lifecycle     | `stage.started`, `stage.completed`, `stage.failed`, `stage.retrying`        |
-| Agent activity      | `agent.message`, `agent.tool.started`, `agent.warning`, `agent.sub.spawned` |
-| Agent todo state    | `todo.created`, `todo.updated`, `todo.deleted`                              |
-| Routing             | `edge.selected`, `loop.restart`, `parallel.started`                         |
-| Git and checkpoints | `checkpoint.completed`, `git.commit`, `git.push`                            |
-| Setup and sandbox   | `sandbox.initializing`, `sandbox.ready`, `setup.started`                    |
+| Category | Example events |
+| - | - |
+| Run lifecycle | `run.started`, `run.completed`, `run.failed`, `run.notice` |
+| Stage lifecycle | `stage.started`, `stage.completed`, `stage.failed`, `stage.retrying` |
+| Agent activity | `agent.message`, `agent.tool.started`, `agent.warning`, `agent.sub.spawned` |
+| Agent todo state | `todo.created`, `todo.updated`, `todo.deleted` |
+| Routing | `edge.selected`, `loop.restart`, `parallel.started` |
+| Git and checkpoints | `checkpoint.completed`, `git.commit`, `git.push` |
+| Setup and sandbox | `sandbox.initializing`, `sandbox.ready`, `setup.started` |
 
 `agent.message` is the canonical post-response event for agent turns. When context-window data is available, it appears on the message payload as `context_window`; there is no separate context-window snapshot event to consume.
 
@@ -141,11 +141,14 @@ The CLI renders live progress from the same envelope format. This is written to 
 
 Post-run analysis surfaces include:
 
-| Surface                           | Description                                                                  |
-| --------------------------------- | ---------------------------------------------------------------------------- |
-| `fabro events <RUN>`              | Full event envelope stream as NDJSON                                         |
-| `fabro logs <RUN>`                | Raw per-run worker tracing log, when available                               |
-| `fabro inspect <RUN>`             | Current durable run state, including run/start/checkpoint/conclusion records |
-| `fabro dump --output <DIR> <RUN>` | Exported `events.jsonl` plus reconstructed JSON and node files               |
+| Surface | Description |
+| - | - |
+| `fabro events <RUN>` | Full event envelope stream as NDJSON |
+| `fabro logs <RUN>` | Raw per-run worker tracing log, when available |
+| `fabro inspect <RUN>` | Current durable run state, including run/start/checkpoint/conclusion records |
+| `fabro dump --output <DIR> <RUN>` | Exported `events.jsonl` plus reconstructed JSON and node files |
 
 See [stages](/api-reference/run-internals/list-run-stages) and [turns](/api-reference/run-internals/list-stage-turns) for higher-level analysis views built on top of this event stream.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

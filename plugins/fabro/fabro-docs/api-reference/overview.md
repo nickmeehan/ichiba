@@ -90,33 +90,33 @@ All error responses share a consistent JSON structure:
 
 Each entry in the `errors` array contains:
 
-| Field    | Type     | Description                                     |
-| -------- | -------- | ----------------------------------------------- |
-| `status` | `string` | The HTTP status code as a string                |
-| `title`  | `string` | The canonical reason phrase for the status code |
-| `detail` | `string` | A human-readable explanation of the error       |
+| Field | Type | Description |
+| - | - | - |
+| `status` | `string` | The HTTP status code as a string |
+| `title` | `string` | The canonical reason phrase for the status code |
+| `detail` | `string` | A human-readable explanation of the error |
 
 ### HTTP Status Codes
 
-| Status                | Meaning                                        | When It Occurs                                          |
-| --------------------- | ---------------------------------------------- | ------------------------------------------------------- |
-| `400 Bad Request`     | The request body or parameters are invalid     | Missing required fields, malformed JSON                 |
-| `401 Unauthorized`    | Authentication is missing or invalid           | No token, invalid dev token, or missing/expired session |
-| `403 Forbidden`       | The authenticated user lacks access            | Username not in the allowed list                        |
-| `404 Not Found`       | The requested resource does not exist          | Unknown run ID, unknown workflow name                   |
-| `409 Conflict`        | The resource is in a conflicting state         | Answering a question on a run that isn't running yet    |
-| `410 Gone`            | The resource is no longer available            | SSE event stream has closed                             |
-| `501 Not Implemented` | The endpoint exists but is not yet implemented | Placeholder routes                                      |
-| `502 Bad Gateway`     | An upstream dependency failed                  | An upstream service returned an error                   |
+| Status | Meaning | When It Occurs |
+| - | - | - |
+| `400 Bad Request` | The request body or parameters are invalid | Missing required fields, malformed JSON |
+| `401 Unauthorized` | Authentication is missing or invalid | No token, invalid dev token, or missing/expired session |
+| `403 Forbidden` | The authenticated user lacks access | Username not in the allowed list |
+| `404 Not Found` | The requested resource does not exist | Unknown run ID, unknown workflow name |
+| `409 Conflict` | The resource is in a conflicting state | Answering a question on a run that isn't running yet |
+| `410 Gone` | The resource is no longer available | SSE event stream has closed |
+| `501 Not Implemented` | The endpoint exists but is not yet implemented | Placeholder routes |
+| `502 Bad Gateway` | An upstream dependency failed | An upstream service returned an error |
 
 ## Pagination
 
 List endpoints that return large collections use offset-based pagination. Pass pagination parameters as query strings:
 
-| Parameter      | Type      | Default | Description                                          |
-| -------------- | --------- | ------- | ---------------------------------------------------- |
-| `page[limit]`  | `integer` | `20`    | Maximum number of items to return (clamped to 1–100) |
-| `page[offset]` | `integer` | `0`     | Number of items to skip                              |
+| Parameter | Type | Default | Description |
+| - | - | - | - |
+| `page[limit]` | `integer` | `20` | Maximum number of items to return (clamped to 1–100) |
+| `page[offset]` | `integer` | `0` | Number of items to skip |
 
 Paginated responses include a `meta` object alongside the `data` array:
 
@@ -144,3 +144,6 @@ The Fabro API is versioned under `/api/v1`. All versioned endpoints, including t
 ## Discovery
 
 The root endpoint (`GET /`) returns discovery URLs. The health endpoint (`GET /health`) can be used for liveness checks. The OpenAPI spec is available at `GET /api/v1/openapi.json`.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

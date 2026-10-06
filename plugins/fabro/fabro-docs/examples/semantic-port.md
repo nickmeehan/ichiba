@@ -158,11 +158,11 @@ This is fundamentally different from a build workflow that runs once and exits. 
 
 The workflow tracks disposition in an external ledger file (`ledger.tsv`) with three states:
 
-| Status         | Meaning                                                                     |
-| -------------- | --------------------------------------------------------------------------- |
-| `new`          | Unprocessed — the workflow hasn't looked at this commit yet                 |
+| Status | Meaning |
+| - | - |
+| `new` | Unprocessed — the workflow hasn't looked at this commit yet |
 | `acknowledged` | Reviewed and determined to be irrelevant (docs-only, Python-specific, etc.) |
-| `implemented`  | Semantic changes ported to the Go codebase                                  |
+| `implemented` | Semantic changes ported to the Go codebase |
 
 The ledger is the source of truth for what's been processed. Because it's a plain file committed to Git, it survives across runs — you can stop and resume the workflow and it picks up where it left off.
 
@@ -280,3 +280,6 @@ The core structure is always the same: fetch the next item, analyze it, decide o
     TOML configs for repeatable, parameterized runs.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

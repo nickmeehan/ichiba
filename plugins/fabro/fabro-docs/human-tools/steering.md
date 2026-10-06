@@ -38,15 +38,18 @@ Multiple steering messages sent in quick succession are all delivered together a
 
 Steering and [human gates](/workflows/human-in-the-loop) serve different purposes:
 
-|                          | Steering                                 | Human gates                                      |
-| ------------------------ | ---------------------------------------- | ------------------------------------------------ |
-| **When**                 | Any time during an agent stage           | At a defined point in the workflow graph         |
-| **Blocks execution**     | No — agent continues working             | Yes — workflow pauses until a choice is made     |
-| **Defined in the graph** | No — sent ad hoc via the API             | Yes — `hexagon` nodes with edge options          |
-| **Use case**             | Course corrections, hints, focus changes | Approval decisions, strategy selection, go/no-go |
+| | Steering | Human gates |
+| - | - | - |
+| **When** | Any time during an agent stage | At a defined point in the workflow graph |
+| **Blocks execution** | No — agent continues working | Yes — workflow pauses until a choice is made |
+| **Defined in the graph** | No — sent ad hoc via the API | Yes — `hexagon` nodes with edge options |
+| **Use case** | Course corrections, hints, focus changes | Approval decisions, strategy selection, go/no-go |
 
 Use human gates for structured decisions that are part of the workflow design. Use steering for reactive guidance when you're watching a run and want to intervene.
 
 <Frame caption="The Files Changed tab shows a side-by-side diff of all changes made during the run.">
   <img src="https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/web/run-files-changed.png?fit=max&auto=format&n=_yTKyxnEAApivGto&q=85&s=9ec61f3149ef6e096eadb1950235494b" alt="Fabro web UI Files Changed tab showing a side-by-side diff" width="2400" height="1558" data-path="images/web/run-files-changed.png" />
 </Frame>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

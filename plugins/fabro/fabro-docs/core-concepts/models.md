@@ -28,52 +28,52 @@ For an unqualified selector, Fabro checks canonical slugs before aliases, filter
 
 For example, the shared `gpt-56-sol` alias can be portable across direct OpenAI and OpenRouter offerings:
 
-| Ready providers                      | Selector     | Selected offering                          |
-| ------------------------------------ | ------------ | ------------------------------------------ |
-| OpenAI only                          | `gpt-56-sol` | `openai/gpt-5.6-sol`                       |
-| OpenRouter only                      | `gpt-56-sol` | `openrouter/gpt-5.6-sol`                   |
-| OpenAI and OpenRouter                | `gpt-56-sol` | OpenAI, because it has higher priority     |
+| Ready providers | Selector | Selected offering |
+| - | - | - |
+| OpenAI only | `gpt-56-sol` | `openai/gpt-5.6-sol` |
+| OpenRouter only | `gpt-56-sol` | `openrouter/gpt-5.6-sol` |
+| OpenAI and OpenRouter | `gpt-56-sol` | OpenAI, because it has higher priority |
 | Both, with `provider = "openrouter"` | `gpt-56-sol` | OpenRouter, because the provider is pinned |
 
 Fabro performs this selection once when creating a run and persists the chosen provider and canonical slug in the run settings and graph. Resuming that run does not reconsider provider priority when credentials change. Runtime [model fallbacks](/execution/failures#model-fallbacks) are the separate mechanism for handling a later provider failure.
 
-| Model                                | Provider  | Aliases                                                                           | Context   | Cost (in/out per Mtok) | Speed      |
-| ------------------------------------ | --------- | --------------------------------------------------------------------------------- | --------- | ---------------------- | ---------- |
-| `claude-fable-5`                     | anthropic | `fable`, `claude-fable`                                                           | 1M        | $10.00 / $50.00        | n/a        |
-| `claude-opus-5`                      | anthropic | `opus`, `claude-opus`                                                             | 1M        | $5.00 / $25.00         | n/a        |
-| `claude-opus-4-8`                    | anthropic |                                                                                   | 1M        | $5.00 / $25.00         | 25 tok/s   |
-| `claude-opus-4-7`                    | anthropic |                                                                                   | 1M        | $5.00 / $25.00         | 25 tok/s   |
-| `claude-opus-4-6`                    | anthropic |                                                                                   | 1M        | $5.00 / $25.00         | 25 tok/s   |
-| `claude-sonnet-4-6`                  | anthropic | `sonnet`, `claude-sonnet`                                                         | 200K      | $3.00 / $15.00         | 50 tok/s   |
-| `claude-sonnet-4-5`                  | anthropic |                                                                                   | 200K      | $3.00 / $15.00         | 50 tok/s   |
-| `claude-haiku-4-5`                   | anthropic | `haiku`, `claude-haiku`                                                           | 200K      | $0.80 / $4.00          | 100 tok/s  |
-| `gpt-5.6-sol`                        | openai    | `sol`, `gpt-sol`, `gpt56-sol`, `gpt-56-sol`, `gpt-5.6`, `gpt56`, `gpt-56`         | 272K      | $5.00 / $30.00         | n/a        |
-| `gpt-5.6-terra`                      | openai    | `terra`, `gpt-terra`, `gpt56-terra`, `gpt-56-terra`                               | 272K      | $2.50 / $15.00         | n/a        |
-| `gpt-5.6-luna`                       | openai    | `luna`, `gpt-luna`, `gpt56-luna`, `gpt-56-luna`                                   | 272K      | $1.00 / $6.00          | n/a        |
-| `gpt-5.4`                            | openai    | `gpt54`, `gpt5`, `codex`                                                          | 272K      | $2.50 / $15.00         | 70 tok/s   |
-| `gpt-5.5`                            | openai    | `gpt55`                                                                           | 272K      | $5.00 / $30.00         | 70 tok/s   |
-| `gpt-5.5-pro`                        | openai    | `gpt55-pro`                                                                       | 1M        | $30.00 / $180.00       | 20 tok/s   |
-| `gpt-5.4-mini`                       | openai    | `gpt54-mini`, `codex-spark`                                                       | 272K      | $0.75 / $4.50          | 140 tok/s  |
-| `gpt-5.4-pro`                        | openai    | `gpt54-pro`                                                                       | 1M        | $30.00 / $180.00       | 20 tok/s   |
-| `gemini-3.1-pro-preview`             | gemini    | `gemini-pro`                                                                      | 1M        | $2.00 / $12.00         | 85 tok/s   |
-| `gemini-3.1-pro-preview-customtools` | gemini    | `gemini-customtools`                                                              | 1M        | $2.00 / $12.00         | 85 tok/s   |
-| `gemini-3.5-flash`                   | gemini    | `gemini-35-flash`                                                                 | 1M        | $1.50 / $9.00          | 150 tok/s  |
-| `gemini-3-flash-preview`             | gemini    | `gemini-flash`                                                                    | 1M        | $0.50 / $3.00          | 150 tok/s  |
-| `gemini-3.1-flash-lite`              | gemini    | `gemini-flash-lite`, `gemini-3.1-flash-lite-preview`                              | 1M        | $0.25 / $1.50          | 200 tok/s  |
-| `kimi-k2.5`                          | moonshot  |                                                                                   | 262K      | $0.60 / $3.00          | 50 tok/s   |
-| `kimi-k3`                            | moonshot  | `kimi`                                                                            | 1M        | $3.00 / $15.00         | n/a        |
-| `kimi-k3-fast`                       | venice    | `kimi-fast`                                                                       | 1M        | $4.50 / $22.50         | n/a        |
-| `deepseek-v4-flash`                  | deepseek  | `deepseek`, `deepseek-v4`, `deepseek-flash`                                       | 1,048,576 | $0.14 / $0.28          | n/a        |
-| `deepseek-v4-pro`                    | deepseek  |                                                                                   | 1,048,576 | $0.435 / $0.87         | n/a        |
-| `grok-4.6`                           | venice    | `grok`, `grok46`, `grok-46`                                                       | 500K      | $2.27 / $6.80          | n/a        |
-| `laguna-s-2.1`                       | poolside  | `laguna`, `laguna-s`                                                              | 1M        | $0.10 / $0.20          | n/a        |
-| `laguna-xs-2.1`                      | poolside  | `laguna-xs`                                                                       | 262K      | $0.10 / $0.20          | n/a        |
-| `glm-5.2`                            | zai       | `glm`, `glm5`, `glm52`, `glm5.2`                                                  | 1M        | $1.40 / $4.40          | n/a        |
-| `glm-5.3`                            | venice    | `glm`, `glm5`, `glm53`, `glm5.3`, `glm-5-3`                                       | 1M        | $1.75 / $5.50          | n/a        |
-| `minimax-m2.5`                       | minimax   | `minimax`                                                                         | 197K      | $0.30 / $1.20          | 45 tok/s   |
-| `mercury-2`                          | inception | `mercury`                                                                         | 131K      | $0.25 / $0.75          | 1000 tok/s |
-| `qwen3.8-max`                        | venice    | `qwen`, `qwen-max`, `qwen3.8`, `qwen-3.8`, `qwen38`, `qwen-3.8-max`, `qwen38-max` | 1M        | $2.50 / $7.50          | n/a        |
-| `qwen3.8-27b`                        | venice    | `qwen-27b`, `qwen-3.8-27b`, `qwen38-27b`                                          | 262K      | $0.45 / $3.20          | n/a        |
+| Model | Provider | Aliases | Context | Cost (in/out per Mtok) | Speed |
+| - | - | - | - | - | - |
+| `claude-fable-5` | anthropic | `fable`, `claude-fable` | 1M | $10.00 / $50.00 | n/a |
+| `claude-opus-5` | anthropic | `opus`, `claude-opus` | 1M | $5.00 / $25.00 | n/a |
+| `claude-opus-4-8` | anthropic | | 1M | $5.00 / $25.00 | 25 tok/s |
+| `claude-opus-4-7` | anthropic | | 1M | $5.00 / $25.00 | 25 tok/s |
+| `claude-opus-4-6` | anthropic | | 1M | $5.00 / $25.00 | 25 tok/s |
+| `claude-sonnet-4-6` | anthropic | `sonnet`, `claude-sonnet` | 200K | $3.00 / $15.00 | 50 tok/s |
+| `claude-sonnet-4-5` | anthropic | | 200K | $3.00 / $15.00 | 50 tok/s |
+| `claude-haiku-4-5` | anthropic | `haiku`, `claude-haiku` | 200K | $0.80 / $4.00 | 100 tok/s |
+| `gpt-5.6-sol` | openai | `sol`, `gpt-sol`, `gpt56-sol`, `gpt-56-sol`, `gpt-5.6`, `gpt56`, `gpt-56` | 272K | $5.00 / $30.00 | n/a |
+| `gpt-5.6-terra` | openai | `terra`, `gpt-terra`, `gpt56-terra`, `gpt-56-terra` | 272K | $2.50 / $15.00 | n/a |
+| `gpt-5.6-luna` | openai | `luna`, `gpt-luna`, `gpt56-luna`, `gpt-56-luna` | 272K | $1.00 / $6.00 | n/a |
+| `gpt-5.4` | openai | `gpt54`, `gpt5`, `codex` | 272K | $2.50 / $15.00 | 70 tok/s |
+| `gpt-5.5` | openai | `gpt55` | 272K | $5.00 / $30.00 | 70 tok/s |
+| `gpt-5.5-pro` | openai | `gpt55-pro` | 1M | $30.00 / $180.00 | 20 tok/s |
+| `gpt-5.4-mini` | openai | `gpt54-mini`, `codex-spark` | 272K | $0.75 / $4.50 | 140 tok/s |
+| `gpt-5.4-pro` | openai | `gpt54-pro` | 1M | $30.00 / $180.00 | 20 tok/s |
+| `gemini-3.1-pro-preview` | gemini | `gemini-pro` | 1M | $2.00 / $12.00 | 85 tok/s |
+| `gemini-3.1-pro-preview-customtools` | gemini | `gemini-customtools` | 1M | $2.00 / $12.00 | 85 tok/s |
+| `gemini-3.5-flash` | gemini | `gemini-35-flash` | 1M | $1.50 / $9.00 | 150 tok/s |
+| `gemini-3-flash-preview` | gemini | `gemini-flash` | 1M | $0.50 / $3.00 | 150 tok/s |
+| `gemini-3.1-flash-lite` | gemini | `gemini-flash-lite`, `gemini-3.1-flash-lite-preview` | 1M | $0.25 / $1.50 | 200 tok/s |
+| `kimi-k2.5` | moonshot | | 262K | $0.60 / $3.00 | 50 tok/s |
+| `kimi-k3` | moonshot | `kimi` | 1M | $3.00 / $15.00 | n/a |
+| `kimi-k3-fast` | venice | `kimi-fast` | 1M | $4.50 / $22.50 | n/a |
+| `deepseek-v4-flash` | deepseek | `deepseek`, `deepseek-v4`, `deepseek-flash` | 1,048,576 | $0.14 / $0.28 | n/a |
+| `deepseek-v4-pro` | deepseek | | 1,048,576 | $0.435 / $0.87 | n/a |
+| `grok-4.6` | venice | `grok`, `grok46`, `grok-46` | 500K | $2.27 / $6.80 | n/a |
+| `laguna-s-2.1` | poolside | `laguna`, `laguna-s` | 1M | $0.10 / $0.20 | n/a |
+| `laguna-xs-2.1` | poolside | `laguna-xs` | 262K | $0.10 / $0.20 | n/a |
+| `glm-5.2` | zai | `glm`, `glm5`, `glm52`, `glm5.2` | 1M | $1.40 / $4.40 | n/a |
+| `glm-5.3` | venice | `glm`, `glm5`, `glm53`, `glm5.3`, `glm-5-3` | 1M | $1.75 / $5.50 | n/a |
+| `minimax-m2.5` | minimax | `minimax` | 197K | $0.30 / $1.20 | 45 tok/s |
+| `mercury-2` | inception | `mercury` | 131K | $0.25 / $0.75 | 1000 tok/s |
+| `qwen3.8-max` | venice | `qwen`, `qwen-max`, `qwen3.8`, `qwen-3.8`, `qwen38`, `qwen-3.8-max`, `qwen38-max` | 1M | $2.50 / $7.50 | n/a |
+| `qwen3.8-27b` | venice | `qwen-27b`, `qwen-3.8-27b`, `qwen38-27b` | 262K | $0.45 / $3.20 | n/a |
 
 Each provider requires its own API key. Server-backed workflows read provider credentials from the server vault (for example `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, or `POOLSIDE_API_KEY` set with `fabro secret set` or `fabro provider login`). Standalone SDK/CLI flows can opt into env-backed credential sources explicitly. See the [Quick Start](/getting-started/quick-start) for setup.
 
@@ -211,17 +211,17 @@ Enabling the provider alone does not expose any models — until #267 adds auto-
 
 When no model or provider is specified, Fabro chooses the default offering on the highest-priority ready provider. If no provider adapter is ready, run creation reports that no eligible offering is available. Each provider has its own default model:
 
-| Provider    | Default model       |
-| ----------- | ------------------- |
-| `anthropic` | `claude-sonnet-5`   |
-| `openai`    | `gpt-5.6-sol`       |
-| `gemini`    | `gemini-3.5-flash`  |
-| `moonshot`  | `kimi-k3`           |
-| `poolside`  | `laguna-s-2.1`      |
-| `zai`       | `glm-5.2`           |
-| `venice`    | `deepseek-v4-flash` |
-| `minimax`   | `minimax-m2.5`      |
-| `inception` | `mercury-2`         |
+| Provider | Default model |
+| - | - |
+| `anthropic` | `claude-sonnet-5` |
+| `openai` | `gpt-5.6-sol` |
+| `gemini` | `gemini-3.5-flash` |
+| `moonshot` | `kimi-k3` |
+| `poolside` | `laguna-s-2.1` |
+| `zai` | `glm-5.2` |
+| `venice` | `deepseek-v4-flash` |
+| `minimax` | `minimax-m2.5` |
+| `inception` | `mercury-2` |
 
 ## Using models in workflows
 
@@ -317,3 +317,6 @@ fabro model test --provider openai
 ```
 
 This is useful for confirming connectivity after setup or when adding a new provider key.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

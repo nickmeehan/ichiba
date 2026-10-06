@@ -39,10 +39,10 @@ Fabro sends bearer-authenticated Chat Completions requests to `https://api.deeps
 
 ## Included models
 
-| Fabro model ID      | DeepSeek API model ID |   Context | Max output | Role                                                                                                         |
-| ------------------- | --------------------- | --------: | ---------: | ------------------------------------------------------------------------------------------------------------ |
-| `deepseek-v4-flash` | `deepseek-v4-flash`   | 1,048,576 |    384,000 | Provider default, small default, and connectivity probe; aliases `deepseek`, `deepseek-v4`, `deepseek-flash` |
-| `deepseek-v4-pro`   | `deepseek-v4-pro`     | 1,048,576 |    384,000 | Higher-capability V4 model                                                                                   |
+| Fabro model ID | DeepSeek API model ID | Context | Max output | Role |
+| - | - | -: | -: | - |
+| `deepseek-v4-flash` | `deepseek-v4-flash` | 1,048,576 | 384,000 | Provider default, small default, and connectivity probe; aliases `deepseek`, `deepseek-v4`, `deepseek-flash` |
+| `deepseek-v4-pro` | `deepseek-v4-pro` | 1,048,576 | 384,000 | Higher-capability V4 model |
 
 Both models support text input, tool calling, native reasoning, streaming, JSON output, and automatic prompt caching. They do not support image input. Thinking mode is enabled by default.
 
@@ -83,11 +83,11 @@ digraph Example {
 
 DeepSeek enables thinking by default at `high` effort. Fabro advertises only effort values that produce a distinct model behavior on each route:
 
-| Route           | V4 Flash             | V4 Pro          |
-| --------------- | -------------------- | --------------- |
-| Direct DeepSeek | `low`, `high`, `max` | `high`, `max`   |
-| Fireworks AI    | `high`, `max`        | `high`, `max`   |
-| OpenRouter      | `low`, `high`, `max` | `high`, `xhigh` |
+| Route | V4 Flash | V4 Pro |
+| - | - | - |
+| Direct DeepSeek | `low`, `high`, `max` | `high`, `max` |
+| Fireworks AI | `high`, `max` | `high`, `max` |
+| OpenRouter | `low`, `high`, `max` | `high`, `xhigh` |
 
 DeepSeek currently maps a V4 Pro request for `low` to `high`; its documentation says this mapping will change in early August 2026. Fireworks maps `low` and `medium` to `high`, and maps `xhigh` to `max`. OpenRouter names the Pro maximum tier `xhigh`.
 
@@ -113,10 +113,10 @@ DeepSeek applies prefix caching automatically. Fabro reads DeepSeek's `prompt_ca
 
 The built-in catalog uses DeepSeek's published prices per million tokens:
 
-| Model               | Uncached input |  Cache hit | Output |
-| ------------------- | -------------: | ---------: | -----: |
-| `deepseek-v4-flash` |         \$0.14 |   \$0.0028 | \$0.28 |
-| `deepseek-v4-pro`   |        \$0.435 | \$0.003625 | \$0.87 |
+| Model | Uncached input | Cache hit | Output |
+| - | -: | -: | -: |
+| `deepseek-v4-flash` | \$0.14 | \$0.0028 | \$0.28 |
+| `deepseek-v4-pro` | \$0.435 | \$0.003625 | \$0.87 |
 
 DeepSeek does not return an in-band dollar cost. Fabro calculates an estimated cost from these catalog rates and the reported token buckets.
 
@@ -149,3 +149,6 @@ See the [Fireworks AI integration](/integrations/fireworks) and [OpenRouter inte
     Official thinking toggles, effort mappings, and tool-call replay rules.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

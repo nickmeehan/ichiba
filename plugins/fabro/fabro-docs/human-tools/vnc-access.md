@@ -51,3 +51,6 @@ digraph FillLegacyForm {
     review -> fill [label="[R] Redo"]
 }
 ```
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

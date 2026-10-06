@@ -34,10 +34,10 @@ When execution reaches the gate, the user sees the previous stage's output follo
 
 The prefixes `[A]`, `[R]`, `[S]` in edge labels serve as keyboard accelerators. Fabro supports three formats:
 
-| Format      | Example       |
-| ----------- | ------------- |
+| Format | Example |
+| - | - |
 | `[K] Label` | `[A] Approve` |
-| `K) Label`  | `A) Approve`  |
+| `K) Label` | `A) Approve` |
 | `K - Label` | `A - Approve` |
 
 When matching the user's selection to an edge, Fabro strips the accelerator prefix so typing `A` matches `[A] Approve`.
@@ -115,11 +115,11 @@ not used while `review_target=true`.
 
 The target object has three required fields:
 
-| Field   | Meaning                                                                                                                       |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `label` | The link text. It must contain 1 to 200 characters and no control characters.                                                 |
-| `url`   | An absolute HTTP or HTTPS URL. It must contain a host, must not contain URL credentials, and must be at most 2048 characters. |
-| `kind`  | The resource type. The supported value is `document`.                                                                         |
+| Field | Meaning |
+| - | - |
+| `label` | The link text. It must contain 1 to 200 characters and no control characters. |
+| `url` | An absolute HTTP or HTTPS URL. It must contain a host, must not contain URL credentials, and must be at most 2048 characters. |
+| `kind` | The resource type. The supported value is `document`. |
 
 Fabro validates the target before it starts the interview. A missing or invalid
 target fails the gate deterministically. A gate without `review_target=true`
@@ -178,13 +178,16 @@ A workflow can have multiple human gates. Place them where the cost of a wrong d
 
 When a user makes a selection, the human gate sets several context values for downstream use:
 
-| Context key                  | Value                                                              |
-| ---------------------------- | ------------------------------------------------------------------ |
-| `human.gate.selected`        | The accelerator key (e.g. `"A"`) or `"freeform"`                   |
-| `human.gate.label`           | The full label of the selected edge                                |
-| `human.gate.text`            | The user's freeform text (if applicable)                           |
-| `human.gate.<node>.question` | The question text for a specific human gate node                   |
-| `human.gate.<node>.answer`   | The answer text for a specific human gate node                     |
-| `human.gate.<node>.label`    | The selected label for a specific human gate node, when applicable |
+| Context key | Value |
+| - | - |
+| `human.gate.selected` | The accelerator key (e.g. `"A"`) or `"freeform"` |
+| `human.gate.label` | The full label of the selected edge |
+| `human.gate.text` | The user's freeform text (if applicable) |
+| `human.gate.<node>.question` | The question text for a specific human gate node |
+| `human.gate.<node>.answer` | The answer text for a specific human gate node |
+| `human.gate.<node>.label` | The selected label for a specific human gate node, when applicable |
 
 These can be read in edge conditions or referenced by downstream agents.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

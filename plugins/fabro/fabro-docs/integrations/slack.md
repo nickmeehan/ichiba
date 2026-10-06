@@ -37,13 +37,13 @@ A team member clicks a button, the message updates to show the selection, and th
 
 ## Supported question types
 
-| Question type       | Slack UI                        |
-| ------------------- | ------------------------------- |
-| **Yes/No**          | Two buttons: Yes, No            |
-| **Confirmation**    | Two buttons: Yes, No            |
-| **Multiple choice** | One button per option           |
-| **Multi-select**    | Checkboxes with a Submit button |
-| **Freeform**        | Prompt to reply in a thread     |
+| Question type | Slack UI |
+| - | - |
+| **Yes/No** | Two buttons: Yes, No |
+| **Confirmation** | Two buttons: Yes, No |
+| **Multiple choice** | One button per option |
+| **Multi-select** | Checkboxes with a Submit button |
+| **Freeform** | Prompt to reply in a thread |
 
 For freeform questions, Fabro posts a message asking the user to reply in the thread. The reply text (with any `@mention` prefix stripped) becomes the answer.
 
@@ -240,10 +240,10 @@ digraph SmokeFailure {
 
 ## Environment variables
 
-| Variable                | Required | Description                                                          |
-| ----------------------- | -------- | -------------------------------------------------------------------- |
-| `FABRO_SLACK_BOT_TOKEN` | Yes      | Bot User OAuth Token (`xoxb-...`). Used to post and update messages. |
-| `FABRO_SLACK_APP_TOKEN` | Yes      | App-Level Token (`xapp-...`). Used to connect via Socket Mode.       |
+| Variable | Required | Description |
+| - | - | - |
+| `FABRO_SLACK_BOT_TOKEN` | Yes | Bot User OAuth Token (`xoxb-...`). Used to post and update messages. |
+| `FABRO_SLACK_APP_TOKEN` | Yes | App-Level Token (`xapp-...`). Used to connect via Socket Mode. |
 
 Both must be set for the Slack integration to activate. If either is missing or empty, Slack is disabled and the startup log names the missing variables. A server-level `default_channel` is not required for lifecycle notifications; it is only needed when you want interview prompts to use a default Slack channel.
 
@@ -253,3 +253,6 @@ Both must be set for the Slack integration to activate. If either is missing or 
 * **One answer per question** — The first person to click a button or reply in a thread provides the answer. Subsequent interactions on the same question are ignored.
 * **No Slack steering** — Slack does not support [steering](/human-tools/steering) running agents.
 * **Lifecycle notifications are one-way** — `run.started`, `run.completed`, and `run.failed` messages are posted once per matching route and are not updated later.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

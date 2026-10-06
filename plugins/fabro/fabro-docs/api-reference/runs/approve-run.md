@@ -351,18 +351,12 @@ components:
       discriminator:
         propertyName: kind
         mapping:
-          user:
-            $ref: '#/components/schemas/PrincipalUser'
-          worker:
-            $ref: '#/components/schemas/PrincipalWorker'
-          webhook:
-            $ref: '#/components/schemas/PrincipalWebhook'
-          slack:
-            $ref: '#/components/schemas/PrincipalSlack'
-          agent:
-            $ref: '#/components/schemas/PrincipalAgent'
-          system:
-            $ref: '#/components/schemas/PrincipalSystem'
+          user: '#/components/schemas/PrincipalUser'
+          worker: '#/components/schemas/PrincipalWorker'
+          webhook: '#/components/schemas/PrincipalWebhook'
+          slack: '#/components/schemas/PrincipalSlack'
+          agent: '#/components/schemas/PrincipalAgent'
+          system: '#/components/schemas/PrincipalSystem'
     RunOrigin:
       type: object
       required:
@@ -648,6 +642,12 @@ components:
           description: >-
             Server-generated request identifier; matches the x-request-id
             response header.
+        meta:
+          type: object
+          additionalProperties: true
+          description: >-
+            Optional structured details specific to the error `code`, for
+            clients that act on them. Each code documents the members it sets.
     ResolvedAutomationGitWorkflowSource:
       description: >-
         Workflow source coordinate and exact commit captured when an automation
@@ -795,28 +795,17 @@ components:
       discriminator:
         propertyName: kind
         mapping:
-          submitted:
-            $ref: '#/components/schemas/RunStatusSubmitted'
-          pending:
-            $ref: '#/components/schemas/RunStatusPending'
-          runnable:
-            $ref: '#/components/schemas/RunStatusRunnable'
-          starting:
-            $ref: '#/components/schemas/RunStatusStarting'
-          running:
-            $ref: '#/components/schemas/RunStatusRunning'
-          blocked:
-            $ref: '#/components/schemas/RunStatusBlocked'
-          paused:
-            $ref: '#/components/schemas/RunStatusPaused'
-          removing:
-            $ref: '#/components/schemas/RunStatusRemoving'
-          succeeded:
-            $ref: '#/components/schemas/RunStatusSucceeded'
-          failed:
-            $ref: '#/components/schemas/RunStatusFailed'
-          dead:
-            $ref: '#/components/schemas/RunStatusDead'
+          submitted: '#/components/schemas/RunStatusSubmitted'
+          pending: '#/components/schemas/RunStatusPending'
+          runnable: '#/components/schemas/RunStatusRunnable'
+          starting: '#/components/schemas/RunStatusStarting'
+          running: '#/components/schemas/RunStatusRunning'
+          blocked: '#/components/schemas/RunStatusBlocked'
+          paused: '#/components/schemas/RunStatusPaused'
+          removing: '#/components/schemas/RunStatusRemoving'
+          succeeded: '#/components/schemas/RunStatusSucceeded'
+          failed: '#/components/schemas/RunStatusFailed'
+          dead: '#/components/schemas/RunStatusDead'
     RunApproval:
       description: >-
         Pre-execution approval state for runs that require one-time human
@@ -902,6 +891,21 @@ components:
             - 'null'
         runtime:
           $ref: '#/components/schemas/RunSandboxRuntime'
+        ready_duration_ms:
+          type:
+            - integer
+            - 'null'
+          format: uint64
+          minimum: 0
+          description: How long the sandbox took to become ready, when recorded.
+        retained:
+          type:
+            - boolean
+            - 'null'
+          description: |
+            Whether the sandbox still exists after the run released it
+            (kept, stopped or running) or was removed. Absent until the
+            release.
     RunSandboxFailure:
       description: Sandbox initialization failure details.
       type: object
@@ -1236,3 +1240,5 @@ components:
         verifies and decodes the cookie before authenticating the request.
 
 ````
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

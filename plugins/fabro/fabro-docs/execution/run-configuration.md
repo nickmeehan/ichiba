@@ -46,11 +46,11 @@ graph = "workflow.fabro"
 goal = "Implement the login feature"
 ```
 
-| Field              | Required             | Description                                                                                                                   |
-| ------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `_version`         | No (defaults to `1`) | Schema version. Must be `1` in the first pass.                                                                                |
-| `[workflow].graph` | No                   | Path to the Graphviz workflow file, relative to the TOML file's directory. Defaults to `workflow.fabro`.                      |
-| `[run].goal`       | No                   | What the workflow should accomplish. Passed to agents and available via `--goal` CLI flag or Graphviz graph `goal` attribute. |
+| Field | Required | Description |
+| - | - | - |
+| `_version` | No (defaults to `1`) | Schema version. Must be `1` in the first pass. |
+| `[workflow].graph` | No | Path to the Graphviz workflow file, relative to the TOML file's directory. Defaults to `workflow.fabro`. |
+| `[run].goal` | No | What the workflow should accomplish. Passed to agents and available via `--goal` CLI flag or Graphviz graph `goal` attribute. |
 
 Goal precedence: CLI `--goal` or `--goal-file` > `[run].goal` > Graphviz graph
 attribute. A CLI `--goal-file` is read on the invoking machine and sent as a
@@ -138,11 +138,11 @@ Override the default model and provider for all nodes that don't have an explici
 name = "claude-sonnet-4-5"
 ```
 
-| Field       | Description                                                                                                                                                                        |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | Canonical model slug or alias (e.g. `claude-sonnet-4-5`, `opus`, `gemini-pro`). See [Models](/core-concepts/models).                                                               |
-| `provider`  | Optional provider pin. When omitted, Fabro selects among ready offerings by provider priority. When present, an unavailable provider is an error rather than permission to switch. |
-| `fallbacks` | Table of ordered fallback lists keyed by the originally requested model.                                                                                                           |
+| Field | Description |
+| - | - |
+| `name` | Canonical model slug or alias (e.g. `claude-sonnet-4-5`, `opus`, `gemini-pro`). See [Models](/core-concepts/models). |
+| `provider` | Optional provider pin. When omitted, Fabro selects among ready offerings by provider priority. When present, an unavailable provider is an error rather than permission to switch. |
+| `fallbacks` | Table of ordered fallback lists keyed by the originally requested model. |
 
 Provider values are catalog provider ID strings. Built-in IDs like `anthropic` and `openai` work, and settings-defined IDs like `proxy` work after they are added under `[llm.providers.<id>]`.
 
@@ -196,10 +196,10 @@ reasoning_effort = "high"
 speed = "fast"
 ```
 
-| Field              | Description                                                                                                                                            |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Field | Description |
+| - | - |
 | `reasoning_effort` | Native reasoning-effort value to request when the selected model allows it, such as `"minimal"`, `"low"`, `"medium"`, `"high"`, `"xhigh"`, or `"max"`. |
-| `speed`            | Native speed value to request when the selected model declares it, such as `"fast"`. The standard speed is implicit and does not need to be set.       |
+| `speed` | Native speed value to request when the selected model declares it, such as `"fast"`. The standard speed is implicit and does not need to be set. |
 
 #### Fallback lists with splice
 
@@ -224,11 +224,11 @@ command = ["npm", "install"]
 env = { NPM_TOKEN = "{{ secrets.NPM_TOKEN }}" }
 ```
 
-| Field     | Description                                                                                                                      |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `script`  | Bash source, evaluated by the sandbox's non-login Bash (`bash -c`). Supports `{{ vars.* }}` and `{{ secrets.* }}` interpolation. |
-| `command` | Argv-style command, mutually exclusive with `script`. Each resolved element is shell-quoted as one argument.                     |
-| `env`     | Additional environment variables for this step. Values support the same interpolation as `script` and `command`.                 |
+| Field | Description |
+| - | - |
+| `script` | Bash source, evaluated by the sandbox's non-login Bash (`bash -c`). Supports `{{ vars.* }}` and `{{ secrets.* }}` interpolation. |
+| `command` | Argv-style command, mutually exclusive with `script`. Each resolved element is shell-quoted as one argument. |
+| `env` | Additional environment variables for this step. Values support the same interpolation as `script` and `command`. |
 
 Each step must exit with status 0. If any step fails, the run aborts before the workflow starts. Prepare steps replace across layers — the higher-precedence layer wins wholesale.
 
@@ -246,10 +246,10 @@ depth = 100
 
 Set `enabled = false` to start Docker and Daytona runs with an empty provider workspace. Use [prepare steps](#runprepare) to clone or create any files the workflow needs.
 
-| Field     | Description                                                                                       |
-| --------- | ------------------------------------------------------------------------------------------------- |
-| `enabled` | When `false`, Fabro skips the repository clone. Defaults to `true`.                               |
-| `depth`   | Git history depth for Docker and Daytona. Defaults to `100`. Set it to `0` to clone full history. |
+| Field | Description |
+| - | - |
+| `enabled` | When `false`, Fabro skips the repository clone. Defaults to `true`. |
+| `depth` | Git history depth for Docker and Daytona. Defaults to `100`. Set it to `0` to clone full history. |
 
 ### `[run.run_branch]`
 
@@ -261,10 +261,10 @@ enabled = true
 push = true
 ```
 
-| Field     | Description                                                                                            |
-| --------- | ------------------------------------------------------------------------------------------------------ |
-| `enabled` | When `false`, Fabro does not create the managed run branch or checkpoint commits.                      |
-| `push`    | When `false`, Fabro creates local checkpoint commits but does not push `fabro/run/<id>` to the remote. |
+| Field | Description |
+| - | - |
+| `enabled` | When `false`, Fabro does not create the managed run branch or checkpoint commits. |
+| `push` | When `false`, Fabro creates local checkpoint commits but does not push `fabro/run/<id>` to the remote. |
 
 ### `[run.meta_branch]`
 
@@ -306,20 +306,20 @@ to the selected server environment:
 memory = "8GB"
 ```
 
-| Field                               | Description                                                                                                                                         |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `run.environment.id`                | Environment slug to select. Defaults to `default`.                                                                                                  |
-| `environments.<slug>.provider`      | Required provider: `local`, `docker`, or `daytona`.                                                                                                 |
-| `image.docker`                      | Docker image. Docker runs it directly; Daytona uses it to create or reuse an internally named snapshot.                                             |
-| `image.dockerfile`                  | Inline Dockerfile or `{ path = "Dockerfile" }`; Daytona uses it to create or reuse an internally named snapshot. Do not set it with `image.docker`. |
-| `resources.cpu` / `memory` / `disk` | Best-effort resource hints. Unsupported provider fields warn and continue.                                                                          |
-| `network.mode`                      | `allow_all`, `block`, or `cidr_allow_list`. Local cannot enforce blocked/CIDR networking; Docker cannot enforce CIDR allow-lists.                   |
-| `network.allow`                     | CIDRs for `cidr_allow_list`; entries are validated as CIDRs.                                                                                        |
-| `lifecycle.preserve`                | Keep the created sandbox after the run finishes.                                                                                                    |
-| `lifecycle.stop_on_terminal`        | Stop the sandbox when the run reaches a terminal state.                                                                                             |
-| `lifecycle.auto_stop`               | Daytona auto-stop duration, such as `"30m"`. Defaults to `"120m"`; `"0s"` disables auto-stop.                                                       |
-| `labels`                            | Provider labels. Merge by key across layers.                                                                                                        |
-| `env`                               | Environment variables passed to command and agent execution. Merge by key across layers.                                                            |
+| Field | Description |
+| - | - |
+| `run.environment.id` | Environment slug to select. Defaults to `default`. |
+| `environments.<slug>.provider` | Required provider: `local`, `docker`, or `daytona`. |
+| `image.docker` | Docker image. Docker runs it directly; Daytona uses it to create or reuse an internally named snapshot. |
+| `image.dockerfile` | Inline Dockerfile or `{ path = "Dockerfile" }`; Daytona uses it to create or reuse an internally named snapshot. Do not set it with `image.docker`. |
+| `resources.cpu` / `memory` / `disk` | Best-effort resource hints. Unsupported provider fields warn and continue. |
+| `network.mode` | `allow_all`, `block`, or `cidr_allow_list`. Local cannot enforce blocked/CIDR networking; Docker cannot enforce CIDR allow-lists. |
+| `network.allow` | CIDRs for `cidr_allow_list`; entries are validated as CIDRs. |
+| `lifecycle.preserve` | Keep the created sandbox after the run finishes. |
+| `lifecycle.stop_on_terminal` | Stop the sandbox when the run reaches a terminal state. |
+| `lifecycle.auto_stop` | Daytona auto-stop duration, such as `"30m"`. Defaults to `"120m"`; `"0s"` disables auto-stop. |
+| `labels` | Provider labels. Merge by key across layers. |
+| `env` | Environment variables passed to command and agent execution. Merge by key across layers. |
 
 When `provider = "local"`, Fabro runs directly in the resolved working
 directory. If you want local isolation, create or enter a separate clone or Git
@@ -335,11 +335,11 @@ SERVICE_URL = "https://api.{{ vars.REGION }}.example.com"
 RELEASE_CHANNEL = "{{ vars.RELEASE_CHANNEL }}"
 ```
 
-| Syntax                         | Description                                                               |
-| ------------------------------ | ------------------------------------------------------------------------- |
-| `"literal"`                    | Static value passed as-is                                                 |
-| `"{{ vars.NAME }}"`            | Server-managed variable substituted when the run is created               |
-| `"{{ secrets.NAME }}"`         | Token secret resolved from the server vault when the run starts           |
+| Syntax | Description |
+| - | - |
+| `"literal"` | Static value passed as-is |
+| `"{{ vars.NAME }}"` | Server-managed variable substituted when the run is created |
+| `"{{ secrets.NAME }}"` | Token secret resolved from the server vault when the run starts |
 | `"prefix-{{ vars.X }}-suffix"` | Substring interpolation; multiple supported tokens per string are allowed |
 
 Missing or non-token secret references fail closed before sandbox startup. `{{ env.* }}` is not supported: the process environment is not a configuration source. Use `{{ vars.NAME }}` for a non-sensitive value or `{{ secrets.NAME }}` for a credential.
@@ -393,12 +393,12 @@ events = ["run.started", "run.completed", "run.failed"]
 channel = "#deploys"
 ```
 
-| Field                                      | Description                                                                                                                                         |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `enabled`                                  | Enables this route. Defaults to `false`.                                                                                                            |
-| `provider`                                 | Notification provider. Use `"slack"` for Slack lifecycle notifications. Other provider names may be parsed but are not delivered by the server yet. |
-| `events`                                   | Raw Fabro event names that trigger this route, such as `run.started`, `run.completed`, and `run.failed`.                                            |
-| `[run.notifications.<name>.slack].channel` | Required for Slack lifecycle notifications. Literal channel names and `{{ vars.NAME }}` interpolation are supported.                                |
+| Field | Description |
+| - | - |
+| `enabled` | Enables this route. Defaults to `false`. |
+| `provider` | Notification provider. Use `"slack"` for Slack lifecycle notifications. Other provider names may be parsed but are not delivered by the server yet. |
+| `events` | Raw Fabro event names that trigger this route, such as `run.started`, `run.completed`, and `run.failed`. |
+| `[run.notifications.<name>.slack].channel` | Required for Slack lifecycle notifications. Literal channel names and `{{ vars.NAME }}` interpolation are supported. |
 
 Each enabled Slack route posts once for each matching lifecycle event. Messages include the run ID, an Open in Fabro link when available, workflow label, terminal result, duration, and pull request details when those are already present in the run event stream.
 
@@ -417,11 +417,11 @@ skip_git_hooks = false
 commit_timeout = "30s"
 ```
 
-| Field            | Description                                                                                                                                                                                                                                                            |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclude_globs`  | Glob patterns for files to exclude from checkpoint commits. Uses git pathspec `:(glob,exclude)` syntax.                                                                                                                                                                |
+| Field | Description |
+| - | - |
+| `exclude_globs` | Glob patterns for files to exclude from checkpoint commits. Uses git pathspec `:(glob,exclude)` syntax. |
 | `skip_git_hooks` | Accepted for compatibility. Fabro-managed run-branch checkpoint commits never run local Git commit hooks (e.g. `pre-commit`, `commit-msg`); the sandbox driver disables repository hooks on every git command it runs. Does not affect Fabro workflow `[[run.hooks]]`. |
-| `commit_timeout` | Accepted for compatibility. The per-node run-branch checkpoint commit runs under the sandbox driver's git command budget; no repository hook can prolong it.                                                                                                           |
+| `commit_timeout` | Accepted for compatibility. The per-node run-branch checkpoint commit runs under the sandbox driver's git command budget; no repository hook can prolong it. |
 
 `exclude_globs` replaces across layers — the higher-precedence layer wins wholesale. `skip_git_hooks` and `commit_timeout` use normal override semantics: the highest layer that sets the field wins.
 
@@ -471,8 +471,8 @@ Configure automatic collection of test artifacts (Playwright reports, JUnit XML,
 include = ["test-results/**", "playwright-report/**", "**/*.trace.zip"]
 ```
 
-| Field     | Description                                                                               |
-| --------- | ----------------------------------------------------------------------------------------- |
+| Field | Description |
+| - | - |
 | `include` | Workspace-relative glob patterns for regular files to collect as assets after each stage. |
 
 Artifact collection is opt-in — when no `[run.artifacts]` section is present, no file scanning occurs.
@@ -527,19 +527,19 @@ To reuse a definition from the server-managed MCP catalog, reference its ID inst
 id = "sentry"
 ```
 
-| Field             | Description                                                                            | Default |
-| ----------------- | -------------------------------------------------------------------------------------- | ------- |
-| `id`              | Server-managed MCP definition to use. Cannot be combined with inline transport fields. | —       |
-| `enabled`         | Set `false` to leave this inline server or catalog reference disabled.                 | `true`  |
-| `type`            | Transport type: `"stdio"`, `"http"`, or `"sandbox"`.                                   | —       |
-| `script`          | (stdio, sandbox) Shell-evaluated startup command, mutually exclusive with `command`.   | —       |
-| `command`         | (stdio, sandbox) Argv array: executable + arguments.                                   | —       |
-| `port`            | (sandbox) Port the server listens on inside the sandbox.                               | —       |
-| `url`             | (http) The MCP server endpoint URL.                                                    | —       |
-| `env`             | (stdio, sandbox) Additional environment variables.                                     | `{}`    |
-| `headers`         | (http) Optional HTTP headers for authentication.                                       | `{}`    |
-| `startup_timeout` | Max duration for server startup + MCP handshake (e.g. `"10s"`, `"1m"`).                | `"10s"` |
-| `tool_timeout`    | Max duration for a single tool call.                                                   | `"60s"` |
+| Field | Description | Default |
+| - | - | - |
+| `id` | Server-managed MCP definition to use. Cannot be combined with inline transport fields. | — |
+| `enabled` | Set `false` to leave this inline server or catalog reference disabled. | `true` |
+| `type` | Transport type: `"stdio"`, `"http"`, or `"sandbox"`. | — |
+| `script` | (stdio, sandbox) Shell-evaluated startup command, mutually exclusive with `command`. | — |
+| `command` | (stdio, sandbox) Argv array: executable + arguments. | — |
+| `port` | (sandbox) Port the server listens on inside the sandbox. | — |
+| `url` | (http) The MCP server endpoint URL. | — |
+| `env` | (stdio, sandbox) Additional environment variables. | `{}` |
+| `headers` | (http) Optional HTTP headers for authentication. | `{}` |
+| `startup_timeout` | Max duration for server startup + MCP handshake (e.g. `"10s"`, `"1m"`). | `"10s"` |
+| `tool_timeout` | Max duration for a single tool call. | `"60s"` |
 
 Inline transport commands, URLs, env values, and headers support `{{ vars.* }}` and `{{ secrets.* }}` interpolation. As with prepare steps, server variables resolve at run creation and token secrets resolve at launch; missing values fail closed. See [MCP runtime interpolation](/agents/mcp#runtime-interpolation) for the standalone `fabro exec` difference.
 
@@ -557,12 +557,12 @@ auto_merge = false
 merge_strategy = "squash"
 ```
 
-| Field            | Description                                                                                                                                                                                                             |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `enabled`        | When `true`, Fabro creates a PR from the agent's working branch after a successful run. Default: `false`.                                                                                                               |
-| `draft`          | When `true`, the PR is created as a draft pull request. Default: `true`.                                                                                                                                                |
-| `auto_merge`     | When `true`, enables GitHub auto-merge on the created PR. Implies `draft = false` since GitHub doesn't allow auto-merge on draft PRs. The repository must have auto-merge enabled in GitHub settings. Default: `false`. |
-| `merge_strategy` | Merge method when `auto_merge` is enabled: `squash` (default), `merge`, or `rebase`.                                                                                                                                    |
+| Field | Description |
+| - | - |
+| `enabled` | When `true`, Fabro creates a PR from the agent's working branch after a successful run. Default: `false`. |
+| `draft` | When `true`, the PR is created as a draft pull request. Default: `true`. |
+| `auto_merge` | When `true`, enables GitHub auto-merge on the created PR. Implies `draft = false` since GitHub doesn't allow auto-merge on draft PRs. The repository must have auto-merge enabled in GitHub settings. Default: `false`. |
+| `merge_strategy` | Merge method when `auto_merge` is enabled: `squash` (default), `merge`, or `rebase`. |
 
 ### `[[run.hooks]]`
 
@@ -580,17 +580,17 @@ timeout = "30s"
 sandbox = false
 ```
 
-| Field      | Description                                                                           |
-| ---------- | ------------------------------------------------------------------------------------- |
-| `id`       | Optional merge identity. Hooks with the same `id` replace each other across layers.   |
-| `name`     | Optional display name for the hook.                                                   |
-| `event`    | Lifecycle event: `run_start`, `run_complete`, `stage_start`, `stage_complete`, etc.   |
-| `script`   | Shell-evaluated command (equivalent to the old `type = "command"` shorthand).         |
-| `command`  | Argv-style command (alternative to `script`).                                         |
-| `matcher`  | Regex matched against node ID or handler type. Limits which stages trigger this hook. |
-| `blocking` | Whether the hook must complete before execution continues. Defaults vary by event.    |
-| `timeout`  | Human-readable hook timeout (e.g. `"30s"`, `"1m"`). Default: `"60s"`.                 |
-| `sandbox`  | Run inside the sandbox (`true`, default) or on the host (`false`).                    |
+| Field | Description |
+| - | - |
+| `id` | Optional merge identity. Hooks with the same `id` replace each other across layers. |
+| `name` | Optional display name for the hook. |
+| `event` | Lifecycle event: `run_start`, `run_complete`, `stage_start`, `stage_complete`, etc. |
+| `script` | Shell-evaluated command (equivalent to the old `type = "command"` shorthand). |
+| `command` | Argv-style command (alternative to `script`). |
+| `matcher` | Regex matched against node ID or handler type. Limits which stages trigger this hook. |
+| `blocking` | Whether the hook must complete before execution continues. Defaults vary by event. |
+| `timeout` | Human-readable hook timeout (e.g. `"30s"`, `"1m"`). Default: `"60s"`. |
+| `sandbox` | Run inside the sandbox (`true`, default) or on the host (`false`). |
 
 Hook merge semantics: hooks with matching `id` values replace in place. Hooks without an `id` from a higher-precedence layer append after the fully merged inherited hook list.
 
@@ -615,13 +615,13 @@ For runs created by `fabro run` and `fabro create`, the CLI transmits sparse
 flags and immutable workflow content, not machine or project run defaults.
 Fabro resolves workflow behavior in this order (first match wins):
 
-| Source                                                          | Priority |
-| --------------------------------------------------------------- | -------- |
-| Node-level [stylesheet](/workflows/stylesheets)                 | Highest  |
-| CLI flags (`--model`, `--provider`, `--environment`)            |          |
-| Run config TOML (`workflow.toml` or equivalent)                 |          |
-| Graphviz graph attributes (`default_model`, `default_provider`) |          |
-| Built-in defaults                                               | Lowest   |
+| Source | Priority |
+| - | - |
+| Node-level [stylesheet](/workflows/stylesheets) | Highest |
+| CLI flags (`--model`, `--provider`, `--environment`) | |
+| Run config TOML (`workflow.toml` or equivalent) | |
+| Graphviz graph attributes (`default_model`, `default_provider`) | |
+| Built-in defaults | Lowest |
 
 <Note>
   Stylesheet rules on individual nodes always take priority over run config values.
@@ -671,3 +671,6 @@ Use `fabro preflight` to validate a run config without executing it:
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro preflight run.toml
 ```
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

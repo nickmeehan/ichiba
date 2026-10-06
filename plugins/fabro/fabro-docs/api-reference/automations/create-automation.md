@@ -265,12 +265,9 @@ components:
       discriminator:
         propertyName: kind
         mapping:
-          git:
-            $ref: '#/components/schemas/GitRunTarget'
-          none:
-            $ref: '#/components/schemas/NoneRunTarget'
-          folder:
-            $ref: '#/components/schemas/FolderRunTarget'
+          git: '#/components/schemas/GitRunTarget'
+          none: '#/components/schemas/NoneRunTarget'
+          folder: '#/components/schemas/FolderRunTarget'
     AutomationGitWorkflowSource:
       description: >-
         Explicit GitHub coordinate from which an automation acquires workflow
@@ -327,10 +324,8 @@ components:
       discriminator:
         propertyName: type
         mapping:
-          api:
-            $ref: '#/components/schemas/AutomationApiTrigger'
-          schedule:
-            $ref: '#/components/schemas/AutomationScheduleTrigger'
+          api: '#/components/schemas/AutomationApiTrigger'
+          schedule: '#/components/schemas/AutomationScheduleTrigger'
     ErrorResponseEntry:
       description: A single error entry in an error response.
       type: object
@@ -361,6 +356,12 @@ components:
           description: >-
             Server-generated request identifier; matches the x-request-id
             response header.
+        meta:
+          type: object
+          additionalProperties: true
+          description: >-
+            Optional structured details specific to the error `code`, for
+            clients that act on them. Each code documents the members it sets.
     GitRunTarget:
       description: >-
         Public github.com repository target. The branch names the attached
@@ -510,3 +511,5 @@ components:
         verifies and decodes the cookie before authenticating the request.
 
 ````
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

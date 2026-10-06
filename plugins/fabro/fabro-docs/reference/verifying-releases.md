@@ -43,3 +43,6 @@ Replace `<version>` with the release version (e.g. `0.207.0`) or use `latest` / 
 ## Homebrew installs
 
 The `fabro-sh/tap` Homebrew formula verifies a SHA-256 checksum against each tarball Homebrew downloads, so there is no separate attestation step to run at install time. If you want provenance verification for a Homebrew-installed release, download the matching tarball from the [releases page](https://github.com/fabro-sh/fabro/releases) and run `gh attestation verify` against it.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

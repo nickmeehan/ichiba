@@ -16,12 +16,12 @@ An agent can spawn **sub-agents** to delegate work to independent child sessions
 
 Sub-agent management is exposed through four built-in tools:
 
-| Tool          | Description                                              |
-| ------------- | -------------------------------------------------------- |
-| `spawn_agent` | Create a new sub-agent with a task prompt                |
-| `send_input`  | Send follow-up input to a running or completed sub-agent |
-| `wait`        | Block until a sub-agent completes and return its result  |
-| `close_agent` | Close a running or completed sub-agent                   |
+| Tool | Description |
+| - | - |
+| `spawn_agent` | Create a new sub-agent with a task prompt |
+| `send_input` | Send follow-up input to a running or completed sub-agent |
+| `wait` | Block until a sub-agent completes and return its result |
+| `close_agent` | Close a running or completed sub-agent |
 
 These tools are registered automatically when the session starts. They inherit the parent's permissions.
 
@@ -62,12 +62,12 @@ Sub-agent observability now uses **session linkage**, not wrapper events.
 
 Parent-owned lifecycle events:
 
-| Event                 | When                              |
-| --------------------- | --------------------------------- |
-| `agent.sub.spawned`   | A sub-agent was created           |
+| Event | When |
+| - | - |
+| `agent.sub.spawned` | A sub-agent was created |
 | `agent.sub.completed` | A sub-agent finished successfully |
-| `agent.sub.failed`    | A sub-agent failed                |
-| `agent.sub.closed`    | A sub-agent was cancelled         |
+| `agent.sub.failed` | A sub-agent failed |
+| `agent.sub.closed` | A sub-agent was cancelled |
 
 Forwarded child activity:
 
@@ -107,3 +107,6 @@ Use [child runs](/execution/child-runs) instead when the delegated work should b
 <Note>
   Sub-agents run until they complete, fail, are cancelled, or hit the session's wall-clock timeout. All active sub-agents are cleaned up automatically when the parent session closes.
 </Note>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

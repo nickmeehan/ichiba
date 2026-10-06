@@ -4,10 +4,13 @@
 
 # List Run Events
 
-> Returns a paginated JSON list of stored run events. Ascending order
-uses `since_seq` as an inclusive cursor. Descending order uses
-`before_seq` as an exclusive cursor and starts at the newest event
-when `before_seq` is omitted.
+> Returns one page of the run's stream (`PaginatedRunStreamList`):
+one ordered delivery of Petri's own `RunEvent`s and Fabro's platform
+records in the `RunStreamItem` envelope, in `stream_seq` order. The
+cursor is `after`: the last `stream_seq` the client saw, exclusive;
+the first page is `after=0`. A client that reconnects resumes from
+its last `stream_seq` and deduplicates by each item's `id`; every
+item is delivered once, in order, with no gap.
 
 
 
@@ -76,33 +79,25 @@ paths:
         - Run Internals
       summary: List Run Events
       description: |
-        Returns a paginated JSON list of stored run events. Ascending order
-        uses `since_seq` as an inclusive cursor. Descending order uses
-        `before_seq` as an exclusive cursor and starts at the newest event
-        when `before_seq` is omitted.
+        Returns one page of the run's stream (`PaginatedRunStreamList`):
+        one ordered delivery of Petri's own `RunEvent`s and Fabro's platform
+        records in the `RunStreamItem` envelope, in `stream_seq` order. The
+        cursor is `after`: the last `stream_seq` the client saw, exclusive;
+        the first page is `after=0`. A client that reconnects resumes from
+        its last `stream_seq` and deduplicates by each item's `id`; every
+        item is delivered once, in order, with no gap.
       operationId: listRunEvents
       parameters:
         - $ref: '#/components/parameters/RunId'
-        - $ref: '#/components/parameters/SinceSeq'
         - $ref: '#/components/parameters/EventLimit'
-        - $ref: '#/components/parameters/BeforeSeq'
-        - $ref: '#/components/parameters/EventOrder'
+        - $ref: '#/components/parameters/StreamAfter'
       responses:
         '200':
-          description: Paginated list of run events
+          description: One page of the run's stream
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedEventList'
-        '400':
-          description: Invalid cursor and order combination
-          headers:
-            x-request-id:
-              $ref: '#/components/headers/XRequestId'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/PaginatedRunStreamList'
         '404':
           description: Run not found
           headers:
@@ -122,16 +117,6 @@ components:
       schema:
         type: string
       example: 01JNQVR7M0EJ5GKAT2SC4ERS1Z
-    SinceSeq:
-      name: since_seq
-      in: query
-      required: false
-      description: First event sequence number to include.
-      schema:
-        type: integer
-        minimum: 1
-        default: 1
-      example: 42
     EventLimit:
       name: limit
       in: query
@@ -143,45 +128,43 @@ components:
         maximum: 1000
         default: 100
       example: 100
-    BeforeSeq:
-      name: before_seq
+    StreamAfter:
+      name: after
       in: query
       required: false
       description: |
-        Exclusive upper event sequence cursor for descending order. Omit on
-        the first descending request to start from the newest event.
+        Run stream cursor for a Petri run: the last `stream_seq` the client
+        saw, exclusive. `0` starts at the first item.
       schema:
         type: integer
-        minimum: 1
+        format: uint64
+        minimum: 0
+        default: 0
       example: 42
-    EventOrder:
-      name: order
-      in: query
-      required: false
-      description: |
-        Event sequence order. `since_seq` is valid only with `asc`;
-        `before_seq` is valid only with `desc`.
-      schema:
-        type: string
-        enum:
-          - asc
-          - desc
-        default: asc
-      example: desc
   schemas:
-    PaginatedEventList:
-      description: Paginated list of stored run events.
+    PaginatedRunStreamList:
+      description: |
+        One page of a Petri run's stream, in `stream_seq` order.
+        `event_contract_version` is Petri's `EVENT_CONTRACT_VERSION` the
+        server was built against: the version of the event contract every
+        `petri` item follows.
       type: object
       required:
         - data
         - meta
+        - event_contract_version
       properties:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/EventEnvelope'
+            $ref: '#/components/schemas/RunStreamItem'
         meta:
           $ref: '#/components/schemas/PaginationMeta'
+        event_contract_version:
+          type: integer
+          format: uint32
+          minimum: 0
+          example: 3
     ErrorResponse:
       description: Standard error response containing one or more error entries.
       type: object
@@ -215,14 +198,71 @@ components:
             failure responses only.
           items:
             type: string
-    EventEnvelope:
-      description: >
-        Stored event envelope with assigned sequence number. On the wire the
-        envelope is flattened: seq sits alongside the RunEvent payload fields at
-        the top level of the JSON object.
-      allOf:
-        - $ref: '#/components/schemas/EventSeq'
-        - $ref: '#/components/schemas/RunEvent'
+    RunStreamItem:
+      description: |
+        One item of a Petri run's stream: a Petri `RunEvent` or a Fabro
+        platform record in Fabro's envelope.
+
+        `stream_seq` is the durable per-run delivery sequence the projector
+        assigned when the item's record was committed: dense, strictly
+        increasing within the run, and the cursor for `after`. `id` is the
+        item's own identity, kept beside the cursor so a client deduplicates
+        by it: for a Petri event the `EventId` as `<log>/<seq>/<index>`
+        (`coordinator/3/0`, `execution 1/23/0`); for a platform record its
+        `seq`. Petri's `EventId` is per log and has no platform variant, so
+        it is never the cursor.
+
+        A `petri` item is a Petri `RunEvent` passed through unchanged:
+        `{id: {log, execution?, seq, index}, origin, recorded_at,
+        observed_at?, context: {invocation, execution, parent?}, subject?,
+        record?, derived?}`. Its vocabulary is Petri's public event contract
+        (`crates/core/execution/EVENTS.md` in the Petri repository), not
+        Fabro's: the recorded event's name is `record.body.event`
+        (`<subject>.<verb>`, e.g. `visit.started`, `step.finished`,
+        `run.finished`), a derived view event's is `derived.event`, and the
+        stage a subject names is `(context.execution, subject.firing)` with
+        `subject.node.name` and `subject.visit` as its display label. The
+        server reports the contract version it serves in
+        `PaginatedRunStreamList.event_contract_version`.
+
+        A `platform` item is a stored platform record: `{seq, recorded_at,
+        record: {kind, ...}, position?: {execution, firing}}`. `record.kind`
+        is one of `run.created`, `run.lifecycle`, `run.title`, `run.parent`,
+        `run.archived`, `run.unarchived`, `run.superseded`, `run.notice`,
+        `interview.answered`, `run.branch`, `git.identity`, `checkpoint`,
+        `pull_request.created`, `notification.sent`, `run.paired`.
+      type: object
+      required:
+        - run_id
+        - stream_seq
+        - kind
+        - id
+        - recorded_at
+        - item
+      properties:
+        run_id:
+          type: string
+        stream_seq:
+          type: integer
+          format: uint64
+          minimum: 0
+          description: The delivery sequence; the cursor.
+        kind:
+          $ref: '#/components/schemas/RunStreamItemKind'
+        id:
+          type: string
+          description: The item's own identity, for deduplication.
+        recorded_at:
+          type: integer
+          format: uint64
+          minimum: 0
+          description: >-
+            Milliseconds since the Unix epoch when the item's record was
+            appended.
+        item:
+          type: object
+          additionalProperties: true
+          description: The Petri `RunEvent` or the stored platform record, unchanged.
     PaginationMeta:
       description: Pagination metadata included in every paginated response.
       type: object
@@ -272,234 +312,18 @@ components:
           description: >-
             Server-generated request identifier; matches the x-request-id
             response header.
-    EventSeq:
-      description: Assigned sequence number component of a stored event envelope.
-      type: object
-      required:
-        - seq
-      properties:
-        seq:
-          type: integer
-          description: Assigned event sequence number.
-          example: 42
-    RunEvent:
-      description: >
-        Internal RunEvent-compatible JSON payload. The server validates this
-        body by deserializing into the typed RunEvent struct.
-      type: object
-      required:
-        - id
-        - ts
-        - run_id
-        - event
-      properties:
-        id:
-          type: string
-        ts:
-          type: string
-          format: date-time
-        run_id:
-          type: string
-        node_id:
-          type:
-            - string
-            - 'null'
-        node_label:
-          type:
-            - string
-            - 'null'
-        stage_id:
-          type:
-            - string
-            - 'null'
-          description: Stage execution identity, formatted as "{node_id}@{visit}".
-        parallel_group_id:
-          type:
-            - string
-            - 'null'
-          description: >
-            Durable identity of one execution of a parallel node, formatted as
-            "{node_id}@{visit}".
-        parallel_branch_id:
-          oneOf:
-            - $ref: '#/components/schemas/ParallelBranchId'
-            - type: 'null'
-        session_id:
-          type:
-            - string
-            - 'null'
-        parent_session_id:
-          type:
-            - string
-            - 'null'
-        tool_call_id:
-          type:
-            - string
-            - 'null'
-          description: >
-            Stable identifier for a tool call, present on agent.tool.* events
-            and other durable events that directly describe the same tool call.
-        actor:
-          oneOf:
-            - $ref: '#/components/schemas/Principal'
-            - type: 'null'
-        event:
-          type: string
-          description: Event type discriminator.
-          example: stage.started
-        properties:
+        meta:
           type: object
           additionalProperties: true
-      additionalProperties: true
-    ParallelBranchId:
-      description: >-
-        Durable identity of one branch within a parallel execution, in
-        `{parallel_group_id}:{index}` form.
-      type: string
-      example: review_fork@3:1
-    Principal:
-      oneOf:
-        - $ref: '#/components/schemas/PrincipalUser'
-        - $ref: '#/components/schemas/PrincipalWorker'
-        - $ref: '#/components/schemas/PrincipalWebhook'
-        - $ref: '#/components/schemas/PrincipalSlack'
-        - $ref: '#/components/schemas/PrincipalAgent'
-        - $ref: '#/components/schemas/PrincipalSystem'
-      discriminator:
-        propertyName: kind
-        mapping:
-          user:
-            $ref: '#/components/schemas/PrincipalUser'
-          worker:
-            $ref: '#/components/schemas/PrincipalWorker'
-          webhook:
-            $ref: '#/components/schemas/PrincipalWebhook'
-          slack:
-            $ref: '#/components/schemas/PrincipalSlack'
-          agent:
-            $ref: '#/components/schemas/PrincipalAgent'
-          system:
-            $ref: '#/components/schemas/PrincipalSystem'
-    PrincipalUser:
-      type: object
-      required:
-        - kind
-        - identity
-        - login
-        - auth_method
-      properties:
-        kind:
-          type: string
-          enum:
-            - user
-        identity:
-          $ref: '#/components/schemas/IdpIdentity'
-        login:
-          type: string
-        auth_method:
-          $ref: '#/components/schemas/AuthMethod'
-        avatar_url:
-          type:
-            - string
-            - 'null'
-    PrincipalWorker:
-      type: object
-      required:
-        - kind
-        - run_id
-      properties:
-        kind:
-          type: string
-          enum:
-            - worker
-        run_id:
-          type: string
-    PrincipalWebhook:
-      type: object
-      required:
-        - kind
-        - delivery_id
-      properties:
-        kind:
-          type: string
-          enum:
-            - webhook
-        delivery_id:
-          type: string
-    PrincipalSlack:
-      type: object
-      required:
-        - kind
-        - team_id
-        - user_id
-      properties:
-        kind:
-          type: string
-          enum:
-            - slack
-        team_id:
-          type: string
-        user_id:
-          type: string
-        user_name:
-          type:
-            - string
-            - 'null'
-    PrincipalAgent:
-      type: object
-      required:
-        - kind
-      properties:
-        kind:
-          type: string
-          enum:
-            - agent
-        session_id:
-          type:
-            - string
-            - 'null'
-        parent_session_id:
-          type:
-            - string
-            - 'null'
-        model:
-          type:
-            - string
-            - 'null'
-    PrincipalSystem:
-      type: object
-      required:
-        - kind
-        - system_kind
-      properties:
-        kind:
-          type: string
-          enum:
-            - system
-        system_kind:
-          $ref: '#/components/schemas/SystemActorKind'
-    IdpIdentity:
-      type: object
-      required:
-        - issuer
-        - subject
-      properties:
-        issuer:
-          type: string
-        subject:
-          type: string
-    AuthMethod:
-      description: Runtime user authentication method.
+          description: >-
+            Optional structured details specific to the error `code`, for
+            clients that act on them. Each code documents the members it sets.
+    RunStreamItemKind:
+      description: Which item shape a run stream item carries.
       type: string
       enum:
-        - github
-        - dev_token
-    SystemActorKind:
-      type: string
-      enum:
-        - engine
-        - watchdog
-        - timeout
+        - petri
+        - platform
   headers:
     XRequestId:
       description: >
@@ -526,3 +350,5 @@ components:
         verifies and decodes the cookie before authenticating the request.
 
 ````
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

@@ -82,11 +82,11 @@ fabro run docs/internal/demo/02-tool-use.fabro
 
 ### Prompt vs. agent nodes
 
-|             | Prompt node (`tab`)  | Agent node (`box`)                    |
-| ----------- | -------------------- | ------------------------------------- |
-| LLM calls   | Single call          | Multi-turn loop                       |
-| Tool access | None                 | Full toolset                          |
-| Use case    | Analysis, generation | Tasks requiring file I/O and commands |
+| | Prompt node (`tab`) | Agent node (`box`) |
+| - | - | - |
+| LLM calls | Single call | Multi-turn loop |
+| Tool access | None | Full toolset |
+| Use case | Analysis, generation | Tasks requiring file I/O and commands |
 
 ## 3. Sub-agents
 
@@ -134,3 +134,6 @@ See [Sub-agents](/agents/subagents) for the full tool reference.
 <Card title="Plan & Implement" icon="arrow-right" href="/tutorials/plan-implement">
   Add human gates and revision loops to a multi-step workflow.
 </Card>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

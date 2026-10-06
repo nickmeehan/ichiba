@@ -10,12 +10,12 @@ Every node execution produces an **outcome** that drives edge routing, retry log
 
 ## The four outcomes
 
-| Outcome               | Meaning                                                                                                                    |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `succeeded`           | The handler completed normally                                                                                             |
-| `failed`              | The handler encountered an unrecoverable error                                                                             |
+| Outcome | Meaning |
+| - | - |
+| `succeeded` | The handler completed normally |
+| `failed` | The handler encountered an unrecoverable error |
 | `partially_succeeded` | The handler did not fully succeed but produced usable results — typically from retries exhausted with `allow_partial=true` |
-| `skipped`             | The node was not executed (e.g. a branch not taken in a parallel fan-out)                                                  |
+| `skipped` | The node was not executed (e.g. a branch not taken in a parallel fan-out) |
 
 <Note>
   Retry intent is internal to the engine. It triggers re-execution inside the retry loop and is never visible in edge `condition` expressions. Retryable failures emit `stage.retrying` events while the node is still active, then finish as one of the four outcomes above.
@@ -25,14 +25,14 @@ Every node execution produces an **outcome** that drives edge routing, retry log
 
 Each node type has its own rules for which outcomes it can return:
 
-| Handler                 | Produces                                                | Conditions                                                                                                                                                                                                                                                     |
-| ----------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Command**             | `succeeded`, `failed`                                   | `succeeded` when exit code is 0; `failed` otherwise                                                                                                                                                                                                            |
-| **Agent / Prompt**      | `succeeded`, `failed`, `partially_succeeded`, `skipped` | Defaults to `succeeded`. The LLM can set any outcome via a [routing directive](/agents/outputs#routing-directives) JSON object in its response. Backend errors request retry when retryable or finish as `failed`.                                             |
-| **Parallel**            | `succeeded`, `partially_succeeded`, `failed`            | Waits for every branch. `succeeded` when all branches succeed, `failed` when all branches fail, and `partially_succeeded` for mixed or partial results. A static fan-out with no branches remains partial; a valid `for_each` source with zero items succeeds. |
-| **Human**               | `succeeded`                                             | Always succeeds — the user's selection becomes a routing signal via `preferred_label`                                                                                                                                                                          |
-| **Conditional**         | `succeeded`                                             | Always succeeds — routing is handled by the engine's edge selection                                                                                                                                                                                            |
-| **Start / Exit / Wait** | `succeeded`                                             | Always succeed                                                                                                                                                                                                                                                 |
+| Handler | Produces | Conditions |
+| - | - | - |
+| **Command** | `succeeded`, `failed` | `succeeded` when exit code is 0; `failed` otherwise |
+| **Agent / Prompt** | `succeeded`, `failed`, `partially_succeeded`, `skipped` | Defaults to `succeeded`. The LLM can set any outcome via a [routing directive](/agents/outputs#routing-directives) JSON object in its response. Backend errors request retry when retryable or finish as `failed`. |
+| **Parallel** | `succeeded`, `partially_succeeded`, `failed` | Waits for every branch. `succeeded` when all branches succeed, `failed` when all branches fail, and `partially_succeeded` for mixed or partial results. A static fan-out with no branches remains partial; a valid `for_each` source with zero items succeeds. |
+| **Human** | `succeeded` | Always succeeds — the user's selection becomes a routing signal via `preferred_label` |
+| **Conditional** | `succeeded` | Always succeeds — routing is handled by the engine's edge selection |
+| **Start / Exit / Wait** | `succeeded` | Always succeed |
 
 ## Retry loop
 
@@ -69,8 +69,8 @@ Handler errors follow the same loop: retryable errors (transient infrastructure)
 
 When `allow_partial=true` and the retry loop exhausts all attempts on a retryable failure, the outcome is promoted to `partially_succeeded` instead of `failed`. This lets the workflow continue past nodes that could not fully succeed.
 
-| Attribute       | Type    | Default |
-| --------------- | ------- | ------- |
+| Attribute | Type | Default |
+| - | - | - |
 | `allow_partial` | Boolean | `false` |
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
@@ -90,8 +90,8 @@ See [Retry policies](/execution/failures#retry-policies) for the available prese
 
 When a node's effective `on_failure` policy is `succeed`, a `failed` outcome with no explicit recovery route is promoted to `succeeded`. This is applied after the retry loop, so retries still happen normally — only the final outcome changes. The original failure details stay on the `stage.completed` event and in the checkpoint, and the outcome's notes record the promotion.
 
-| Attribute    | Type   | Default                                                 |
-| ------------ | ------ | ------------------------------------------------------- |
+| Attribute | Type | Default |
+| - | - | - |
 | `on_failure` | String | inherits the graph-level `on_failure` (default `route`) |
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
@@ -138,3 +138,6 @@ gate -> fix     [condition="outcome=failed"]
 ```
 
 See [Transitions](/workflows/transitions) for the full edge selection logic and operator reference.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

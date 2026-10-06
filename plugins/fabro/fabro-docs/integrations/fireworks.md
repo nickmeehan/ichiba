@@ -49,18 +49,18 @@ export FIREWORKS_API_KEY=fw_...
 
 The built-in catalog gives Fireworks offerings the same human-facing model slugs used by other providers. Fireworks account-scoped model paths remain opaque `api_model` values:
 
-| Fabro model slug                                                                     | Fireworks API ID / notes                                                         |
-| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| `kimi-k3`                                                                            | `accounts/fireworks/models/kimi-k3`                                              |
-| `kimi-k3-fast`                                                                       | `accounts/fireworks/routers/kimi-k3-fast`; Fast tier at 50% above standard rates |
-| `kimi-k2.7-code`                                                                     | `accounts/fireworks/models/kimi-k2p7-code`; provider default                     |
-| `kimi-k2.6`                                                                          | `accounts/fireworks/models/kimi-k2p6`                                            |
-| `deepseek-v4-pro`, `deepseek-v4-flash` (`deepseek`, `deepseek-v4`, `deepseek-flash`) | `accounts/fireworks/models/deepseek-v4-...`                                      |
-| `glm-5.2`                                                                            | `accounts/fireworks/models/glm-5p2`                                              |
-| `minimax-m2.7`                                                                       | `accounts/fireworks/models/minimax-m2p7`                                         |
-| `qwen3.7-plus`                                                                       | `accounts/fireworks/models/qwen3p7-plus`                                         |
-| `gpt-oss-120b`                                                                       | `accounts/fireworks/models/gpt-oss-120b`                                         |
-| `gpt-oss-20b`                                                                        | `accounts/fireworks/models/gpt-oss-20b`; provider small default                  |
+| Fabro model slug | Fireworks API ID / notes |
+| - | - |
+| `kimi-k3` | `accounts/fireworks/models/kimi-k3` |
+| `kimi-k3-fast` | `accounts/fireworks/routers/kimi-k3-fast`; Fast tier at 50% above standard rates |
+| `kimi-k2.7-code` | `accounts/fireworks/models/kimi-k2p7-code`; provider default |
+| `kimi-k2.6` | `accounts/fireworks/models/kimi-k2p6` |
+| `deepseek-v4-pro`, `deepseek-v4-flash` (`deepseek`, `deepseek-v4`, `deepseek-flash`) | `accounts/fireworks/models/deepseek-v4-...` |
+| `glm-5.2` | `accounts/fireworks/models/glm-5p2` |
+| `minimax-m2.7` | `accounts/fireworks/models/minimax-m2p7` |
+| `qwen3.7-plus` | `accounts/fireworks/models/qwen3p7-plus` |
+| `gpt-oss-120b` | `accounts/fireworks/models/gpt-oss-120b` |
+| `gpt-oss-20b` | `accounts/fireworks/models/gpt-oss-20b`; provider small default |
 
 Any other Fireworks serverless model can be added under the provider. Choose a stable Fabro model slug as the table key and put the Fireworks account-scoped path in `api_model` (dots in upstream model names become `p`, e.g. `glm-5.2` → `glm-5p2`):
 
@@ -136,3 +136,6 @@ Catalog prices mirror [Fireworks serverless pricing](https://docs.fireworks.ai/s
     Full reference for provider settings and provider-scoped model offerings.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

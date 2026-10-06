@@ -12,11 +12,11 @@ Fabro renders full MiniJinja templates in three workflow attributes: the graph `
 
 Goal templates can reference inputs and server-managed variables. Prompt templates receive those values plus the rendered workflow goal:
 
-| Expression          | Resolves to                                                               |
-| ------------------- | ------------------------------------------------------------------------- |
-| `{{ goal }}`        | The rendered workflow goal (prompts only; a goal cannot reference itself) |
-| `{{ inputs.name }}` | A value from `[run.inputs]`, optionally overridden by CLI input flags     |
-| `{{ vars.NAME }}`   | A server-managed variable snapshotted when the run is created             |
+| Expression | Resolves to |
+| - | - |
+| `{{ goal }}` | The rendered workflow goal (prompts only; a goal cannot reference itself) |
+| `{{ inputs.name }}` | A value from `[run.inputs]`, optionally overridden by CLI input flags |
+| `{{ vars.NAME }}` | A server-managed variable snapshotted when the run is created |
 
 The root `model_stylesheet` receives only `inputs` and `vars`. It does not receive `goal`. See [Model Stylesheets](/workflows/stylesheets#template-stylesheets) for examples and output safety guidance.
 
@@ -166,7 +166,7 @@ digraph Example {
 
 That prompt becomes `Create a plan for: Implement the login feature`.
 
-A graph goal cannot contain `{{ goal }}` because that would reference itself. `fabro validate` reports `goal_self_reference` as an error; put the reusable text in an input or server-managed variable instead.
+A graph goal cannot contain `{{ goal }}` because that would reference itself: the goal is not bound while it renders, so `fabro validate` reports `attractor.unbound_input` and run-style commands refuse the workflow with `unsupported.template.unbound_input`. Put the reusable text in an input or server-managed variable instead.
 
 ## Expansion timing
 
@@ -188,9 +188,7 @@ Fabro renders the graph `goal` first and stores the rendered value back onto the
 
 ## Undefined variables
 
-Fabro renders undefined workflow variables as empty text and records a `template_undefined_variable` diagnostic. `fabro validate` reports that diagnostic as a warning so you can validate workflow structure before all inputs are known. Offline validation does not read a server's variable store, so `{{ vars.* }}` references also warn there. Run-style commands such as `fabro run`, `fabro create`, and preflight use the server snapshot and promote any still-undefined reference to an error before proceeding.
-
-In a `script`, an undefined value records the same diagnostic but leaves the token in place rather than emptying it, so validation output shows what is unbound.
+A workflow variable that nothing binds is a diagnostic from the workflow compile. `fabro validate` reports it as a warning (`attractor.unbound_input`) and leaves the text unrendered, so you can validate workflow structure before all inputs are known. Offline validation does not read a server's variable store, so `{{ vars.* }}` references also warn there. Run-style commands such as `fabro run`, `fabro create`, and preflight use the server snapshot and refuse any still-unbound reference with `unsupported.template.unbound_input` before proceeding.
 
 ## Template includes
 
@@ -214,9 +212,12 @@ TOML `[run.inputs]` tables intentionally replace the inherited map wholesale rat
 
 CLI input flags are different: they are sparse per-key overrides applied after config resolution, so unrelated inherited inputs remain available. If a key is repeated on the CLI, the last value wins.
 
-| Source                                                                    | Priority |
-| ------------------------------------------------------------------------- | -------- |
-| CLI flags (`-I key=value` / `--input key=value`, repeated; per-key merge) | Highest  |
-| `workflow.toml` `[run.inputs]`                                            |          |
-| `.fabro/project.toml` `[run.inputs]`                                      |          |
-| `~/.fabro/settings.toml` `[run.inputs]`                                   | Lowest   |
+| Source | Priority |
+| - | - |
+| CLI flags (`-I key=value` / `--input key=value`, repeated; per-key merge) | Highest |
+| `workflow.toml` `[run.inputs]` | |
+| `.fabro/project.toml` `[run.inputs]` | |
+| `~/.fabro/settings.toml` `[run.inputs]` | Lowest |
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

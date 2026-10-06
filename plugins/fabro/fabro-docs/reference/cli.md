@@ -10,15 +10,15 @@
 
 These flags apply to all subcommands:
 
-| Flag                 | Description                                               |
-| -------------------- | --------------------------------------------------------- |
-| `--json`             | Output machine-readable JSON when the command supports it |
-| `--debug`            | Enable DEBUG-level logging (default is INFO)              |
-| `--no-upgrade-check` | Skip the automatic background upgrade check               |
-| `--quiet`            | Suppress non-essential output                             |
-| `--verbose`          | Enable verbose output                                     |
-| `-h, --help`         | Print help                                                |
-| `-V, --version`      | Print version                                             |
+| Flag | Description |
+| - | - |
+| `--json` | Output machine-readable JSON when the command supports it |
+| `--debug` | Enable DEBUG-level logging (default is INFO) |
+| `--no-upgrade-check` | Skip the automatic background upgrade check |
+| `--quiet` | Suppress non-essential output |
+| `--verbose` | Enable verbose output |
+| `-h, --help` | Print help |
+| `-V, --version` | Print version |
 
 Connection-target flags like `--storage-dir` and `--server` are command-specific, not global. Fabro no longer auto-loads `~/.fabro/.env`; persist server-owned credentials with `fabro provider login` / `fabro secret set`, or provide environment variables in the invoking shell.
 
@@ -63,53 +63,55 @@ fabro [OPTIONS] [COMMAND]
 
 #### Subcommands
 
-| Command            | Description                                                                                                         |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| `fabro approve`    | Approve a pending run for execution                                                                                 |
-| `fabro archive`    | Mark terminal runs as archived (reviewed, no further action needed). Archived runs are hidden from default listings |
-| `fabro artifact`   | Inspect and copy run artifacts (screenshots, reports, traces)                                                       |
-| `fabro ask`        | Ask Fabro a read-only question about a run                                                                          |
-| `fabro attach`     | Attach to a running or finished workflow run                                                                        |
-| `fabro auth`       | Manage CLI authentication state                                                                                     |
-| `fabro completion` | Generate shell completions                                                                                          |
-| `fabro create`     | Register a workflow version and create a submitted run                                                              |
-| `fabro deny`       | Deny execution of a pending run                                                                                     |
-| `fabro discord`    | Open the Discord community in the browser                                                                           |
-| `fabro docs`       | Open the docs website in the browser                                                                                |
-| `fabro doctor`     | Check environment and integration health                                                                            |
-| `fabro dump`       | Export a run's durable state to a directory                                                                         |
-| `fabro events`     | View the event log of a workflow run                                                                                |
-| `fabro fork`       | Fork a workflow run from an earlier checkpoint into a new run                                                       |
-| `fabro graph`      | Render a workflow graph as SVG                                                                                      |
-| `fabro inspect`    | Show detailed information about a workflow run                                                                      |
-| `fabro install`    | Set up the Fabro environment (LLMs, certs, GitHub)                                                                  |
-| `fabro logs`       | View the raw worker tracing log of a workflow run                                                                   |
-| `fabro mcp`        | Model Context Protocol server                                                                                       |
-| `fabro model`      | List and test LLM models                                                                                            |
-| `fabro parent`     | Manage run parent links                                                                                             |
-| `fabro pr`         | Pull request operations                                                                                             |
-| `fabro preflight`  | Validate run configuration without executing                                                                        |
-| `fabro provider`   | Provider operations                                                                                                 |
-| `fabro repo`       | Repository commands                                                                                                 |
-| `fabro resume`     | Resume an interrupted workflow run                                                                                  |
-| `fabro rewind`     | Rewind a workflow run to an earlier checkpoint                                                                      |
-| `fabro rm`         | Remove one or more workflow runs                                                                                    |
-| `fabro run`        | Register a workflow version, create a run, and start it                                                             |
-| `fabro sandbox`    | Sandbox operations (cp, ssh, preview)                                                                               |
-| `fabro secret`     | Manage server-owned secrets                                                                                         |
-| `fabro server`     | Server operations                                                                                                   |
-| `fabro settings`   | Inspect effective settings                                                                                          |
-| `fabro start`      | Start a created workflow run on the server                                                                          |
-| `fabro steer`      | Steer a running agent mid-execution                                                                                 |
-| `fabro system`     | System maintenance commands                                                                                         |
-| `fabro unarchive`  | Restore archived runs to their prior terminal status                                                                |
-| `fabro uninstall`  | Uninstall Fabro from this machine                                                                                   |
-| `fabro upgrade`    | Upgrade fabro to the latest version                                                                                 |
-| `fabro validate`   | Validate a workflow                                                                                                 |
-| `fabro variable`   | Manage server-owned variables                                                                                       |
-| `fabro version`    | Show client and server version information                                                                          |
-| `fabro wait`       | Block until a workflow run completes                                                                                |
-| `fabro workflow`   | Workflow operations                                                                                                 |
+| Command | Description |
+| - | - |
+| `fabro approve` | Approve a pending run for execution |
+| `fabro archive` | Mark terminal runs as archived (reviewed, no further action needed). Archived runs are hidden from default listings |
+| `fabro artifact` | Inspect and copy run artifacts (screenshots, reports, traces) |
+| `fabro ask` | Ask Fabro a read-only question about a run |
+| `fabro attach` | Attach to a running or finished workflow run |
+| `fabro auth` | Manage CLI authentication state |
+| `fabro completion` | Generate shell completions |
+| `fabro create` | Register a workflow version and create a submitted run |
+| `fabro deny` | Deny execution of a pending run |
+| `fabro discord` | Open the Discord community in the browser |
+| `fabro docs` | Open the docs website in the browser |
+| `fabro doctor` | Check environment and integration health |
+| `fabro dump` | Export a run's durable state to a directory |
+| `fabro events` | View the event log of a workflow run |
+| `fabro fork` | Fork a workflow run from an earlier checkpoint into a new run |
+| `fabro graph` | Render a workflow graph as SVG |
+| `fabro inspect` | Show detailed information about a workflow run |
+| `fabro install` | Set up the Fabro environment (LLMs, certs, GitHub) |
+| `fabro logs` | View the raw worker tracing log of a workflow run |
+| `fabro mcp` | Model Context Protocol server |
+| `fabro model` | List and test LLM models |
+| `fabro parent` | Manage run parent links |
+| `fabro pr` | Pull request operations |
+| `fabro preflight` | Validate run configuration without executing |
+| `fabro provider` | Provider operations |
+| `fabro repo` | Repository commands |
+| `fabro resume` | Resume an interrupted workflow run |
+| `fabro retry` | Retry a finished workflow from the start in a new run |
+| `fabro rewind` | Rewind a workflow run to an earlier checkpoint, replacing it |
+| `fabro rm` | Remove one or more workflow runs |
+| `fabro run` | Register a workflow version, create a run, and start it |
+| `fabro sandbox` | Sandbox operations (cp, ssh, preview) |
+| `fabro secret` | Manage server-owned secrets |
+| `fabro server` | Server operations |
+| `fabro settings` | Inspect effective settings |
+| `fabro start` | Start a created workflow run on the server |
+| `fabro steer` | Steer a running agent mid-execution |
+| `fabro system` | System maintenance commands |
+| `fabro timeline` | Show the checkpoint timeline of a workflow run |
+| `fabro unarchive` | Restore archived runs to their prior terminal status |
+| `fabro uninstall` | Uninstall Fabro from this machine |
+| `fabro upgrade` | Upgrade fabro to the latest version |
+| `fabro validate` | Validate a workflow |
+| `fabro variable` | Manage server-owned variables |
+| `fabro version` | Show client and server version information |
+| `fabro wait` | Block until a workflow run completes |
+| `fabro workflow` | Workflow operations |
 
 ### `fabro approve`
 
@@ -121,14 +123,14 @@ fabro approve [OPTIONS] <RUNS>...
 
 #### Arguments
 
-| Name   | Description                          |
-| ------ | ------------------------------------ |
+| Name | Description |
+| - | - |
 | `RUNS` | Run IDs or workflow names to approve |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro archive`
@@ -141,14 +143,14 @@ fabro archive [OPTIONS] <RUNS>...
 
 #### Arguments
 
-| Name   | Description                          |
-| ------ | ------------------------------------ |
+| Name | Description |
+| - | - |
 | `RUNS` | Run IDs or workflow names to archive |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro artifact`
@@ -161,10 +163,10 @@ fabro artifact [OPTIONS] <COMMAND>
 
 #### Subcommands
 
-| Command               | Description                        |
-| --------------------- | ---------------------------------- |
-| `fabro artifact cp`   | Copy artifacts from a workflow run |
-| `fabro artifact list` | List artifacts for a workflow run  |
+| Command | Description |
+| - | - |
+| `fabro artifact cp` | Copy artifacts from a workflow run |
+| `fabro artifact list` | List artifacts for a workflow run |
 
 #### `fabro artifact cp`
 
@@ -176,20 +178,20 @@ fabro artifact cp [OPTIONS] <SOURCE> [DEST]
 
 #### Arguments
 
-| Name     | Description                                                             |
-| -------- | ----------------------------------------------------------------------- |
-| `SOURCE` | Source: RUN\_ID (all artifacts) or RUN\_ID:path (specific artifact)     |
-| `DEST`   | Destination directory (defaults to current directory)<br />Default: `.` |
+| Name | Description |
+| - | - |
+| `SOURCE` | Source: RUN\_ID (all artifacts) or RUN\_ID:path (specific artifact) |
+| `DEST` | Destination directory (defaults to current directory)<br />Default: `.` |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
-| `--node <node>`     | Filter to artifacts from a specific node                      |
-| `--retry <retry>`   | Filter to artifacts from a specific retry attempt             |
+| Option | Description |
+| - | - |
+| `--node <node>` | Filter to artifacts from a specific node |
+| `--retry <retry>` | Filter to artifacts from a specific retry attempt |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
-| `--stage <stage>`   | Filter to artifacts from a specific stage visit (node\@visit) |
-| `--tree`            | Preserve node\[/visit\_{N}]/retry\_{N}/ directory structure   |
+| `--stage <stage>` | Filter to artifacts from a specific stage visit (node\@visit) |
+| `--tree` | Preserve node\[/visit\_{N}]/retry\_{N}/ directory structure |
 
 #### `fabro artifact list`
 
@@ -201,18 +203,18 @@ fabro artifact list [OPTIONS] <RUN_ID>
 
 #### Arguments
 
-| Name     | Description        |
-| -------- | ------------------ |
+| Name | Description |
+| - | - |
 | `RUN_ID` | Run ID (or prefix) |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
-| `--node <node>`     | Filter to artifacts from a specific node                      |
-| `--retry <retry>`   | Filter to artifacts from a specific retry attempt             |
+| Option | Description |
+| - | - |
+| `--node <node>` | Filter to artifacts from a specific node |
+| `--retry <retry>` | Filter to artifacts from a specific retry attempt |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
-| `--stage <stage>`   | Filter to artifacts from a specific stage visit (node\@visit) |
+| `--stage <stage>` | Filter to artifacts from a specific stage visit (node\@visit) |
 
 ### `fabro ask`
 
@@ -224,17 +226,17 @@ fabro ask [OPTIONS] --prompt <PROMPT> <RUN>
 
 #### Arguments
 
-| Name  | Description                    |
-| ----- | ------------------------------ |
+| Name | Description |
+| - | - |
 | `RUN` | Run ID prefix or workflow name |
 
 #### Options
 
-| Option                  | Description                                                   |
-| ----------------------- | ------------------------------------------------------------- |
-| `--model <model>`       | Optional model name                                           |
-| `-p, --prompt <prompt>` | Question to ask                                               |
-| `--server <server>`     | Fabro server target: http(s) URL or absolute Unix socket path |
+| Option | Description |
+| - | - |
+| `--model <model>` | Optional model name |
+| `-p, --prompt <prompt>` | Question to ask |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro attach`
 
@@ -246,14 +248,14 @@ fabro attach [OPTIONS] <RUN>
 
 #### Arguments
 
-| Name  | Description                    |
-| ----- | ------------------------------ |
+| Name | Description |
+| - | - |
 | `RUN` | Run ID prefix or workflow name |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro auth`
@@ -266,10 +268,10 @@ fabro auth [OPTIONS] <COMMAND>
 
 #### Subcommands
 
-| Command             | Description                  |
-| ------------------- | ---------------------------- |
-| `fabro auth login`  | Log in to a Fabro server     |
-| `fabro auth logout` | Log out from a Fabro server  |
+| Command | Description |
+| - | - |
+| `fabro auth login` | Log in to a Fabro server |
+| `fabro auth logout` | Log out from a Fabro server |
 | `fabro auth status` | Show offline CLI auth status |
 
 #### `fabro auth login`
@@ -282,12 +284,12 @@ fabro auth login [OPTIONS]
 
 #### Options
 
-| Option                    | Description                                                                     |
-| ------------------------- | ------------------------------------------------------------------------------- |
-| `--dev-token <dev_token>` | Log in with a dev-token instead of browser OAuth                                |
-| `--no-browser`            | Print the browser URL instead of opening it automatically                       |
-| `--server <server>`       | Fabro server target: http(s) URL or absolute Unix socket path                   |
-| `--timeout <timeout>`     | Timeout in seconds waiting for the browser flow to complete<br />Default: `300` |
+| Option | Description |
+| - | - |
+| `--dev-token <dev_token>` | Log in with a dev-token instead of browser OAuth |
+| `--no-browser` | Print the browser URL instead of opening it automatically |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--timeout <timeout>` | Timeout in seconds waiting for the browser flow to complete<br />Default: `300` |
 
 #### `fabro auth logout`
 
@@ -299,9 +301,9 @@ fabro auth logout [OPTIONS]
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
-| `--all`             | Log out from every stored server                              |
+| Option | Description |
+| - | - |
+| `--all` | Log out from every stored server |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 #### `fabro auth status`
@@ -314,8 +316,8 @@ fabro auth status [OPTIONS]
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro completion`
@@ -328,8 +330,8 @@ fabro completion [OPTIONS] <SHELL>
 
 #### Arguments
 
-| Name    | Description                                                                                  |
-| ------- | -------------------------------------------------------------------------------------------- |
+| Name | Description |
+| - | - |
 | `SHELL` | Shell to generate completions for<br />Values: `bash`, `elvish`, `fish`, `powershell`, `zsh` |
 
 ### `fabro create`
@@ -342,34 +344,34 @@ fabro create [OPTIONS] <WORKFLOW>
 
 #### Arguments
 
-| Name       | Description                                        |
-| ---------- | -------------------------------------------------- |
+| Name | Description |
+| - | - |
 | `WORKFLOW` | Workflow name, path, or OWNER/REPO\[@REF]:WORKFLOW |
 
 #### Options
 
-| Option                           | Description                                                                                   |
-| -------------------------------- | --------------------------------------------------------------------------------------------- |
-| `--auto-approve`                 | Auto-approve all human gates                                                                  |
-| `-d, --detach`                   | Run the workflow in the background and print the run ID                                       |
-| `--dry-run`                      | Simulate execution; workflow source may still be fetched and uploaded                         |
-| `--environment <environment>`    | Named environment for agent tools                                                             |
-| `--goal <goal>`                  | Override the workflow goal (available as {{ goal }} in prompts)                               |
-| `--goal-file <goal_file>`        | Read a per-run goal value from a local file                                                   |
-| `--label <key=value>`            | Attach a label to this run (repeatable, format: KEY=VALUE)                                    |
-| `--model <model>`                | Override default LLM model                                                                    |
-| `--parent <run>`                 | Link this run to an existing orchestration parent run                                         |
-| `--preserve-sandbox`             | Keep the sandbox alive after the run finishes (for debugging)                                 |
-| `--provider <provider>`          | Override default LLM provider                                                                 |
-| `--server <server>`              | Fabro server target: http(s) URL or absolute Unix socket path                                 |
-| `--target-branch <branch>`       | Target working branch (default: remote default branch), pinned to its observed commit         |
-| `--target-from <path>`           | Observe this target directory instead of cwd; Folder targets require server filesystem access |
-| `--target-repo <owner/repo>`     | Target GitHub OWNER/REPO; the execution sandbox still needs its own clone credentials         |
-| `--target <owner/repo[@branch]>` | Target GitHub repository and optional working branch                                          |
-| `-I, --input <key=value>`        | Override a workflow input value (repeatable, format: KEY=VALUE)                               |
-| `-v, --verbose`                  | Enable verbose output                                                                         |
-| `--workflow-ref <ref>`           | Workflow branch, tag, HEAD (default), or full commit SHA; qualify ambiguous names             |
-| `--workflow-repo <owner/repo>`   | Acquire workflow source locally from a GitHub OWNER/REPO using native Git credentials         |
+| Option | Description |
+| - | - |
+| `--auto-approve` | Auto-approve all human gates |
+| `-d, --detach` | Run the workflow in the background and print the run ID |
+| `--dry-run` | Simulate execution; workflow source may still be fetched and uploaded |
+| `--environment <environment>` | Named environment for agent tools |
+| `--goal <goal>` | Override the workflow goal (available as {{ goal }} in prompts) |
+| `--goal-file <goal_file>` | Read a per-run goal value from a local file |
+| `--label <key=value>` | Attach a label to this run (repeatable, format: KEY=VALUE) |
+| `--model <model>` | Override default LLM model |
+| `--parent <run>` | Link this run to an existing orchestration parent run |
+| `--preserve-sandbox` | Keep the sandbox alive after the run finishes (for debugging) |
+| `--provider <provider>` | Override default LLM provider |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--target-branch <branch>` | Target working branch (default: remote default branch), pinned to its observed commit |
+| `--target-from <path>` | Observe this target directory instead of cwd; Folder targets require server filesystem access |
+| `--target-repo <owner/repo>` | Target GitHub OWNER/REPO; the execution sandbox still needs its own clone credentials |
+| `--target <owner/repo[@branch]>` | Target GitHub repository and optional working branch |
+| `-I, --input <key=value>` | Override a workflow input value (repeatable, format: KEY=VALUE) |
+| `-v, --verbose` | Enable verbose output |
+| `--workflow-ref <ref>` | Workflow branch, tag, HEAD (default), or full commit SHA; qualify ambiguous names |
+| `--workflow-repo <owner/repo>` | Acquire workflow source locally from a GitHub OWNER/REPO using native Git credentials |
 
 ### `fabro deny`
 
@@ -381,15 +383,15 @@ fabro deny [OPTIONS] <RUNS>...
 
 #### Arguments
 
-| Name   | Description                       |
-| ------ | --------------------------------- |
+| Name | Description |
+| - | - |
 | `RUNS` | Run IDs or workflow names to deny |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
-| `--reason <reason>` | Reason for denying execution                                  |
+| Option | Description |
+| - | - |
+| `--reason <reason>` | Reason for denying execution |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro discord`
@@ -418,10 +420,10 @@ fabro doctor [OPTIONS]
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
-| `-v, --verbose`     | Show detailed information for each check                      |
+| `-v, --verbose` | Show detailed information for each check |
 
 ### `fabro dump`
 
@@ -433,16 +435,16 @@ fabro dump [OPTIONS] --output <OUTPUT> <RUN>
 
 #### Arguments
 
-| Name  | Description                    |
-| ----- | ------------------------------ |
+| Name | Description |
+| - | - |
 | `RUN` | Run ID prefix or workflow name |
 
 #### Options
 
-| Option                  | Description                                                   |
-| ----------------------- | ------------------------------------------------------------- |
-| `-o, --output <output>` | Output directory (must not exist or be empty)                 |
-| `--server <server>`     | Fabro server target: http(s) URL or absolute Unix socket path |
+| Option | Description |
+| - | - |
+| `-o, --output <output>` | Output directory (must not exist or be empty) |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro events`
 
@@ -454,19 +456,19 @@ fabro events [OPTIONS] <RUN>
 
 #### Arguments
 
-| Name  | Description                                      |
-| ----- | ------------------------------------------------ |
+| Name | Description |
+| - | - |
 | `RUN` | Run ID prefix or workflow name (most recent run) |
 
 #### Options
 
-| Option              | Description                                                                   |
-| ------------------- | ----------------------------------------------------------------------------- |
-| `-f, --follow`      | Follow event output                                                           |
-| `-p, --pretty`      | Formatted colored output with rendered assistant text                         |
-| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path                 |
-| `--since <since>`   | Events since timestamp or relative (e.g. "42m", "2h", "2026-01-02T13:00:00Z") |
-| `-n, --tail <tail>` | Lines from end (default: all)                                                 |
+| Option | Description |
+| - | - |
+| `-f, --follow` | Follow event output |
+| `-p, --pretty` | Formatted colored output with rendered assistant text |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--since <since>` | Events since timestamp or relative (e.g. "42m", "2h", "2026-01-02T13:00:00Z") |
+| `-n, --tail <tail>` | Lines from end (default: all) |
 
 ### `fabro fork`
 
@@ -478,16 +480,16 @@ fabro fork [OPTIONS] <RUN_ID> [TARGET]
 
 #### Arguments
 
-| Name     | Description                                                                       |
-| -------- | --------------------------------------------------------------------------------- |
-| `RUN_ID` | Run ID (or unambiguous prefix)                                                    |
+| Name | Description |
+| - | - |
+| `RUN_ID` | Run ID (or unambiguous prefix) |
 | `TARGET` | Target checkpoint: node name, node\@visit, or @ordinal (omit to fork from latest) |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
-| `--list`            | Show the checkpoint timeline instead of forking               |
+| Option | Description |
+| - | - |
+| `--list` | Show the checkpoint timeline instead of forking |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro graph`
@@ -500,19 +502,19 @@ fabro graph [OPTIONS] <WORKFLOW>
 
 #### Arguments
 
-| Name       | Description                                                                   |
-| ---------- | ----------------------------------------------------------------------------- |
+| Name | Description |
+| - | - |
 | `WORKFLOW` | Path to the .fabro workflow file, .toml task config, or project workflow name |
 
 #### Options
 
-| Option                        | Description                                                                       |
-| ----------------------------- | --------------------------------------------------------------------------------- |
-| `--allow-invalid`             | Render even when workflow validation reports errors                               |
+| Option | Description |
+| - | - |
+| `--allow-invalid` | Render even when workflow validation reports errors |
 | `-d, --direction <direction>` | Graph layout direction (overrides the DOT file's rankdir)<br />Values: `lr`, `tb` |
-| `--format <format>`           | Output format<br />Values: `svg`<br />Default: `svg`                              |
-| `-o, --output <output>`       | Output file path (defaults to stdout)                                             |
-| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path                     |
+| `--format <format>` | Output format<br />Values: `svg`<br />Default: `svg` |
+| `-o, --output <output>` | Output file path (defaults to stdout) |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro inspect`
 
@@ -524,14 +526,14 @@ fabro inspect [OPTIONS] <RUN>
 
 #### Arguments
 
-| Name  | Description                                      |
-| ----- | ------------------------------------------------ |
+| Name | Description |
+| - | - |
 | `RUN` | Run ID prefix or workflow name (most recent run) |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro install`
@@ -544,15 +546,15 @@ fabro install [OPTIONS] [COMMAND]
 
 #### Options
 
-| Option                        | Description                                                                                                          |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)                                                                 |
-| `--web-url <web_url>`         | Base URL for the web UI (used for OAuth callback URLs and generated settings)<br />Default: `http://127.0.0.1:32276` |
+| Option | Description |
+| - | - |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
+| `--web-url <web_url>` | Base URL for the web UI (used for OAuth callback URLs and generated settings)<br />Default: `http://127.0.0.1:32276` |
 
 #### Subcommands
 
-| Command                | Description                                        |
-| ---------------------- | -------------------------------------------------- |
+| Command | Description |
+| - | - |
 | `fabro install github` | Configure GitHub integration (token or GitHub App) |
 
 #### `fabro install github`
@@ -565,9 +567,9 @@ fabro install github [OPTIONS]
 
 #### Options
 
-| Option                  | Description                                                                             |
-| ----------------------- | --------------------------------------------------------------------------------------- |
-| `--owner <owner>`       | GitHub App owner: `personal` or `org:<slug>` (app only, requires --non-interactive)     |
+| Option | Description |
+| - | - |
+| `--owner <owner>` | GitHub App owner: `personal` or `org:<slug>` (app only, requires --non-interactive) |
 | `--strategy <strategy>` | GitHub authentication strategy (requires --non-interactive)<br />Values: `token`, `app` |
 
 ### `fabro logs`
@@ -580,16 +582,16 @@ fabro logs [OPTIONS] <RUN>
 
 #### Arguments
 
-| Name  | Description                                      |
-| ----- | ------------------------------------------------ |
+| Name | Description |
+| - | - |
 | `RUN` | Run ID prefix or workflow name (most recent run) |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
-| `-n, --tail <tail>` | Lines from end (default: all)                                 |
+| `-n, --tail <tail>` | Lines from end (default: all) |
 
 ### `fabro mcp`
 
@@ -601,11 +603,11 @@ fabro mcp [OPTIONS] <COMMAND>
 
 #### Subcommands
 
-| Command            | Description                             |
-| ------------------ | --------------------------------------- |
-| `fabro mcp config` | Print MCP client configuration JSON     |
-| `fabro mcp init`   | Configure an MCP client to launch Fabro |
-| `fabro mcp start`  | Start the Fabro MCP server over stdio   |
+| Command | Description |
+| - | - |
+| `fabro mcp config` | Print MCP client configuration JSON |
+| `fabro mcp init` | Configure an MCP client to launch Fabro |
+| `fabro mcp start` | Start the Fabro MCP server over stdio |
 
 #### `fabro mcp config`
 
@@ -617,11 +619,11 @@ fabro mcp config [OPTIONS]
 
 #### Options
 
-| Option                        | Description                                                                                               |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `--name <name>`               | Name of the mcpServers entry; use distinct names to register multiple Fabro servers<br />Default: `fabro` |
-| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path                                             |
-| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)                                                      |
+| Option | Description |
+| - | - |
+| `--name <name>` | Name of the mcpServers entry; use distinct names to register multiple Fabro servers<br />Default: `fabro` |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
 
 #### `fabro mcp init`
 
@@ -633,17 +635,17 @@ fabro mcp init [OPTIONS] <AGENT>
 
 #### Arguments
 
-| Name    | Description                            |
-| ------- | -------------------------------------- |
+| Name | Description |
+| - | - |
 | `AGENT` | Values: `claude`, `cursor`, `windsurf` |
 
 #### Options
 
-| Option                        | Description                                                                                               |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `--name <name>`               | Name of the mcpServers entry; use distinct names to register multiple Fabro servers<br />Default: `fabro` |
-| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path                                             |
-| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)                                                      |
+| Option | Description |
+| - | - |
+| `--name <name>` | Name of the mcpServers entry; use distinct names to register multiple Fabro servers<br />Default: `fabro` |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
 
 #### `fabro mcp start`
 
@@ -655,10 +657,10 @@ fabro mcp start [OPTIONS]
 
 #### Options
 
-| Option                        | Description                                                   |
-| ----------------------------- | ------------------------------------------------------------- |
-| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path |
-| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)          |
+| Option | Description |
+| - | - |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
 
 ### `fabro model`
 
@@ -670,9 +672,9 @@ fabro model [OPTIONS] [COMMAND]
 
 #### Subcommands
 
-| Command            | Description                                        |
-| ------------------ | -------------------------------------------------- |
-| `fabro model list` | List available models                              |
+| Command | Description |
+| - | - |
+| `fabro model list` | List available models |
 | `fabro model test` | Test model availability by sending a simple prompt |
 
 #### `fabro model list`
@@ -685,11 +687,11 @@ fabro model list [OPTIONS]
 
 #### Options
 
-| Option                      | Description                                                   |
-| --------------------------- | ------------------------------------------------------------- |
-| `-p, --provider <provider>` | Filter by provider                                            |
-| `-q, --query <query>`       | Search for models matching this string                        |
-| `--server <server>`         | Fabro server target: http(s) URL or absolute Unix socket path |
+| Option | Description |
+| - | - |
+| `-p, --provider <provider>` | Filter by provider |
+| `-q, --query <query>` | Search for models matching this string |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 #### `fabro model test`
 
@@ -701,14 +703,14 @@ fabro model test [OPTIONS]
 
 #### Options
 
-| Option                                  | Description                                                               |
-| --------------------------------------- | ------------------------------------------------------------------------- |
-| `-j, --jobs <jobs>`                     | Number of model tests to run concurrently in bulk mode<br />Default: `4`  |
-| `-m, --model <model>`                   | Test a specific model                                                     |
-| `-p, --provider <provider>`             | Filter by provider                                                        |
+| Option | Description |
+| - | - |
+| `-j, --jobs <jobs>` | Number of model tests to run concurrently in bulk mode<br />Default: `4` |
+| `-m, --model <model>` | Test a specific model |
+| `-p, --provider <provider>` | Filter by provider |
 | `--reasoning-effort <reasoning_effort>` | Request a reasoning-effort level (minimal, low, medium, high, xhigh, max) |
-| `--server <server>`                     | Fabro server target: http(s) URL or absolute Unix socket path             |
-| `--tools`                               | Run a multi-turn tool-use test                                            |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--tools` | Run a multi-turn tool-use test |
 
 ### `fabro parent`
 
@@ -720,10 +722,10 @@ fabro parent [OPTIONS] <COMMAND>
 
 #### Subcommands
 
-| Command               | Description                                  |
-| --------------------- | -------------------------------------------- |
-| `fabro parent link`   | Link or replace a run's orchestration parent |
-| `fabro parent unlink` | Unlink a run from its orchestration parent   |
+| Command | Description |
+| - | - |
+| `fabro parent link` | Link or replace a run's orchestration parent |
+| `fabro parent unlink` | Unlink a run from its orchestration parent |
 
 #### `fabro parent link`
 
@@ -735,15 +737,15 @@ fabro parent link [OPTIONS] <CHILD_RUN> <PARENT_RUN>
 
 #### Arguments
 
-| Name         | Description         |
-| ------------ | ------------------- |
-| `CHILD_RUN`  | Child run selector  |
+| Name | Description |
+| - | - |
+| `CHILD_RUN` | Child run selector |
 | `PARENT_RUN` | Parent run selector |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 #### `fabro parent unlink`
@@ -756,14 +758,14 @@ fabro parent unlink [OPTIONS] <CHILD_RUN>
 
 #### Arguments
 
-| Name        | Description        |
-| ----------- | ------------------ |
+| Name | Description |
+| - | - |
 | `CHILD_RUN` | Child run selector |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro pr`
@@ -776,14 +778,14 @@ fabro pr [OPTIONS] <COMMAND>
 
 #### Subcommands
 
-| Command           | Description                                                   |
-| ----------------- | ------------------------------------------------------------- |
-| `fabro pr close`  | Close a pull request                                          |
-| `fabro pr create` | Create a pull request from a completed run                    |
-| `fabro pr link`   | Link or replace the GitHub pull request associated with a run |
-| `fabro pr merge`  | Merge a pull request                                          |
-| `fabro pr unlink` | Unlink the pull request associated with a run                 |
-| `fabro pr view`   | View pull request details                                     |
+| Command | Description |
+| - | - |
+| `fabro pr close` | Close a pull request |
+| `fabro pr create` | Create a pull request from a completed run |
+| `fabro pr link` | Link or replace the GitHub pull request associated with a run |
+| `fabro pr merge` | Merge a pull request |
+| `fabro pr unlink` | Unlink the pull request associated with a run |
+| `fabro pr view` | View pull request details |
 
 #### `fabro pr close`
 
@@ -795,14 +797,14 @@ fabro pr close [OPTIONS] <RUN_ID>
 
 #### Arguments
 
-| Name     | Description      |
-| -------- | ---------------- |
+| Name | Description |
+| - | - |
 | `RUN_ID` | Run ID or prefix |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 #### `fabro pr create`
@@ -815,17 +817,17 @@ fabro pr create [OPTIONS] <RUN_ID>
 
 #### Arguments
 
-| Name     | Description      |
-| -------- | ---------------- |
+| Name | Description |
+| - | - |
 | `RUN_ID` | Run ID or prefix |
 
 #### Options
 
-| Option              | Description                                                            |
-| ------------------- | ---------------------------------------------------------------------- |
-| `-f, --force`       | Create PR even if the run status is not succeeded/partially\_succeeded |
-| `--model <model>`   | LLM model for generating PR description                                |
-| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path          |
+| Option | Description |
+| - | - |
+| `-f, --force` | Create PR even if the run status is not succeeded/partially\_succeeded |
+| `--model <model>` | LLM model for generating PR description |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 #### `fabro pr link`
 
@@ -837,15 +839,15 @@ fabro pr link [OPTIONS] <RUN_ID> <URL>
 
 #### Arguments
 
-| Name     | Description                                       |
-| -------- | ------------------------------------------------- |
-| `RUN_ID` | Run ID or prefix                                  |
-| `URL`    | GitHub pull request URL to associate with the run |
+| Name | Description |
+| - | - |
+| `RUN_ID` | Run ID or prefix |
+| `URL` | GitHub pull request URL to associate with the run |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 #### `fabro pr merge`
@@ -858,16 +860,16 @@ fabro pr merge [OPTIONS] <RUN_ID>
 
 #### Arguments
 
-| Name     | Description      |
-| -------- | ---------------- |
+| Name | Description |
+| - | - |
 | `RUN_ID` | Run ID or prefix |
 
 #### Options
 
-| Option              | Description                                                                                            |
-| ------------------- | ------------------------------------------------------------------------------------------------------ |
+| Option | Description |
+| - | - |
 | `--method <method>` | Merge method: merge, squash, or rebase<br />Values: `merge`, `squash`, `rebase`<br />Default: `squash` |
-| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path                                          |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 #### `fabro pr unlink`
 
@@ -879,14 +881,14 @@ fabro pr unlink [OPTIONS] <RUN_ID>
 
 #### Arguments
 
-| Name     | Description      |
-| -------- | ---------------- |
+| Name | Description |
+| - | - |
 | `RUN_ID` | Run ID or prefix |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 #### `fabro pr view`
@@ -899,14 +901,14 @@ fabro pr view [OPTIONS] <RUN_ID>
 
 #### Arguments
 
-| Name     | Description      |
-| -------- | ---------------- |
+| Name | Description |
+| - | - |
 | `RUN_ID` | Run ID or prefix |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro preflight`
@@ -919,22 +921,22 @@ fabro preflight [OPTIONS] <WORKFLOW>
 
 #### Arguments
 
-| Name       | Description                                         |
-| ---------- | --------------------------------------------------- |
+| Name | Description |
+| - | - |
 | `WORKFLOW` | Path to a .fabro workflow file or .toml task config |
 
 #### Options
 
-| Option                        | Description                                                     |
-| ----------------------------- | --------------------------------------------------------------- |
-| `--environment <environment>` | Named environment for agent tools                               |
-| `--goal <goal>`               | Override the workflow goal (available as {{ goal }} in prompts) |
-| `--goal-file <goal_file>`     | Read the workflow goal from a file                              |
-| `--model <model>`             | Override default LLM model                                      |
-| `--provider <provider>`       | Override default LLM provider                                   |
-| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path   |
-| `-I, --input <key=value>`     | Override a workflow input value (repeatable, format: KEY=VALUE) |
-| `-v, --verbose`               | Enable verbose output                                           |
+| Option | Description |
+| - | - |
+| `--environment <environment>` | Named environment for agent tools |
+| `--goal <goal>` | Override the workflow goal (available as {{ goal }} in prompts) |
+| `--goal-file <goal_file>` | Read the workflow goal from a file |
+| `--model <model>` | Override default LLM model |
+| `--provider <provider>` | Override default LLM provider |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `-I, --input <key=value>` | Override a workflow input value (repeatable, format: KEY=VALUE) |
+| `-v, --verbose` | Enable verbose output |
 
 ### `fabro provider`
 
@@ -946,8 +948,8 @@ fabro provider [OPTIONS] <COMMAND>
 
 #### Subcommands
 
-| Command                | Description               |
-| ---------------------- | ------------------------- |
+| Command | Description |
+| - | - |
 | `fabro provider login` | Log in to an LLM provider |
 
 #### `fabro provider login`
@@ -960,11 +962,11 @@ fabro provider login [OPTIONS] --provider <PROVIDER>
 
 #### Options
 
-| Option                  | Description                                                   |
-| ----------------------- | ------------------------------------------------------------- |
-| `--api-key-stdin`       | Read an API key from stdin instead of prompting               |
-| `--provider <provider>` | LLM provider to authenticate with                             |
-| `--server <server>`     | Fabro server target: http(s) URL or absolute Unix socket path |
+| Option | Description |
+| - | - |
+| `--api-key-stdin` | Read an API key from stdin instead of prompting |
+| `--provider <provider>` | LLM provider to authenticate with |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro repo`
 
@@ -976,10 +978,10 @@ fabro repo [OPTIONS] <COMMAND>
 
 #### Subcommands
 
-| Command             | Description                      |
-| ------------------- | -------------------------------- |
+| Command | Description |
+| - | - |
 | `fabro repo deinit` | Remove .fabro/ project directory |
-| `fabro repo init`   | Initialize a new project         |
+| `fabro repo init` | Initialize a new project |
 
 #### `fabro repo deinit`
 
@@ -999,8 +1001,8 @@ fabro repo init [OPTIONS]
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro resume`
@@ -1013,20 +1015,40 @@ fabro resume [OPTIONS] <RUN>
 
 #### Arguments
 
-| Name  | Description                  |
-| ----- | ---------------------------- |
+| Name | Description |
+| - | - |
 | `RUN` | Run ID or unambiguous prefix |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
-| `-d, --detach`      | Run in the background and print the run ID                    |
+| Option | Description |
+| - | - |
+| `-d, --detach` | Run in the background and print the run ID |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+
+### `fabro retry`
+
+Retry a finished workflow from the start in a new run
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro retry [OPTIONS] <RUN_ID>
+```
+
+#### Arguments
+
+| Name | Description |
+| - | - |
+| `RUN_ID` | Run ID (or unambiguous prefix) |
+
+#### Options
+
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro rewind`
 
-Rewind a workflow run to an earlier checkpoint
+Rewind a workflow run to an earlier checkpoint, replacing it
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro rewind [OPTIONS] <RUN_ID> [TARGET]
@@ -1034,16 +1056,16 @@ fabro rewind [OPTIONS] <RUN_ID> [TARGET]
 
 #### Arguments
 
-| Name     | Description                                                               |
-| -------- | ------------------------------------------------------------------------- |
-| `RUN_ID` | Run ID (or unambiguous prefix)                                            |
+| Name | Description |
+| - | - |
+| `RUN_ID` | Run ID (or unambiguous prefix) |
 | `TARGET` | Target checkpoint: node name, node\@visit, or @ordinal (omit with --list) |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
-| `--list`            | Show the checkpoint timeline instead of rewinding             |
+| Option | Description |
+| - | - |
+| `--list` | Show the checkpoint timeline instead of rewinding |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro rm`
@@ -1056,15 +1078,15 @@ fabro rm [OPTIONS] <RUNS>...
 
 #### Arguments
 
-| Name   | Description                         |
-| ------ | ----------------------------------- |
+| Name | Description |
+| - | - |
 | `RUNS` | Run IDs or workflow names to remove |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
-| `-f, --force`       | Force removal of active runs                                  |
+| Option | Description |
+| - | - |
+| `-f, --force` | Force removal of active runs |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro run`
@@ -1077,34 +1099,34 @@ fabro run [OPTIONS] <WORKFLOW>
 
 #### Arguments
 
-| Name       | Description                                        |
-| ---------- | -------------------------------------------------- |
+| Name | Description |
+| - | - |
 | `WORKFLOW` | Workflow name, path, or OWNER/REPO\[@REF]:WORKFLOW |
 
 #### Options
 
-| Option                           | Description                                                                                   |
-| -------------------------------- | --------------------------------------------------------------------------------------------- |
-| `--auto-approve`                 | Auto-approve all human gates                                                                  |
-| `-d, --detach`                   | Run the workflow in the background and print the run ID                                       |
-| `--dry-run`                      | Simulate execution; workflow source may still be fetched and uploaded                         |
-| `--environment <environment>`    | Named environment for agent tools                                                             |
-| `--goal <goal>`                  | Override the workflow goal (available as {{ goal }} in prompts)                               |
-| `--goal-file <goal_file>`        | Read a per-run goal value from a local file                                                   |
-| `--label <key=value>`            | Attach a label to this run (repeatable, format: KEY=VALUE)                                    |
-| `--model <model>`                | Override default LLM model                                                                    |
-| `--parent <run>`                 | Link this run to an existing orchestration parent run                                         |
-| `--preserve-sandbox`             | Keep the sandbox alive after the run finishes (for debugging)                                 |
-| `--provider <provider>`          | Override default LLM provider                                                                 |
-| `--server <server>`              | Fabro server target: http(s) URL or absolute Unix socket path                                 |
-| `--target-branch <branch>`       | Target working branch (default: remote default branch), pinned to its observed commit         |
-| `--target-from <path>`           | Observe this target directory instead of cwd; Folder targets require server filesystem access |
-| `--target-repo <owner/repo>`     | Target GitHub OWNER/REPO; the execution sandbox still needs its own clone credentials         |
-| `--target <owner/repo[@branch]>` | Target GitHub repository and optional working branch                                          |
-| `-I, --input <key=value>`        | Override a workflow input value (repeatable, format: KEY=VALUE)                               |
-| `-v, --verbose`                  | Enable verbose output                                                                         |
-| `--workflow-ref <ref>`           | Workflow branch, tag, HEAD (default), or full commit SHA; qualify ambiguous names             |
-| `--workflow-repo <owner/repo>`   | Acquire workflow source locally from a GitHub OWNER/REPO using native Git credentials         |
+| Option | Description |
+| - | - |
+| `--auto-approve` | Auto-approve all human gates |
+| `-d, --detach` | Run the workflow in the background and print the run ID |
+| `--dry-run` | Simulate execution; workflow source may still be fetched and uploaded |
+| `--environment <environment>` | Named environment for agent tools |
+| `--goal <goal>` | Override the workflow goal (available as {{ goal }} in prompts) |
+| `--goal-file <goal_file>` | Read a per-run goal value from a local file |
+| `--label <key=value>` | Attach a label to this run (repeatable, format: KEY=VALUE) |
+| `--model <model>` | Override default LLM model |
+| `--parent <run>` | Link this run to an existing orchestration parent run |
+| `--preserve-sandbox` | Keep the sandbox alive after the run finishes (for debugging) |
+| `--provider <provider>` | Override default LLM provider |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--target-branch <branch>` | Target working branch (default: remote default branch), pinned to its observed commit |
+| `--target-from <path>` | Observe this target directory instead of cwd; Folder targets require server filesystem access |
+| `--target-repo <owner/repo>` | Target GitHub OWNER/REPO; the execution sandbox still needs its own clone credentials |
+| `--target <owner/repo[@branch]>` | Target GitHub repository and optional working branch |
+| `-I, --input <key=value>` | Override a workflow input value (repeatable, format: KEY=VALUE) |
+| `-v, --verbose` | Enable verbose output |
+| `--workflow-ref <ref>` | Workflow branch, tag, HEAD (default), or full commit SHA; qualify ambiguous names |
+| `--workflow-repo <owner/repo>` | Acquire workflow source locally from a GitHub OWNER/REPO using native Git credentials |
 
 ### `fabro sandbox`
 
@@ -1116,11 +1138,11 @@ fabro sandbox [OPTIONS] <COMMAND>
 
 #### Subcommands
 
-| Command                 | Description                                     |
-| ----------------------- | ----------------------------------------------- |
-| `fabro sandbox cp`      | Copy files to/from a run's sandbox              |
+| Command | Description |
+| - | - |
+| `fabro sandbox cp` | Copy files to/from a run's sandbox |
 | `fabro sandbox preview` | Get a preview URL for a port on a run's sandbox |
-| `fabro sandbox ssh`     | SSH into a run's sandbox                        |
+| `fabro sandbox ssh` | SSH into a run's sandbox |
 
 #### `fabro sandbox cp`
 
@@ -1132,16 +1154,16 @@ fabro sandbox cp [OPTIONS] <SRC> <DST>
 
 #### Arguments
 
-| Name  | Description                                  |
-| ----- | -------------------------------------------- |
-| `SRC` | Source: `<run-id>:<path>` or local path      |
+| Name | Description |
+| - | - |
+| `SRC` | Source: `<run-id>:<path>` or local path |
 | `DST` | Destination: `<run-id>:<path>` or local path |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
-| `-r, --recursive`   | Recurse into directories                                      |
+| Option | Description |
+| - | - |
+| `-r, --recursive` | Recurse into directories |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 #### `fabro sandbox preview`
@@ -1154,19 +1176,19 @@ fabro sandbox preview [OPTIONS] <RUN> <PORT>
 
 #### Arguments
 
-| Name   | Description      |
-| ------ | ---------------- |
-| `RUN`  | Run ID or prefix |
-| `PORT` | Port number      |
+| Name | Description |
+| - | - |
+| `RUN` | Run ID or prefix |
+| `PORT` | Port number |
 
 #### Options
 
-| Option              | Description                                                                         |
-| ------------------- | ----------------------------------------------------------------------------------- |
-| `--open`            | Open URL in browser (implies --signed)                                              |
-| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path                       |
-| `--signed`          | Generate a signed URL (embeds auth token, no headers needed)                        |
-| `--ttl <ttl>`       | Signed URL expiry in seconds (default 3600, requires --signed)<br />Default: `3600` |
+| Option | Description |
+| - | - |
+| `--open` | Open URL in browser (implies --signed) |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--signed` | Generate a signed URL (embeds auth token, no headers needed) |
+| `--ttl <ttl>` | Signed URL expiry in seconds (default 3600, requires --signed)<br />Default: `3600` |
 
 #### `fabro sandbox ssh`
 
@@ -1178,17 +1200,17 @@ fabro sandbox ssh [OPTIONS] <RUN>
 
 #### Arguments
 
-| Name  | Description      |
-| ----- | ---------------- |
+| Name | Description |
+| - | - |
 | `RUN` | Run ID or prefix |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
-| `--print`           | Print the SSH command instead of connecting                   |
+| Option | Description |
+| - | - |
+| `--print` | Print the SSH command instead of connecting |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
-| `--ttl <ttl>`       | SSH access expiry in minutes (default 60)<br />Default: `60`  |
+| `--ttl <ttl>` | SSH access expiry in minutes (default 60)<br />Default: `60` |
 
 ### `fabro secret`
 
@@ -1200,17 +1222,17 @@ fabro secret [OPTIONS] <COMMAND>
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 #### Subcommands
 
-| Command             | Description        |
-| ------------------- | ------------------ |
-| `fabro secret list` | List secret names  |
-| `fabro secret rm`   | Remove a secret    |
-| `fabro secret set`  | Set a secret value |
+| Command | Description |
+| - | - |
+| `fabro secret list` | List secret names |
+| `fabro secret rm` | Remove a secret |
+| `fabro secret set` | Set a secret value |
 
 #### `fabro secret list`
 
@@ -1230,8 +1252,8 @@ fabro secret rm [OPTIONS] <KEY>
 
 #### Arguments
 
-| Name  | Description                  |
-| ----- | ---------------------------- |
+| Name | Description |
+| - | - |
 | `KEY` | Name of the secret to remove |
 
 #### `fabro secret set`
@@ -1244,18 +1266,18 @@ fabro secret set [OPTIONS] <KEY> [VALUE]
 
 #### Arguments
 
-| Name    | Description                                  |
-| ------- | -------------------------------------------- |
-| `KEY`   | Name of the secret                           |
+| Name | Description |
+| - | - |
+| `KEY` | Name of the secret |
 | `VALUE` | Value to store (omit to enter interactively) |
 
 #### Options
 
-| Option                        | Description                                                            |
-| ----------------------------- | ---------------------------------------------------------------------- |
-| `--description <description>` | Optional human-readable description                                    |
-| `--type <type>`               | Secret storage type<br />Values: `token`, `file`<br />Default: `token` |
-| `--value-stdin`               | Read the secret value from stdin                                       |
+| Option | Description |
+| - | - |
+| `--description <description>` | Optional human-readable description |
+| `--type <type>` | Secret storage type<br />Values: `token`, `file`<br />Default: `token` |
+| `--value-stdin` | Read the secret value from stdin |
 
 ### `fabro server`
 
@@ -1267,12 +1289,12 @@ fabro server [OPTIONS] <COMMAND>
 
 #### Subcommands
 
-| Command                | Description                          |
-| ---------------------- | ------------------------------------ |
+| Command | Description |
+| - | - |
 | `fabro server restart` | Stop and restart the HTTP API server |
-| `fabro server start`   | Start the HTTP API server            |
-| `fabro server status`  | Show server status                   |
-| `fabro server stop`    | Stop the HTTP API server             |
+| `fabro server start` | Start the HTTP API server |
+| `fabro server status` | Show server status |
+| `fabro server stop` | Stop the HTTP API server |
 
 #### `fabro server restart`
 
@@ -1284,20 +1306,20 @@ fabro server restart [OPTIONS]
 
 #### Options
 
-| Option                                        | Description                                                                      |
-| --------------------------------------------- | -------------------------------------------------------------------------------- |
-| `--bind <bind>`                               | Address to bind to (IP or IP:port for TCP, or path containing / for Unix socket) |
-| `--config <config>`                           | Path to server config file (default: \~/.fabro/settings.toml)                    |
-| `--environment <environment>`                 | Named environment for agent tools                                                |
-| `--foreground`                                | Run in the foreground instead of daemonizing                                     |
-| `--max-concurrent-runs <max_concurrent_runs>` | Maximum number of concurrent run executions                                      |
-| `--model <model>`                             | Override default LLM model                                                       |
-| `--no-web`                                    | Disable the embedded web UI, browser auth routes, and web-only helper endpoints  |
-| `--provider <provider>`                       | Override default LLM provider                                                    |
-| `--storage-dir <storage_dir>`                 | Local storage directory (default: \~/.fabro/storage)                             |
-| `--timeout <timeout>`                         | Seconds to wait for graceful shutdown before SIGKILL<br />Default: `10`          |
-| `--watch-web`                                 | Run `bun run dev` in apps/fabro-web to watch/recompile web assets (debug only)   |
-| `--web`                                       | Enable the embedded web UI and browser auth routes                               |
+| Option | Description |
+| - | - |
+| `--bind <bind>` | Address to bind to (IP or IP:port for TCP, or path containing / for Unix socket) |
+| `--config <config>` | Path to server config file (default: \~/.fabro/settings.toml) |
+| `--environment <environment>` | Named environment for agent tools |
+| `--foreground` | Run in the foreground instead of daemonizing |
+| `--max-concurrent-runs <max_concurrent_runs>` | Maximum number of concurrent run executions |
+| `--model <model>` | Override default LLM model |
+| `--no-web` | Disable the embedded web UI, browser auth routes, and web-only helper endpoints |
+| `--provider <provider>` | Override default LLM provider |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
+| `--timeout <timeout>` | Seconds to wait for graceful shutdown before SIGKILL<br />Default: `10` |
+| `--watch-web` | Run `bun run dev` in apps/fabro-web to watch/recompile web assets (debug only) |
+| `--web` | Enable the embedded web UI and browser auth routes |
 
 #### `fabro server start`
 
@@ -1309,19 +1331,19 @@ fabro server start [OPTIONS]
 
 #### Options
 
-| Option                                        | Description                                                                      |
-| --------------------------------------------- | -------------------------------------------------------------------------------- |
-| `--bind <bind>`                               | Address to bind to (IP or IP:port for TCP, or path containing / for Unix socket) |
-| `--config <config>`                           | Path to server config file (default: \~/.fabro/settings.toml)                    |
-| `--environment <environment>`                 | Named environment for agent tools                                                |
-| `--foreground`                                | Run in the foreground instead of daemonizing                                     |
-| `--max-concurrent-runs <max_concurrent_runs>` | Maximum number of concurrent run executions                                      |
-| `--model <model>`                             | Override default LLM model                                                       |
-| `--no-web`                                    | Disable the embedded web UI, browser auth routes, and web-only helper endpoints  |
-| `--provider <provider>`                       | Override default LLM provider                                                    |
-| `--storage-dir <storage_dir>`                 | Local storage directory (default: \~/.fabro/storage)                             |
-| `--watch-web`                                 | Run `bun run dev` in apps/fabro-web to watch/recompile web assets (debug only)   |
-| `--web`                                       | Enable the embedded web UI and browser auth routes                               |
+| Option | Description |
+| - | - |
+| `--bind <bind>` | Address to bind to (IP or IP:port for TCP, or path containing / for Unix socket) |
+| `--config <config>` | Path to server config file (default: \~/.fabro/settings.toml) |
+| `--environment <environment>` | Named environment for agent tools |
+| `--foreground` | Run in the foreground instead of daemonizing |
+| `--max-concurrent-runs <max_concurrent_runs>` | Maximum number of concurrent run executions |
+| `--model <model>` | Override default LLM model |
+| `--no-web` | Disable the embedded web UI, browser auth routes, and web-only helper endpoints |
+| `--provider <provider>` | Override default LLM provider |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
+| `--watch-web` | Run `bun run dev` in apps/fabro-web to watch/recompile web assets (debug only) |
+| `--web` | Enable the embedded web UI and browser auth routes |
 
 #### `fabro server status`
 
@@ -1333,9 +1355,9 @@ fabro server status [OPTIONS]
 
 #### Options
 
-| Option                        | Description                                          |
-| ----------------------------- | ---------------------------------------------------- |
-| `--json`                      | Output as JSON                                       |
+| Option | Description |
+| - | - |
+| `--json` | Output as JSON |
 | `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
 
 #### `fabro server stop`
@@ -1348,10 +1370,10 @@ fabro server stop [OPTIONS]
 
 #### Options
 
-| Option                        | Description                                                             |
-| ----------------------------- | ----------------------------------------------------------------------- |
-| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)                    |
-| `--timeout <timeout>`         | Seconds to wait for graceful shutdown before SIGKILL<br />Default: `10` |
+| Option | Description |
+| - | - |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
+| `--timeout <timeout>` | Seconds to wait for graceful shutdown before SIGKILL<br />Default: `10` |
 
 ### `fabro settings`
 
@@ -1363,8 +1385,8 @@ fabro settings [OPTIONS]
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro start`
@@ -1377,14 +1399,14 @@ fabro start [OPTIONS] <RUN>
 
 #### Arguments
 
-| Name  | Description                    |
-| ----- | ------------------------------ |
+| Name | Description |
+| - | - |
 | `RUN` | Run ID prefix or workflow name |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro steer`
@@ -1397,18 +1419,19 @@ fabro steer [OPTIONS] <RUN> [TEXT]
 
 #### Arguments
 
-| Name   | Description                                         |
-| ------ | --------------------------------------------------- |
-| `RUN`  | Run ID prefix to steer                              |
+| Name | Description |
+| - | - |
+| `RUN` | Run ID prefix to steer |
 | `TEXT` | Steer message text (omit when --text-stdin is used) |
 
 #### Options
 
-| Option              | Description                                                                                                                        |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `--interrupt`       | Cancel the in-flight LLM stream / tool calls and deliver the message as the next user turn (default: append to the steering queue) |
-| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path                                                                      |
-| `--text-stdin`      | Read steer text from stdin instead of a positional arg                                                                             |
+| Option | Description |
+| - | - |
+| `--interrupt` | Cancel the in-flight LLM stream / tool calls and deliver the message as the next user turn (default: append to the steering queue) |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--stage <stage>` | Agent stage to steer, as its stage id (node\@visit) or node name (default: the run's one live agent stage) |
+| `--text-stdin` | Read steer text from stdin instead of a positional arg |
 
 ### `fabro system`
 
@@ -1420,12 +1443,12 @@ fabro system [OPTIONS] <COMMAND>
 
 #### Subcommands
 
-| Command               | Description                            |
-| --------------------- | -------------------------------------- |
-| `fabro system df`     | Show disk usage                        |
-| `fabro system events` | Stream run events from the server      |
-| `fabro system info`   | Show server runtime information        |
-| `fabro system prune`  | Delete old workflow runs               |
+| Command | Description |
+| - | - |
+| `fabro system df` | Show disk usage |
+| `fabro system events` | Stream run events from the server |
+| `fabro system info` | Show server runtime information |
+| `fabro system prune` | Delete old workflow runs |
 | `fabro system repair` | Inspect and repair durable server data |
 
 #### `fabro system df`
@@ -1438,11 +1461,11 @@ fabro system df [OPTIONS]
 
 #### Options
 
-| Option                        | Description                                                   |
-| ----------------------------- | ------------------------------------------------------------- |
-| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path |
-| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)          |
-| `-v, --verbose`               | Show per-run breakdown                                        |
+| Option | Description |
+| - | - |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
+| `-v, --verbose` | Show per-run breakdown |
 
 #### `fabro system events`
 
@@ -1454,11 +1477,11 @@ fabro system events [OPTIONS]
 
 #### Options
 
-| Option                        | Description                                                   |
-| ----------------------------- | ------------------------------------------------------------- |
-| `--run-id <run_ids>`          | Filter by run ID (repeatable)                                 |
-| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path |
-| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)          |
+| Option | Description |
+| - | - |
+| `--run-id <run_ids>` | Filter by run ID (repeatable) |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
 
 #### `fabro system info`
 
@@ -1470,10 +1493,10 @@ fabro system info [OPTIONS]
 
 #### Options
 
-| Option                        | Description                                                   |
-| ----------------------------- | ------------------------------------------------------------- |
-| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path |
-| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)          |
+| Option | Description |
+| - | - |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
 
 #### `fabro system prune`
 
@@ -1485,16 +1508,16 @@ fabro system prune [OPTIONS]
 
 #### Options
 
-| Option                        | Description                                                                                            |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `--before <before>`           | Only include runs started before this date (YYYY-MM-DD prefix match)                                   |
-| `--label <key=value>`         | Filter by label (KEY=VALUE, repeatable, AND semantics)                                                 |
-| `--older-than <duration>`     | Only prune runs older than this duration (e.g. 24h, 7d). Default: 24h when no explicit filters are set |
-| `--orphans`                   | Include orphan directories (no matching durable run)                                                   |
-| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path                                          |
-| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)                                                   |
-| `--workflow <workflow>`       | Filter by workflow name (substring match)                                                              |
-| `--yes`                       | Actually delete (default is dry-run)                                                                   |
+| Option | Description |
+| - | - |
+| `--before <before>` | Only include runs started before this date (YYYY-MM-DD prefix match) |
+| `--label <key=value>` | Filter by label (KEY=VALUE, repeatable, AND semantics) |
+| `--older-than <duration>` | Only prune runs older than this duration (e.g. 24h, 7d). Default: 24h when no explicit filters are set |
+| `--orphans` | Include orphan directories (no matching durable run) |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
+| `--workflow <workflow>` | Filter by workflow name (substring match) |
+| `--yes` | Actually delete (default is dry-run) |
 
 #### `fabro system repair`
 
@@ -1506,8 +1529,8 @@ fabro system repair [OPTIONS] <COMMAND>
 
 #### Subcommands
 
-| Command                    | Description                                          |
-| -------------------------- | ---------------------------------------------------- |
+| Command | Description |
+| - | - |
 | `fabro system repair runs` | List runs that cannot be loaded from durable storage |
 
 ##### `fabro system repair runs`
@@ -1520,12 +1543,32 @@ fabro system repair runs [OPTIONS]
 
 #### Options
 
-| Option                        | Description                                                   |
-| ----------------------------- | ------------------------------------------------------------- |
-| `--delete`                    | Preview deleting unreadable runs                              |
-| `--server <server>`           | Fabro server target: http(s) URL or absolute Unix socket path |
-| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage)          |
-| `--yes`                       | Actually delete unreadable runs (default is dry-run)          |
+| Option | Description |
+| - | - |
+| `--delete` | Preview deleting unreadable runs |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
+| `--yes` | Actually delete unreadable runs (default is dry-run) |
+
+### `fabro timeline`
+
+Show the checkpoint timeline of a workflow run
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro timeline [OPTIONS] <RUN_ID>
+```
+
+#### Arguments
+
+| Name | Description |
+| - | - |
+| `RUN_ID` | Run ID (or unambiguous prefix) |
+
+#### Options
+
+| Option | Description |
+| - | - |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro unarchive`
 
@@ -1537,14 +1580,14 @@ fabro unarchive [OPTIONS] <RUNS>...
 
 #### Arguments
 
-| Name   | Description                            |
-| ------ | -------------------------------------- |
+| Name | Description |
+| - | - |
 | `RUNS` | Run IDs or workflow names to unarchive |
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro uninstall`
@@ -1557,8 +1600,8 @@ fabro uninstall [OPTIONS]
 
 #### Options
 
-| Option  | Description              |
-| ------- | ------------------------ |
+| Option | Description |
+| - | - |
 | `--yes` | Skip confirmation prompt |
 
 ### `fabro upgrade`
@@ -1571,10 +1614,10 @@ fabro upgrade [OPTIONS]
 
 #### Options
 
-| Option         | Description                                                             |
-| -------------- | ----------------------------------------------------------------------- |
-| `--dry-run`    | Preview what would happen without making changes                        |
-| `--force`      | Upgrade even if already on the target version                           |
+| Option | Description |
+| - | - |
+| `--dry-run` | Preview what would happen without making changes |
+| `--force` | Upgrade even if already on the target version |
 | `--prerelease` | Include prereleases (alpha, beta, rc) when selecting the latest version |
 
 ### `fabro validate`
@@ -1587,8 +1630,8 @@ fabro validate [OPTIONS] <WORKFLOW>
 
 #### Arguments
 
-| Name       | Description                      |
-| ---------- | -------------------------------- |
+| Name | Description |
+| - | - |
 | `WORKFLOW` | Path to the .fabro workflow file |
 
 ### `fabro variable`
@@ -1601,18 +1644,18 @@ fabro variable [OPTIONS] <COMMAND>
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 #### Subcommands
 
-| Command               | Description          |
-| --------------------- | -------------------- |
-| `fabro variable get`  | Get a variable value |
-| `fabro variable list` | List variables       |
-| `fabro variable rm`   | Remove a variable    |
-| `fabro variable set`  | Set a variable value |
+| Command | Description |
+| - | - |
+| `fabro variable get` | Get a variable value |
+| `fabro variable list` | List variables |
+| `fabro variable rm` | Remove a variable |
+| `fabro variable set` | Set a variable value |
 
 #### `fabro variable get`
 
@@ -1624,8 +1667,8 @@ fabro variable get [OPTIONS] <NAME>
 
 #### Arguments
 
-| Name   | Description                 |
-| ------ | --------------------------- |
+| Name | Description |
+| - | - |
 | `NAME` | Name of the variable to get |
 
 #### `fabro variable list`
@@ -1646,8 +1689,8 @@ fabro variable rm [OPTIONS] <NAME>
 
 #### Arguments
 
-| Name   | Description                    |
-| ------ | ------------------------------ |
+| Name | Description |
+| - | - |
 | `NAME` | Name of the variable to remove |
 
 #### `fabro variable set`
@@ -1660,17 +1703,17 @@ fabro variable set [OPTIONS] <NAME> [VALUE]
 
 #### Arguments
 
-| Name    | Description          |
-| ------- | -------------------- |
-| `NAME`  | Name of the variable |
-| `VALUE` | Value to store       |
+| Name | Description |
+| - | - |
+| `NAME` | Name of the variable |
+| `VALUE` | Value to store |
 
 #### Options
 
-| Option                        | Description                         |
-| ----------------------------- | ----------------------------------- |
+| Option | Description |
+| - | - |
 | `--description <description>` | Optional human-readable description |
-| `--value-stdin`               | Read the variable value from stdin  |
+| `--value-stdin` | Read the variable value from stdin |
 
 ### `fabro version`
 
@@ -1682,8 +1725,8 @@ fabro version [OPTIONS]
 
 #### Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
+| Option | Description |
+| - | - |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 ### `fabro wait`
@@ -1696,17 +1739,17 @@ fabro wait [OPTIONS] <RUN>
 
 #### Arguments
 
-| Name  | Description                                      |
-| ----- | ------------------------------------------------ |
+| Name | Description |
+| - | - |
 | `RUN` | Run ID prefix or workflow name (most recent run) |
 
 #### Options
 
-| Option                | Description                                                   |
-| --------------------- | ------------------------------------------------------------- |
-| `--interval <ms>`     | Poll interval in milliseconds<br />Default: `1000`            |
-| `--server <server>`   | Fabro server target: http(s) URL or absolute Unix socket path |
-| `--timeout <seconds>` | Maximum time to wait in seconds                               |
+| Option | Description |
+| - | - |
+| `--interval <ms>` | Poll interval in milliseconds<br />Default: `1000` |
+| `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
+| `--timeout <seconds>` | Maximum time to wait in seconds |
 
 ### `fabro workflow`
 
@@ -1718,10 +1761,10 @@ fabro workflow [OPTIONS] <COMMAND>
 
 #### Subcommands
 
-| Command                 | Description              |
-| ----------------------- | ------------------------ |
-| `fabro workflow create` | Create a new workflow    |
-| `fabro workflow list`   | List available workflows |
+| Command | Description |
+| - | - |
+| `fabro workflow create` | Create a new workflow |
+| `fabro workflow list` | List available workflows |
 
 #### `fabro workflow create`
 
@@ -1733,14 +1776,14 @@ fabro workflow create [OPTIONS] <NAME>
 
 #### Arguments
 
-| Name   | Description          |
-| ------ | -------------------- |
+| Name | Description |
+| - | - |
 | `NAME` | Name of the workflow |
 
 #### Options
 
-| Option              | Description                       |
-| ------------------- | --------------------------------- |
+| Option | Description |
+| - | - |
 | `-g, --goal <goal>` | Goal description for the workflow |
 
 #### `fabro workflow list`
@@ -1750,3 +1793,6 @@ List available workflows
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro workflow list [OPTIONS]
 ```
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

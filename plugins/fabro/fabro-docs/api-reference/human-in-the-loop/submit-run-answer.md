@@ -146,16 +146,11 @@ components:
       discriminator:
         propertyName: kind
         mapping:
-          'yes':
-            $ref: '#/components/schemas/SubmitAnswerYesRequest'
-          'no':
-            $ref: '#/components/schemas/SubmitAnswerNoRequest'
-          selected:
-            $ref: '#/components/schemas/SubmitAnswerSelectedRequest'
-          multi_selected:
-            $ref: '#/components/schemas/SubmitAnswerMultiSelectedRequest'
-          text:
-            $ref: '#/components/schemas/SubmitAnswerTextRequest'
+          'yes': '#/components/schemas/SubmitAnswerYesRequest'
+          'no': '#/components/schemas/SubmitAnswerNoRequest'
+          selected: '#/components/schemas/SubmitAnswerSelectedRequest'
+          multi_selected: '#/components/schemas/SubmitAnswerMultiSelectedRequest'
+          text: '#/components/schemas/SubmitAnswerTextRequest'
     ErrorResponse:
       description: Standard error response containing one or more error entries.
       type: object
@@ -288,6 +283,12 @@ components:
           description: >-
             Server-generated request identifier; matches the x-request-id
             response header.
+        meta:
+          type: object
+          additionalProperties: true
+          description: >-
+            Optional structured details specific to the error `code`, for
+            clients that act on them. Each code documents the members it sets.
   headers:
     XRequestId:
       description: >
@@ -314,3 +315,5 @@ components:
         verifies and decodes the cookie before authenticating the request.
 
 ````
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

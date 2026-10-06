@@ -49,19 +49,19 @@ export OPENROUTER_API_KEY=sk-or-v1-...
 
 The built-in catalog gives OpenRouter offerings the same human-facing model slugs used by direct providers. Vendor-namespaced OpenRouter IDs remain opaque `api_model` values:
 
-| Fabro model slug                                                                     | OpenRouter API ID / notes                                               |
-| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| `claude-fable-5`, `claude-opus-5`, `claude-opus-4-8`, `claude-opus-4-7`              | Matching `anthropic/...` API IDs; Anthropic-style cache billing         |
-| `claude-sonnet-4-6`                                                                  | `anthropic/claude-sonnet-4.6`; provider default                         |
-| `claude-haiku-4-5`                                                                   | `anthropic/claude-haiku-4.5`; provider small default                    |
-| `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.4`, `gpt-5.5`                 | Matching `openai/...` API IDs                                           |
-| `gemini-3.1-pro-preview`, `gemini-3.5-flash`                                         | `google/...` API IDs                                                    |
+| Fabro model slug | OpenRouter API ID / notes |
+| - | - |
+| `claude-fable-5`, `claude-opus-5`, `claude-opus-4-8`, `claude-opus-4-7` | Matching `anthropic/...` API IDs; Anthropic-style cache billing |
+| `claude-sonnet-4-6` | `anthropic/claude-sonnet-4.6`; provider default |
+| `claude-haiku-4-5` | `anthropic/claude-haiku-4.5`; provider small default |
+| `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.4`, `gpt-5.5` | Matching `openai/...` API IDs |
+| `gemini-3.1-pro-preview`, `gemini-3.5-flash` | `google/...` API IDs |
 | `deepseek-v4-pro`, `deepseek-v4-flash` (`deepseek`, `deepseek-v4`, `deepseek-flash`) | `deepseek/...` API IDs; Flash uses the `deepseek-v4-flash-0731` release |
-| `kimi-k3`, `kimi-k2.6`, `qwen3-coder`, `qwen3.6-flash`                               | Vendor-prefixed API IDs                                                 |
-| `laguna-s-2.1`, `laguna-xs-2.1`                                                      | `poolside/...`; native reasoning and tool use                           |
-| `glm-5.2` (`glm`, `glm5`, `glm52`, `glm5.2`), `glm-4.6`                              | `z-ai/...` API IDs                                                      |
-| `minimax-m2.7`, `mimo-v2.5-pro`                                                      | Vendor-prefixed API IDs                                                 |
-| `nemotron-3-super-120b-a12b`, `devstral-2512`                                        | Vendor-prefixed API IDs                                                 |
+| `kimi-k3`, `kimi-k2.6`, `qwen3-coder`, `qwen3.6-flash` | Vendor-prefixed API IDs |
+| `laguna-s-2.1`, `laguna-xs-2.1` | `poolside/...`; native reasoning and tool use |
+| `glm-5.2` (`glm`, `glm5`, `glm52`, `glm5.2`), `glm-4.6` | `z-ai/...` API IDs |
+| `minimax-m2.7`, `mimo-v2.5-pro` | Vendor-prefixed API IDs |
+| `nemotron-3-super-120b-a12b`, `devstral-2512` | Vendor-prefixed API IDs |
 
 Any other OpenRouter model can be added under the provider. Choose a stable Fabro model slug as the table key and put OpenRouter's exact vendor/model string in `api_model`:
 
@@ -159,3 +159,6 @@ Fabro does not send OpenRouter's optional attribution headers (`HTTP-Referer`, `
     Full reference for provider settings and provider-scoped model offerings.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

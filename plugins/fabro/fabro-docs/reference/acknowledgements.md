@@ -15,3 +15,6 @@ Fabro was inspired by [Attractor](https://github.com/strongdm/attractor), create
 ## AI researchers and labs
 
 Fabro is built on top of the large language models produced by leading AI research labs, including [Anthropic](https://www.anthropic.com/), [OpenAI](https://openai.com/), and [Google DeepMind](https://deepmind.google/). Their foundational work in AI research and model development makes agentic coding workflows possible. Fabro wouldn't exist without the breakthroughs these teams and the broader AI research community have achieved.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

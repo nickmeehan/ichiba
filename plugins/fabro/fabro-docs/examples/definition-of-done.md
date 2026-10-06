@@ -940,3 +940,6 @@ Both variants end with a human gate. Even after automated verification, a human 
     Human approval gates and review checkpoints.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

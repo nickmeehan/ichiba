@@ -16,28 +16,28 @@ Every agent in Fabro has access to a set of built-in tools for interacting with 
 
 These tools are registered for every provider profile:
 
-| Tool         | Category | Description                                       |
-| ------------ | -------- | ------------------------------------------------- |
-| `shell`      | shell    | Run commands as Bash source via `bash -c`         |
-| `read_file`  | read     | Read file contents with optional offset and limit |
-| `write_file` | write    | Create or overwrite a file                        |
-| `grep`       | read     | Search file contents with regex patterns          |
-| `glob`       | read     | Find files by name pattern                        |
-| `web_search` | shell    | Search the web via Brave or Venice                |
-| `web_fetch`  | shell    | Fetch and optionally summarize a URL              |
+| Tool | Category | Description |
+| - | - | - |
+| `shell` | shell | Run commands as Bash source via `bash -c` |
+| `read_file` | read | Read file contents with optional offset and limit |
+| `write_file` | write | Create or overwrite a file |
+| `grep` | read | Search file contents with regex patterns |
+| `glob` | read | Find files by name pattern |
+| `web_search` | shell | Search the web via Brave or Venice |
+| `web_fetch` | shell | Fetch and optionally summarize a URL |
 
 ## Provider-specific tools
 
 Some tools are only available with certain LLM providers:
 
-| Tool                                              | Providers         | Description                                            |
-| ------------------------------------------------- | ----------------- | ------------------------------------------------------ |
-| `edit_file`                                       | Anthropic, Gemini | Replace a string in a file (find-and-replace)          |
-| `apply_patch`                                     | OpenAI            | Apply a v4a-format patch to modify files               |
-| `update_plan`                                     | OpenAI            | Maintain a multi-step plan for the current task        |
-| `TaskCreate`, `TaskUpdate`, `TaskGet`, `TaskList` | Anthropic         | Maintain a shared task list for the root agent session |
-| `read_many_files`                                 | Gemini            | Read multiple files in a single call                   |
-| `list_dir`                                        | Gemini            | List directory contents with depth control             |
+| Tool | Providers | Description |
+| - | - | - |
+| `edit_file` | Anthropic, Gemini | Replace a string in a file (find-and-replace) |
+| `apply_patch` | OpenAI | Apply a v4a-format patch to modify files |
+| `update_plan` | OpenAI | Maintain a multi-step plan for the current task |
+| `TaskCreate`, `TaskUpdate`, `TaskGet`, `TaskList` | Anthropic | Maintain a shared task list for the root agent session |
+| `read_many_files` | Gemini | Read multiple files in a single call |
+| `list_dir` | Gemini | List directory contents with depth control |
 
 ## Tool reference
 
@@ -47,11 +47,11 @@ Executes the command as Bash source in the sandbox's working directory, equivale
 
 To run something under a different interpreter, say so in the command itself (`sh -c ...`, a script with a `#!/bin/sh` shebang, or an explicit `set -o pipefail`); those run beneath Fabro's Bash boundary.
 
-| Parameter     | Type    | Required | Description                          |
-| ------------- | ------- | -------- | ------------------------------------ |
-| `command`     | string  | yes      | Bash source to evaluate              |
-| `timeout_ms`  | integer | no       | Timeout in milliseconds              |
-| `description` | string  | no       | Description of what the command does |
+| Parameter | Type | Required | Description |
+| - | - | - | - |
+| `command` | string | yes | Bash source to evaluate |
+| `timeout_ms` | integer | no | Timeout in milliseconds |
+| `description` | string | no | Description of what the command does |
 
 The timeout defaults to the provider's configured value (10s for most providers, 120s for Anthropic) and is capped at the maximum (600s / 10 minutes). If the command exceeds the timeout, Fabro kills the process and returns a "Command timed out" message along with any output captured so far.
 
@@ -61,11 +61,11 @@ The output includes the exit code, stdout, and stderr.
 
 Reads a file and returns its contents with line numbers.
 
-| Parameter   | Type    | Required | Description                               |
-| ----------- | ------- | -------- | ----------------------------------------- |
-| `file_path` | string  | yes      | Absolute path to the file                 |
-| `offset`    | integer | no       | 1-based line number to start reading from |
-| `limit`     | integer | no       | Number of lines to read (default: 2000)   |
+| Parameter | Type | Required | Description |
+| - | - | - | - |
+| `file_path` | string | yes | Absolute path to the file |
+| `offset` | integer | no | 1-based line number to start reading from |
+| `limit` | integer | no | Number of lines to read (default: 2000) |
 
 Output is formatted with line numbers (e.g. `  1 | fn main() {`), making it easy for agents to reference specific lines when editing.
 
@@ -73,10 +73,10 @@ Output is formatted with line numbers (e.g. `  1 | fn main() {`), making it easy
 
 Creates or overwrites a file.
 
-| Parameter   | Type   | Required | Description               |
-| ----------- | ------ | -------- | ------------------------- |
-| `file_path` | string | yes      | Absolute path to the file |
-| `content`   | string | yes      | Content to write          |
+| Parameter | Type | Required | Description |
+| - | - | - | - |
+| `file_path` | string | yes | Absolute path to the file |
+| `content` | string | yes | Content to write |
 
 <Note>
   `write_file` replaces the entire file. For changes to an existing file, prefer `edit_file`, which only replaces the string you name.
@@ -86,12 +86,12 @@ Creates or overwrites a file.
 
 Replaces a string in an existing file. Available for Anthropic and Gemini providers.
 
-| Parameter     | Type    | Required | Description                              |
-| ------------- | ------- | -------- | ---------------------------------------- |
-| `file_path`   | string  | yes      | Absolute path to the file                |
-| `old_string`  | string  | yes      | The string to find                       |
-| `new_string`  | string  | yes      | The replacement string                   |
-| `replace_all` | boolean | no       | Replace all occurrences (default: false) |
+| Parameter | Type | Required | Description |
+| - | - | - | - |
+| `file_path` | string | yes | Absolute path to the file |
+| `old_string` | string | yes | The string to find |
+| `new_string` | string | yes | The replacement string |
+| `replace_all` | boolean | no | Replace all occurrences (default: false) |
 
 If `old_string` is not found, the tool returns an error. If multiple occurrences exist and `replace_all` is false, the tool returns an error asking for more context or to set `replace_all`.
 
@@ -101,13 +101,13 @@ Because `old_string` must match the file exactly, an edit built from a stale or 
 
 Searches file contents with a regex pattern. The sandbox uses ripgrep when `rg` is on the path and falls back to POSIX `grep` otherwise, detected once and cached per sandbox. Keep patterns portable across both rather than relying on ripgrep-only syntax.
 
-| Parameter          | Type    | Required | Description                                     |
-| ------------------ | ------- | -------- | ----------------------------------------------- |
-| `pattern`          | string  | yes      | Regex pattern to search for                     |
-| `path`             | string  | no       | Path to search in (default: `.`)                |
-| `glob_filter`      | string  | no       | Glob pattern to filter which files are searched |
-| `case_insensitive` | boolean | no       | Case-insensitive search (default: false)        |
-| `max_results`      | integer | no       | Maximum number of results                       |
+| Parameter | Type | Required | Description |
+| - | - | - | - |
+| `pattern` | string | yes | Regex pattern to search for |
+| `path` | string | no | Path to search in (default: `.`) |
+| `glob_filter` | string | no | Glob pattern to filter which files are searched |
+| `case_insensitive` | boolean | no | Case-insensitive search (default: false) |
+| `max_results` | integer | no | Maximum number of results |
 
 Results are returned as `file:line:content` lines.
 
@@ -115,10 +115,10 @@ Results are returned as `file:line:content` lines.
 
 Finds files matching a glob pattern.
 
-| Parameter | Type   | Required | Description                                         |
-| --------- | ------ | -------- | --------------------------------------------------- |
-| `pattern` | string | yes      | Glob pattern to match files (e.g. `**/*.rs`)        |
-| `path`    | string | no       | Directory to search in (default: working directory) |
+| Parameter | Type | Required | Description |
+| - | - | - | - |
+| `pattern` | string | yes | Glob pattern to match files (e.g. `**/*.rs`) |
+| `path` | string | no | Directory to search in (default: working directory) |
 
 Returns matching file paths, one per line, sorted lexicographically by their path relative to the search root.
 
@@ -128,10 +128,10 @@ Patterns are case-sensitive and relative to `path`: `*` and `?` stay within one 
 
 Searches the web using Brave Search or Venice Search. Fabro selects the backend automatically from the available credentials.
 
-| Parameter     | Type    | Required | Description                                                                           |
-| ------------- | ------- | -------- | ------------------------------------------------------------------------------------- |
-| `query`       | string  | yes      | Search query. Venice rejects queries longer than 400 characters before the HTTP call. |
-| `max_results` | integer | no       | Maximum results (default: 5, max: 20)                                                 |
+| Parameter | Type | Required | Description |
+| - | - | - | - |
+| `query` | string | yes | Search query. Venice rejects queries longer than 400 characters before the HTTP call. |
+| `max_results` | integer | no | Maximum results (default: 5, max: 20) |
 
 Fabro uses direct [Brave Search](/integrations/brave-search) when `BRAVE_SEARCH_API_KEY` is present. Otherwise it uses [Venice Search](/integrations/venice-search) when `VENICE_API_KEY` is present. If both credentials are present, Brave wins. Venice always uses its Brave search engine.
 
@@ -143,11 +143,11 @@ The tool is registered when either credential is available. Once Fabro selects a
 
 Fetches content from a URL and optionally summarizes it with an LLM.
 
-| Parameter    | Type    | Required | Description                                                                          |
-| ------------ | ------- | -------- | ------------------------------------------------------------------------------------ |
-| `url`        | string  | yes      | URL to fetch (must be `http://` or `https://`)                                       |
-| `prompt`     | string  | no       | A question about the page content; returns a concise answer instead of the full page |
-| `timeout_ms` | integer | no       | Timeout in milliseconds (default: 30000, max: 60000)                                 |
+| Parameter | Type | Required | Description |
+| - | - | - | - |
+| `url` | string | yes | URL to fetch (must be `http://` or `https://`) |
+| `prompt` | string | no | A question about the page content; returns a concise answer instead of the full page |
+| `timeout_ms` | integer | no | Timeout in milliseconds (default: 30000, max: 60000) |
 
 HTML content is automatically converted to Markdown (with script and style tags stripped). Output is capped at 100KB. When a `prompt` is provided and a summarizer model is configured, the fetched content is passed to a lightweight LLM call that returns a concise answer.
 
@@ -155,9 +155,9 @@ HTML content is automatically converted to Markdown (with script and style tags 
 
 Applies a v4a-format patch to create, update, or delete files. Available for OpenAI providers.
 
-| Parameter | Type   | Required | Description                 |
-| --------- | ------ | -------- | --------------------------- |
-| `patch`   | string | yes      | Patch content in v4a format |
+| Parameter | Type | Required | Description |
+| - | - | - | - |
+| `patch` | string | yes | Patch content in v4a format |
 
 The v4a format uses `*** Begin Patch` / `*** End Patch` delimiters with `*** Add File:`, `*** Delete File:`, and `*** Update File:` operations.
 
@@ -165,9 +165,9 @@ The v4a format uses `*** Begin Patch` / `*** End Patch` delimiters with `*** Add
 
 Reads multiple files in a single tool call. Available for Gemini.
 
-| Parameter | Type      | Required | Description                  |
-| --------- | --------- | -------- | ---------------------------- |
-| `paths`   | string\[] | yes      | Array of absolute file paths |
+| Parameter | Type | Required | Description |
+| - | - | - | - |
+| `paths` | string\[] | yes | Array of absolute file paths |
 
 Returns each file's contents prefixed with `=== path ===`.
 
@@ -175,10 +175,10 @@ Returns each file's contents prefixed with `=== path ===`.
 
 Lists directory contents with optional depth control. Available for Gemini.
 
-| Parameter | Type    | Required | Description                   |
-| --------- | ------- | -------- | ----------------------------- |
-| `path`    | string  | yes      | Directory path to list        |
-| `depth`   | integer | no       | Depth of listing (default: 1) |
+| Parameter | Type | Required | Description |
+| - | - | - | - |
+| `path` | string | yes | Directory path to list |
+| `depth` | integer | no | Depth of listing (default: 1) |
 
 Directories are suffixed with `/` in the output.
 
@@ -186,12 +186,12 @@ Directories are suffixed with `/` in the output.
 
 Maintains the current task plan. Available for OpenAI providers.
 
-| Parameter       | Type      | Required | Description                                         |
-| --------------- | --------- | -------- | --------------------------------------------------- |
-| `plan`          | object\[] | yes      | Full ordered list of plan steps                     |
-| `plan[].step`   | string    | yes      | Step text; step text must be unique within the plan |
-| `plan[].status` | string    | yes      | `pending`, `in_progress`, or `completed`            |
-| `explanation`   | string    | no       | Short note explaining why the plan changed          |
+| Parameter | Type | Required | Description |
+| - | - | - | - |
+| `plan` | object\[] | yes | Full ordered list of plan steps |
+| `plan[].step` | string | yes | Step text; step text must be unique within the plan |
+| `plan[].status` | string | yes | `pending`, `in_progress`, or `completed` |
+| `explanation` | string | no | Short note explaining why the plan changed |
 
 The submitted list replaces the current plan for that OpenAI session. Fabro reconciles steps by exact step text, emits `todo.created`, `todo.updated`, and `todo.deleted` events for changes, and projects the current list into run state.
 
@@ -219,14 +219,14 @@ Before executing a tool, Fabro validates the arguments against the tool's JSON S
 
 Tool output is truncated before being stored in conversation history to prevent context window bloat. Each tool has default limits:
 
-| Tool          | Character limit  | Truncation mode |
-| ------------- | ---------------- | --------------- |
-| `grep`        | 30,000           | Tail (keep end) |
-| `glob`        | 20,000           | Tail            |
-| `edit_file`   | 10,000           | Tail            |
-| `apply_patch` | 10,000           | Tail            |
-| `write_file`  | 1,000            | Tail            |
-| Other tools   | No default limit | Head + tail     |
+| Tool | Character limit | Truncation mode |
+| - | - | - |
+| `grep` | 30,000 | Tail (keep end) |
+| `glob` | 20,000 | Tail |
+| `edit_file` | 10,000 | Tail |
+| `apply_patch` | 10,000 | Tail |
+| `write_file` | 1,000 | Tail |
+| Other tools | No default limit | Head + tail |
 
 Limits can be overridden per-tool via `SessionConfig.tool_output_limits`.
 
@@ -236,22 +236,22 @@ When a tool call fails, the error is returned to the agent as a tool result with
 
 Common error cases:
 
-| Error                       | Cause                                                          |
-| --------------------------- | -------------------------------------------------------------- |
-| Unknown tool                | The agent called a tool that doesn't exist                     |
-| Argument validation failure | Arguments don't match the tool's JSON Schema                   |
-| File not found              | The target file doesn't exist                                  |
-| Command timeout             | A shell command exceeded its timeout                           |
-| `old_string` not found      | An `edit_file` anchor didn't match the file's current contents |
+| Error | Cause |
+| - | - |
+| Unknown tool | The agent called a tool that doesn't exist |
+| Argument validation failure | Arguments don't match the tool's JSON Schema |
+| File not found | The target file doesn't exist |
+| Command timeout | A shell command exceeded its timeout |
+| `old_string` not found | An `edit_file` anchor didn't match the file's current contents |
 
 ### Timeouts
 
 Shell commands have two timeout settings:
 
-| Setting                      | Default                        | Description                                    |
-| ---------------------------- | ------------------------------ | ---------------------------------------------- |
-| `default_command_timeout_ms` | 10,000 (120,000 for Anthropic) | Timeout when the agent doesn't specify one     |
-| `max_command_timeout_ms`     | 600,000 (10 minutes)           | Hard cap regardless of what the agent requests |
+| Setting | Default | Description |
+| - | - | - |
+| `default_command_timeout_ms` | 10,000 (120,000 for Anthropic) | Timeout when the agent doesn't specify one |
+| `max_command_timeout_ms` | 600,000 (10 minutes) | Hard cap regardless of what the agent requests |
 
 The agent can request a specific timeout via the `timeout_ms` parameter, but it's always capped at the maximum.
 
@@ -278,3 +278,6 @@ Additional tools can be added via [MCP servers](/agents/mcp). MCP tools appear a
     Sub-agents inherit tools from their parent session.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

@@ -14,11 +14,11 @@ Fabro implements the open [Agent Skills](https://agentskills.io/home) format. Ea
 
 Fabro discovers skills from three convention directories, searched in order:
 
-| Directory                   | Scope                             |
-| --------------------------- | --------------------------------- |
-| `~/.fabro/skills/`          | Global -- applies to all projects |
-| `{git_root}/.fabro/skills/` | Project -- checked into the repo  |
-| `{git_root}/skills/`        | Project (alternate location)      |
+| Directory | Scope |
+| - | - |
+| `~/.fabro/skills/` | Global -- applies to all projects |
+| `{git_root}/.fabro/skills/` | Project -- checked into the repo |
+| `{git_root}/skills/` | Project (alternate location) |
 
 Within each directory, Fabro looks for `*/SKILL.md` files (one level of nesting).
 
@@ -63,9 +63,9 @@ to load its instructions, then follow them.
 
 The agent can call `use_skill` with a skill name to load the template, then follow the instructions:
 
-| Parameter    | Type   | Required | Description                                        |
-| ------------ | ------ | -------- | -------------------------------------------------- |
-| `skill_name` | string | yes      | Name of the skill to load (without the `/` prefix) |
+| Parameter | Type | Required | Description |
+| - | - | - | - |
+| `skill_name` | string | yes | Name of the skill to load (without the `/` prefix) |
 
 Returns the skill's template text.
 
@@ -75,3 +75,6 @@ Returns the skill's template text.
 2. **Registration** -- If any skills are found, the `use_skill` tool is registered and the skill list is added to the system prompt
 3. **Expansion** -- When user input contains a `/skill-name` reference, Fabro expands it before sending to the LLM
 4. **Tool use** -- The agent can also call `use_skill` at any time to load a skill's template mid-conversation
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

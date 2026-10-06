@@ -14,13 +14,13 @@
 
 Fabro is single-tenant software designed for small, trusted teams. The following controls are **not implemented** — plan your deployment accordingly.
 
-| Control                            | Status                                                                                                                                                                                                                                              |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Multi-tenancy**                  | Not supported. Fabro is single-tenant only — there is no organization or tenant isolation.                                                                                                                                                          |
-| **Roles or ACLs**                  | Not supported. All authenticated users have identical, full access to every run, workflow, and API endpoint.                                                                                                                                        |
-| **Inbound source-IP allowlisting** | Not implemented in Fabro. Restrict source networks with a reverse proxy, firewall, VPN, Tailscale, platform ingress policy, or another deployment-layer control.                                                                                    |
-| **Rate limiting**                  | Not implemented. The API server does not throttle requests.                                                                                                                                                                                         |
-| **Custom security header policy**  | Not configurable. Fabro emits default security headers, including enforced `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, and `Strict-Transport-Security` when HTTPS is detected. |
+| Control | Status |
+| - | - |
+| **Multi-tenancy** | Not supported. Fabro is single-tenant only — there is no organization or tenant isolation. |
+| **Roles or ACLs** | Not supported. All authenticated users have identical, full access to every run, workflow, and API endpoint. |
+| **Inbound source-IP allowlisting** | Not implemented in Fabro. Restrict source networks with a reverse proxy, firewall, VPN, Tailscale, platform ingress policy, or another deployment-layer control. |
+| **Rate limiting** | Not implemented. The API server does not throttle requests. |
+| **Custom security header policy** | Not configurable. Fabro emits default security headers, including enforced `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, and `Strict-Transport-Security` when HTTPS is detected. |
 
 ## Security recommendations
 
@@ -59,3 +59,6 @@ If you discover a security vulnerability in Fabro, please report it responsibly:
 4. We will work with you to understand the issue and coordinate disclosure timing.
 
 We appreciate the security research community's efforts in helping keep Fabro and its users safe.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

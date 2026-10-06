@@ -62,12 +62,12 @@ digraph Pipeline {
 
 Before execution, `{{ goal }}` becomes `Add a /health endpoint to the API server`.
 
-| Expression          | Resolves to                      |
-| ------------------- | -------------------------------- |
-| `{{ goal }}`        | The graph-level `goal` attribute |
-| `{{ inputs.name }}` | A value from `[run.inputs]`      |
+| Expression | Resolves to |
+| - | - |
+| `{{ goal }}` | The graph-level `goal` attribute |
+| `{{ inputs.name }}` | A value from `[run.inputs]` |
 
-Undefined prompt variables render as empty text and produce a `template_undefined_variable` diagnostic. `fabro validate` reports that diagnostic as a warning; run-style commands promote it to an error before proceeding. Environment variables are not available in prompt templates.
+A prompt variable that nothing binds is a diagnostic from the workflow compile. `fabro validate` reports it as a warning (`attractor.unbound_input`) and leaves the text unrendered; run-style commands and `fabro preflight` refuse the workflow with `unsupported.template.unbound_input` before a run is created. Environment variables are not available in prompt templates.
 
 Prompt and goal templates can use static MiniJinja includes to share partials:
 
@@ -126,14 +126,14 @@ The preamble is controlled by the **fidelity** setting. See [Context: Fidelity](
 
 Each agent session has a **system prompt** that provides foundational instructions. The system prompt is built once per session and includes:
 
-| Section               | Contents                                                                       |
-| --------------------- | ------------------------------------------------------------------------------ |
-| Identity and role     | What the agent is and how it should approach tasks                             |
-| Environment context   | Working directory, platform, OS, git branch, model, date                       |
-| Tool guidance         | Per-tool usage instructions (when to use `read_file` vs `shell`, etc.)         |
-| Coding best practices | Guidelines for clean, minimal, focused changes                                 |
-| Project docs          | Contents of `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, or `.codex/instructions.md` |
-| Skills                | Available skill templates the agent can invoke                                 |
+| Section | Contents |
+| - | - |
+| Identity and role | What the agent is and how it should approach tasks |
+| Environment context | Working directory, platform, OS, git branch, model, date |
+| Tool guidance | Per-tool usage instructions (when to use `read_file` vs `shell`, etc.) |
+| Coding best practices | Guidelines for clean, minimal, focused changes |
+| Project docs | Contents of `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, or `.codex/instructions.md` |
+| Skills | Available skill templates the agent can invoke |
 
 The system prompt is **separate** from the preamble. The preamble is prepended to the user-facing prompt message, while the system prompt is set as the LLM's system message.
 
@@ -267,12 +267,12 @@ The system prompt varies by LLM provider. Each provider has its own identity tex
 
 Fabro automatically discovers project instruction files by walking the directory hierarchy from the git root to the working directory. Which files are loaded depends on the agent profile:
 
-| Agent profile          | Files                                 |
-| ---------------------- | ------------------------------------- |
-| Anthropic and Claude 5 | `AGENTS.md`, `CLAUDE.md`              |
-| OpenAI and GPT-5.6     | `AGENTS.md`, `.codex/instructions.md` |
-| Gemini                 | `AGENTS.md`, `GEMINI.md`              |
-| Kimi                   | `AGENTS.md`                           |
+| Agent profile | Files |
+| - | - |
+| Anthropic and Claude 5 | `AGENTS.md`, `CLAUDE.md` |
+| OpenAI and GPT-5.6 | `AGENTS.md`, `.codex/instructions.md` |
+| Gemini | `AGENTS.md`, `GEMINI.md` |
+| Kimi | `AGENTS.md` |
 
 Files are loaded in directory order (root first, deepest last) with a total budget of 32KB. If the combined content exceeds this budget, later files are truncated.
 
@@ -299,16 +299,19 @@ This block also includes `git status --short` and recent commits when available,
 
 Both agent nodes (`shape=box`) and prompt nodes (`shape=tab`) go through the same prompt assembly pipeline: variable expansion, preamble prepending, and system prompt construction. The difference is execution:
 
-|                    | Agent node                            | Prompt node                           |
-| ------------------ | ------------------------------------- | ------------------------------------- |
-| Shape              | `box` (default)                       | `tab`                                 |
-| Tool access        | Yes (agentic loop)                    | No (single LLM call)                  |
-| Prompt assembly    | Preamble + prompt                     | Preamble + prompt                     |
-| Routing directives | Extracted from response               | Extracted from response               |
-| Context updates    | `response.{node_id}`, `last_response` | `response.{node_id}`, `last_response` |
+| | Agent node | Prompt node |
+| - | - | - |
+| Shape | `box` (default) | `tab` |
+| Tool access | Yes (agentic loop) | No (single LLM call) |
+| Prompt assembly | Preamble + prompt | Preamble + prompt |
+| Routing directives | Extracted from response | Extracted from response |
+| Context updates | `response.{node_id}`, `last_response` | `response.{node_id}`, `last_response` |
 
 Use prompt nodes for analysis, classification, and summarization tasks where tools are not needed.
 
 ## Prompt logging
 
 Fabro persists the assembled prompt to `stages/{rank:03}-{node_id}@{visit}/prompt.md` in metadata snapshots and `fabro dump` output for every agent and prompt stage. This includes the preamble (if any) and the expanded prompt text. Use these files for debugging when an agent behaves unexpectedly.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

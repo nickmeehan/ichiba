@@ -14,12 +14,12 @@ Fabro runs as a server. The CLI authenticates and communicates with that server,
 
 ## Two deployment modes
 
-|                           | Local                                                | Self-hosted                           |
-| ------------------------- | ---------------------------------------------------- | ------------------------------------- |
-| **Where the server runs** | Your laptop                                          | A host you operate (Docker container) |
-| **How to start it**       | `fabro server start`                                 | `docker compose up -d`                |
-| **Best for**              | Solo use, getting started, learning                  | Teams, production, 24/7 workflows     |
-| **Trade-off**             | Workflows pause when your laptop sleeps or shuts off | You operate the host                  |
+| | Local | Self-hosted |
+| - | - | - |
+| **Where the server runs** | Your laptop | A host you operate (Docker container) |
+| **How to start it** | `fabro server start` | `docker compose up -d` |
+| **Best for** | Solo use, getting started, learning | Teams, production, 24/7 workflows |
+| **Trade-off** | Workflows pause when your laptop sleeps or shuts off | You operate the host |
 
 Both modes use the same image, the same workflow engine, and the same CLI. The only difference is where the server process lives.
 
@@ -46,3 +46,6 @@ Use a public reverse proxy such as Caddy when the server must be reachable from 
     One-click managed shortcut for the same Docker image.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

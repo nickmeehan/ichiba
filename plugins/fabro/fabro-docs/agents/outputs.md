@@ -16,11 +16,11 @@ After an agent or prompt node completes, Fabro captures the full response text a
 
 Every agent and prompt node sets three context keys from its response:
 
-| Key                  | Value                                                    |
-| -------------------- | -------------------------------------------------------- |
-| `last_stage`         | The node ID of the stage that just completed             |
-| `last_response`      | The response text, truncated to the first 200 characters |
-| `response.{node_id}` | The full response text                                   |
+| Key | Value |
+| - | - |
+| `last_stage` | The node ID of the stage that just completed |
+| `last_response` | The response text, truncated to the first 200 characters |
+| `response.{node_id}` | The full response text |
 
 These keys are available to downstream nodes via the [context](/execution/context). The `last_response` key provides a quick preview, while `response.{node_id}` preserves the complete output for nodes that need it.
 
@@ -46,13 +46,13 @@ Agent and prompt nodes can influence which edge is taken after they complete by 
 }
 ```
 
-| Field                  | Effect                                                                            |
-| ---------------------- | --------------------------------------------------------------------------------- |
-| `outcome`              | Sets the node outcome: `succeeded`, `failed`, `partially_succeeded`, or `skipped` |
-| `failure_reason`       | When `outcome` is `failed`, provides a structured failure message                 |
-| `preferred_next_label` | Matched against edge labels to select the next node                               |
-| `suggested_next_ids`   | Ordered list of preferred target node IDs                                         |
-| `context_updates`      | Key-value pairs merged into the run context                                       |
+| Field | Effect |
+| - | - |
+| `outcome` | Sets the node outcome: `succeeded`, `failed`, `partially_succeeded`, or `skipped` |
+| `failure_reason` | When `outcome` is `failed`, provides a structured failure message |
+| `preferred_next_label` | Matched against edge labels to select the next node |
+| `suggested_next_ids` | Ordered list of preferred target node IDs |
+| `context_updates` | Key-value pairs merged into the run context |
 
 ### How extraction works
 
@@ -92,11 +92,11 @@ Command nodes instead validate only after an exit-code-`0` script, applying the 
 
 Agent nodes can provide routing directives through fallback files. Fabro checks sources in this order:
 
-| Order | Source                                         |
-| ----- | ---------------------------------------------- |
-| 1     | The final response text                        |
-| 2     | `status.json` in the sandbox working directory |
-| 3     | The last file touched by the agent             |
+| Order | Source |
+| - | - |
+| 1 | The final response text |
+| 2 | `status.json` in the sandbox working directory |
+| 3 | The last file touched by the agent |
 
 This fallback chain applies to normal routing extraction and to `output_schema="routing"`. For validated routing, Fabro only advances to the next source when the current source has no JSON object or no object with recognized routing fields. If the current source contains malformed routing JSON or valid JSON with wrong routing field types, validation fails and Fabro starts the repair loop instead.
 
@@ -145,8 +145,8 @@ Custom schema validation only reads response or command output text. It does not
 
 When custom schema validation succeeds, Fabro stores the parsed JSON value in context at:
 
-| Key                | Value                                                 |
-| ------------------ | ----------------------------------------------------- |
+| Key | Value |
+| - | - |
 | `output.{node_id}` | The parsed JSON object that matched the custom schema |
 
 For example, node `audit` writes its parsed custom output to `output.audit`. Fabro still stores raw LLM response text at `response.audit`; command output remains available through `command.output`.
@@ -161,10 +161,10 @@ If custom schema validation fails for an agent or prompt node, Fabro sends conci
 
 Fabro writes several files per stage to `stages/{rank:03}-{node_id}@{visit}/` in metadata snapshots and `fabro dump` output:
 
-| File          | Contents                                                              |
-| ------------- | --------------------------------------------------------------------- |
-| `prompt.md`   | The assembled prompt (preamble + expanded prompt text)                |
-| `response.md` | The full LLM response text                                            |
+| File | Contents |
+| - | - |
+| `prompt.md` | The assembled prompt (preamble + expanded prompt text) |
+| `response.md` | The full LLM response text |
 | `status.json` | The outcome: status, context updates, routing directives, usage stats |
 
 These files are written for every agent and prompt node execution, including retries. Use them for debugging unexpected agent behavior or verifying that routing directives were extracted correctly.
@@ -184,11 +184,11 @@ The tracked paths are stored as `files_touched` on the stage outcome:
 
 ### Where files\_touched appears
 
-| Location               | How it's used                                                                                            |
-| ---------------------- | -------------------------------------------------------------------------------------------------------- |
+| Location | How it's used |
+| - | - |
 | `StageCompleted` event | Emitted with `files_touched` in the event stream and surfaced by `fabro events` / exported event streams |
-| Preambles              | Listed under each completed stage so downstream agents know what changed                                 |
-| `status.json`          | Written to the stage's logs directory after each node completes                                          |
+| Preambles | Listed under each completed stage so downstream agents know what changed |
+| `status.json` | Written to the stage's logs directory after each node completes |
 
 ### How tracking works
 
@@ -257,9 +257,11 @@ When `[run.artifacts]` contains include patterns, Fabro scans the sandbox after 
 
 1. Fabro compiles and validates the configured workspace-relative globs.
 2. The sandbox provider enumerates regular files and their sizes without recursing through symlinks below the workspace root.
-3. Fabro applies the globs to normalized relative paths, enforces its collection limits, and downloads the selected files.
+3. Fabro applies the globs to normalized relative paths, enforces its collection limits, and copies selected files to the local directory or S3 bucket configured by `server.artifacts`. Originals remain in the sandbox.
 
-Each scan represents the post-stage workspace state; Fabro does not depend on filesystem modification timestamps. The same path and content hash is recorded only once per run, even when it still matches after later stages. Individual files over 10 MB are skipped, and each collection is limited to 100 files and 50 MB total.
+Each scan represents the post-stage workspace state; Fabro does not depend on filesystem modification timestamps. The same path and content hash is recorded only once per run, even when it still matches after later stages. Individual files over 10 MiB (10,485,760 bytes) are skipped, and each collection is limited to 100 files and 50 MiB total. A file exactly 10 MiB can be captured.
+
+New artifact bytes use the configured artifact backend, with stage and filename metadata in SQLite. Existing captures stored as SQLite blobs remain readable without moving their bytes. Generic offloaded context values and checkpoint patches continue to use SQLite blobs.
 
 ### What gets captured
 
@@ -288,10 +290,13 @@ The Artifacts page groups captures by file path. Expand a file to see and downlo
 
 Outputs and artifacts appear in several observability surfaces:
 
-| Surface                                               | What's reported                                                                                 |
-| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `StageCompleted` event                                | `files_touched` list for the stage                                                              |
-| `WorkflowRunCompleted` event                          | `artifact_count` -- total number of offloaded artifacts across the run                          |
-| Web UI                                                | Run stage output, artifact version history, individual downloads, and a ZIP of the latest files |
-| [Preambles](/execution/context#preamble-construction) | File list and artifact pointer references for completed stages                                  |
-| Stage logs                                            | `status.json` in each stage's run directory contains the full outcome including `files_touched` |
+| Surface | What's reported |
+| - | - |
+| `StageCompleted` event | `files_touched` list for the stage |
+| `WorkflowRunCompleted` event | `artifact_count` -- total number of offloaded artifacts across the run |
+| Web UI | Run stage output, artifact version history, individual downloads, and a ZIP of the latest files |
+| [Preambles](/execution/context#preamble-construction) | File list and artifact pointer references for completed stages |
+| Stage logs | `status.json` in each stage's run directory contains the full outcome including `files_touched` |
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

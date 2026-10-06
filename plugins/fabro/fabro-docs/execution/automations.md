@@ -155,3 +155,6 @@ To bootstrap an automation from work you have already run, open a run's actions 
 ## API
 
 `/api/v1/automations` provides full CRUD: list, create, fetch, replace, and delete. `environment_id` is required in create and replace requests. Automation responses may return a null environment only for an incomplete migrated definition, and expose the latest scheduled-run failure through `last_error`. Responses carry an `ETag` revision; `PUT` and `DELETE` require a matching `If-Match` header. `GET /api/v1/automations/{id}/runs` lists the automation's runs newest-first with standard pagination.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

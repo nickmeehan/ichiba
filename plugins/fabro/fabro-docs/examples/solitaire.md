@@ -326,3 +326,6 @@ The structure is always the same: decompose into phases that build on each other
     TOML configs for repeatable, parameterized runs.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

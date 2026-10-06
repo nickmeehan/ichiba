@@ -62,19 +62,19 @@ The order is fixed by lithos-llm: `AWS_BEARER_TOKEN_BEDROCK`, then `BEDROCK_API_
 
 The built-in catalog curates Converse-capable models, using cross-region inference profile ids (`us.`/`global.` prefixes) where on-demand access requires them:
 
-| Fabro model ID                                    | Notes                                                                                                                                                                                                                 |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `us.anthropic.claude-sonnet-4-6`                  | Provider default; Anthropic cache billing                                                                                                                                                                             |
-| `us.anthropic.claude-opus-4-8`                    | Anthropic cache billing                                                                                                                                                                                               |
-| `us.anthropic.claude-haiku-4-5`                   | Provider small default                                                                                                                                                                                                |
-| `us.anthropic.claude-fable-5`                     | Frontier; sampling params pinned by Bedrock (Fabro drops `temperature`/`top_p` automatically); requires the account-level `provider_data_share` data-sharing opt-in (see [Model access](#model-access-and-approvals)) |
-| `openai.gpt-oss-120b`, `openai.gpt-oss-20b`       | OpenAI open-weights                                                                                                                                                                                                   |
-| `amazon.nova-2-lite`                              | Vision                                                                                                                                                                                                                |
-| `meta.llama4-maverick`                            | Vision                                                                                                                                                                                                                |
-| `mistral.mistral-large-3`, `mistral.devstral-2`   |                                                                                                                                                                                                                       |
-| `deepseek.v3-2`                                   |                                                                                                                                                                                                                       |
-| `moonshotai.kimi-k2.5`, `zai.glm-5`               |                                                                                                                                                                                                                       |
-| `minimax.minimax-m2.5`, `nvidia.nemotron-3-super` |                                                                                                                                                                                                                       |
+| Fabro model ID | Notes |
+| - | - |
+| `us.anthropic.claude-sonnet-4-6` | Provider default; Anthropic cache billing |
+| `us.anthropic.claude-opus-4-8` | Anthropic cache billing |
+| `us.anthropic.claude-haiku-4-5` | Provider small default |
+| `us.anthropic.claude-fable-5` | Frontier; sampling params pinned by Bedrock (Fabro drops `temperature`/`top_p` automatically); requires the account-level `provider_data_share` data-sharing opt-in (see [Model access](#model-access-and-approvals)) |
+| `openai.gpt-oss-120b`, `openai.gpt-oss-20b` | OpenAI open-weights |
+| `amazon.nova-2-lite` | Vision |
+| `meta.llama4-maverick` | Vision |
+| `mistral.mistral-large-3`, `mistral.devstral-2` | |
+| `deepseek.v3-2` | |
+| `moonshotai.kimi-k2.5`, `zai.glm-5` | |
+| `minimax.minimax-m2.5`, `nvidia.nemotron-3-super` | |
 
 Any other Converse-capable Bedrock model can be added under `[llm.providers.bedrock.models."<model-id>"]` with the Bedrock model or inference-profile id as `api_model`.
 
@@ -154,3 +154,6 @@ Bedrock-specific request fields pass through verbatim via `provider_options.bedr
     Full reference for provider settings and provider-scoped model offerings.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

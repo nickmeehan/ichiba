@@ -46,3 +46,6 @@ LLM provider probe failures are reported as errors. Use `--verbose` to see the u
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro preflight run.toml
 ```
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

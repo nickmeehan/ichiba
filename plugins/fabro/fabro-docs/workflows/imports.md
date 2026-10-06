@@ -48,10 +48,10 @@ After expansion, the effective graph contains `start → validate.lint → valid
 
 Imported nodes are renamed with the placeholder ID as a prefix, joined by a dot:
 
-| Imported node | Becomes         |
-| ------------- | --------------- |
-| `lint`        | `validate.lint` |
-| `test`        | `validate.test` |
+| Imported node | Becomes |
+| - | - |
+| `lint` | `validate.lint` |
+| `test` | `validate.test` |
 
 Edges inside the imported graph are rewritten to match. This means the same file can be imported multiple times in one workflow under different placeholder names without ID collisions.
 
@@ -71,18 +71,18 @@ If the contract is violated, the placeholder is **poisoned**: its `import` attri
 
 A small set of attributes on the placeholder node propagate as **defaults** to every imported node. The imported node's own value wins when both are set.
 
-| Attribute          |
-| ------------------ |
-| `model`            |
-| `provider`         |
+| Attribute |
+| - |
+| `model` |
+| `provider` |
 | `reasoning_effort` |
-| `speed`            |
-| `backend`          |
-| `acp.command`      |
-| `acp.config`       |
-| `fidelity`         |
-| `max_retries`      |
-| `thread_id`        |
+| `speed` |
+| `backend` |
+| `acp.command` |
+| `acp.config` |
+| `fidelity` |
+| `max_retries` |
+| `thread_id` |
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 validate [import="./validate.fabro", model="haiku", reasoning_effort="low"]
@@ -164,3 +164,6 @@ Common failure messages:
 * `imported workflow must have exactly one start node, found <n>` — the contract above is violated.
 * `import placeholder '<id>' has unsupported attribute '<key>'` — the placeholder uses an attribute that does not propagate.
 * `empty import '<id>' cannot bypass semantic edges` — a body-less import sits between edges that carry conditions or labels.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

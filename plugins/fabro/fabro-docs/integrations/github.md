@@ -15,26 +15,26 @@ Fabro supports two GitHub integration strategies:
 
 ## Strategy matrix
 
-| Capability             | `token`      | `app`                     |
-| ---------------------- | ------------ | ------------------------- |
-| CLI pull requests      | Yes          | Yes                       |
-| Private repo cloning   | Yes          | Yes                       |
+| Capability | `token` | `app` |
+| - | - | - |
+| CLI pull requests | Yes | Yes |
+| Private repo cloning | Yes | Yes |
 | Sandbox `GITHUB_TOKEN` | Direct token | Scoped installation token |
-| Browser sign-in        | No           | Yes                       |
-| Web UI routes          | Disabled     | Enabled                   |
-| Webhooks               | No           | Strategy-dependent        |
+| Browser sign-in | No | Yes |
+| Web UI routes | Disabled | Enabled |
+| Webhooks | No | Strategy-dependent |
 
 ## GitHub App mode
 
 The rest of this page describes the `app` strategy, which is required for browser auth and for any webhook delivery strategy.
 
-| Feature                   | How it's used                                                                                                                                                                                                |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **OAuth login**           | Users sign in to the web UI with their GitHub account                                                                                                                                                        |
-| **Private repo cloning**  | Daytona and Docker sandboxes clone private repositories using short-lived Installation Access Tokens                                                                                                         |
-| **Checkpoint pushing**    | After each workflow stage, Fabro pushes the run branch back to origin from inside the sandbox                                                                                                                |
-| **Auto-PR**               | When `[run.pull_request] enabled = true` in the [run config](/execution/run-configuration#runpull_request), Fabro opens a PR from the agent's working branch after a successful run                          |
-| **Auto-merge**            | When `[run.pull_request] auto_merge = true`, Fabro enables GitHub's auto-merge on created PRs so they merge automatically once required checks pass                                                          |
+| Feature | How it's used |
+| - | - |
+| **OAuth login** | Users sign in to the web UI with their GitHub account |
+| **Private repo cloning** | Daytona and Docker sandboxes fetch private repositories using short-lived, read-only Installation Access Tokens |
+| **Run branch pushing** | Fabro pushes from the sandbox after each checkpoint and again before a successful run finishes |
+| **Auto-PR** | When `[run.pull_request] enabled = true` in the [run config](/execution/run-configuration#runpull_request), Fabro opens a PR from the agent's working branch after a successful run |
+| **Auto-merge** | When `[run.pull_request] auto_merge = true`, Fabro enables GitHub's auto-merge on created PRs so they merge automatically once required checks pass |
 | **Sandbox GITHUB\_TOKEN** | When `[run.integrations.github.permissions]` are declared at any layer (workflow, project, or user settings), Fabro mints a scoped Installation Access Token and injects it as `GITHUB_TOKEN` in the sandbox |
 
 ## Setup
@@ -55,17 +55,17 @@ fabro install
 
 When you choose the GitHub App strategy, the CLI opens GitHub with a pre-filled [App Manifest](https://docs.github.com/en/apps/sharing-github-apps/registering-a-github-app-from-a-manifest) containing:
 
-| Permission            | Level | Purpose                                                                              |
-| --------------------- | ----- | ------------------------------------------------------------------------------------ |
-| Contents              | Write | Clone repos, push run branches and checkpoints                                       |
-| Metadata              | Read  | Look up repository installation status                                               |
-| Pull requests         | Write | Create and update PRs from workflows                                                 |
-| Checks                | Write | Report workflow status on commits                                                    |
-| Issues                | Write | Create issues from workflows                                                         |
-| Emails                | Read  | Read verified email for OAuth login                                                  |
-| Dependabot alerts     | Write | Read and manage repository vulnerability alerts                                      |
-| Organization projects | Write | Read and update organization Projects V2                                             |
-| Packages              | Read  | Download private GitHub Packages (e.g. npm registry) with the sandbox `GITHUB_TOKEN` |
+| Permission | Level | Purpose |
+| - | - | - |
+| Contents | Write | Clone repos, push run branches and checkpoints |
+| Metadata | Read | Look up repository installation status |
+| Pull requests | Write | Create and update PRs from workflows |
+| Checks | Write | Report workflow status on commits |
+| Issues | Write | Create issues from workflows |
+| Emails | Read | Read verified email for OAuth login |
+| Dependabot alerts | Write | Read and manage repository vulnerability alerts |
+| Organization projects | Write | Read and update organization Projects V2 |
+| Packages | Read | Download private GitHub Packages (e.g. npm registry) with the sandbox `GITHUB_TOKEN` |
 
 These permissions are included when Fabro registers a new app. For an existing GitHub App, add the missing permissions in the app's settings, then approve the permission update on each installation before workflows can use them.
 
@@ -96,13 +96,13 @@ fabro doctor
 
 The GitHub App check verifies five fields:
 
-| Field                                  | Source                   |
-| -------------------------------------- | ------------------------ |
-| `server.integrations.github.app_id`    | `~/.fabro/settings.toml` |
+| Field | Source |
+| - | - |
+| `server.integrations.github.app_id` | `~/.fabro/settings.toml` |
 | `server.integrations.github.client_id` | `~/.fabro/settings.toml` |
-| `GITHUB_APP_CLIENT_SECRET`             | server vault             |
-| `GITHUB_APP_WEBHOOK_SECRET`            | server vault             |
-| `GITHUB_APP_PRIVATE_KEY`               | server vault             |
+| `GITHUB_APP_CLIENT_SECRET` | server vault |
+| `GITHUB_APP_WEBHOOK_SECRET` | server vault |
+| `GITHUB_APP_PRIVATE_KEY` | server vault |
 
 If all five are set, the check passes. If none are set, it warns (GitHub integration is optional). If some are set but others are missing, it errors with the specific missing fields.
 
@@ -119,11 +119,11 @@ client_id = "Iv1.abc123def"
 slug = "fabro-a3f2"
 ```
 
-| Field       | Description                                                |
-| ----------- | ---------------------------------------------------------- |
-| `app_id`    | Numeric GitHub App ID                                      |
-| `client_id` | OAuth Client ID for the app                                |
-| `slug`      | App slug, used for linking to the GitHub App settings page |
+| Field | Description |
+| - | - |
+| `app_id` | Numeric GitHub App ID |
+| `client_id` | OAuth Client ID for the app |
+| `slug` | App slug, used for linking to the GitHub App settings page |
 
 ### Server vault
 
@@ -219,16 +219,15 @@ An empty `allowed_usernames` list rejects all users.
 
 ### Repository cloning in sandboxes
 
-When a workflow runs in a remote sandbox (Daytona or Docker), Fabro clones the current repository into the sandbox using the GitHub App:
+When a run targets a GitHub repository, its workspace is checked out inside the sandbox (Docker or Daytona) before the first stage runs:
 
-1. Fabro detects the local repository's `origin` remote URL and current branch
-2. SSH URLs (e.g. `git@github.com:owner/repo.git`) are converted to HTTPS
-3. Fabro signs a short-lived JWT using the App ID and private key (RS256, 10-minute validity)
-4. Using the JWT, Fabro looks up the GitHub App installation for the repository (`GET /repos/\{owner\}/\{repo\}/installation`)
-5. Fabro requests a scoped Installation Access Token with `contents: write` permission on the specific repository
-6. The sandbox clones via HTTPS using `x-access-token` as the username and the token as the password
+1. When the run's worker starts, it signs a short-lived JWT using the App ID and private key (RS256, 10-minute validity)
+2. Using the JWT, Fabro looks up the GitHub App installation for the repository (`GET /repos/\{owner\}/\{repo\}/installation`)
+3. Fabro requests a scoped Installation Access Token with `contents: read` permission on the specific repository
+4. Inside the sandbox, Fabro fetches the selected revision from `https://github.com/<owner>/<repo>` at the run's `[run.clone] depth`, presenting the token as an HTTP header on that one command, and checks out the working branch
+5. The workspace's `origin` is the plain HTTPS URL: the token is never written into the repository, its configuration, or its remote
 
-For public repositories, the clone works without credentials. The token is still generated because it's needed for pushing checkpoints.
+The files belong to the user the sandbox runs commands as. For public repositories the fetch works without credentials when none are configured.
 
 #### Git targets for run intents
 
@@ -236,11 +235,11 @@ The `RunIntent` create body always names a GitHub repository and a working
 branch. It may also select a bare tag, pin a full 40-character commit SHA, or
 include both:
 
-| Target fields            | Revision selected when the worker starts                     |
-| ------------------------ | ------------------------------------------------------------ |
-| `branch`                 | The branch HEAD                                              |
-| `branch` + `sha`         | The exact commit                                             |
-| `branch` + `tag`         | The tag's peeled commit                                      |
+| Target fields | Revision selected when the worker starts |
+| - | - |
+| `branch` | The branch HEAD |
+| `branch` + `sha` | The exact commit |
+| `branch` + `tag` | The tag's peeled commit |
 | `branch` + `tag` + `sha` | The exact commit; the tag remains part of the run's identity |
 
 `branch` is always the attached branch inside the sandbox. `tag` is a bare tag
@@ -322,11 +321,11 @@ Every commit a run creates is authored and committed by the run's GitHub credent
 
 ### Checkpoint pushing
 
-After each workflow stage, Fabro [checkpoints](/execution/checkpoints) by pushing the run branch to origin. Before a successful run becomes terminal, the publish stage pushes the final commit again and treats failure as a run failure. Inside remote sandboxes, the git remote URL is configured with the Installation Access Token for authenticated pushing.
+After each workflow stage, Fabro [checkpoints](/execution/checkpoints) the workspace on the run branch, `fabro/run/<run-id>`, and pushes it directly from that workspace. Fabro keeps no second Git repository or checkpoint bundles on the server. In App mode, the worker pushes with an Installation Access Token with `contents: write`, reusing one token until it nears expiry and then minting the next, and passes it only to the sandbox Git command. The token is not saved in the repository's remote URL or configuration. `[run.run_branch] push = false` keeps the branch only in the run workspace.
 
-When pull request creation is enabled, Fabro then checks that GitHub reports the run branch at the exact final commit before opening the PR. A failed final push, branch check, or PR creation marks the run as failed with `publish_failed`; the terminal run event is emitted only after this step finishes.
+An intermediate push failure logs a warning; later checkpoints and final publication retry the push. After a successful run's last stage and before the run finishes, Fabro awaits one final push.
 
-For long-running workflows, Fabro refreshes the token before each push since Installation Access Tokens are short-lived (typically 1 hour).
+When pull request creation is enabled and the run changed files, Fabro then checks that GitHub reports the run branch at the exact final commit and opens the pull request. A failed final push, publication preparation, branch check, or PR creation marks the run as failed with `publish_failed`; the terminal run event is emitted only after this step finishes.
 
 ## Troubleshooting
 
@@ -369,3 +368,6 @@ The `app_id` in `settings.toml` or the `GITHUB_APP_PRIVATE_KEY` vault secret is 
 ### Clone fails for private repositories
 
 If you see `Git clone failed ... If this is a private repository, configure a GitHub App`, the GitHub App credentials are not configured. Run `fabro install` on the server host or verify with `fabro doctor`.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

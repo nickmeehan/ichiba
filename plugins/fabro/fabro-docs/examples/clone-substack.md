@@ -744,3 +744,6 @@ To adapt for your project:
     CSS-like rules for assigning models to workflow nodes.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

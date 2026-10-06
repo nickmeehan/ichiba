@@ -86,3 +86,6 @@ This workflow plans a change, asks a human to approve it, implements the plan, a
 <Card title="Quick Start" icon="rocket" href="/getting-started/quick-start" horizontal>
   Install Fabro and run your first workflow in minutes.
 </Card>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

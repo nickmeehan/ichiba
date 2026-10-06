@@ -6,17 +6,17 @@
 
 > How Fabro uses Git to checkpoint and resume workflow runs
 
-Fabro checkpoints every workflow run using Git plus the durable run store. After each node completes, Fabro commits file changes to the run branch and records execution state in the durable event stream so that interrupted runs can be resumed exactly where they left off. This happens automatically — no configuration required beyond running inside a Git repository.
+Fabro records every workflow run in the durable run store. With run branches enabled, it also commits file changes inside the run workspace after each node completes. GitHub targets push those commits to the run branch; local runs keep them in their workspace. A local-folder run works in a clone of the folder's committed `HEAD`, so uncommitted changes are not included, and a folder that is not a Git repository starts as an empty workspace.
 
 ## Code and execution history
 
 Fabro stores code and execution state separately:
 
-| Storage                               | Contains                                                                                     |
-| ------------------------------------- | -------------------------------------------------------------------------------------------- |
-| **Run branch** (`fabro/run/{run_id}`) | File changes made by agents and commands                                                     |
-| **Durable run store**                 | Events and event-derived projections for checkpoints, stages, configuration, and conclusions |
-| **Content-addressed store (CAS)**     | Artifact and offloaded context payloads referenced by events and checkpoints                 |
+| Storage | Contains |
+| - | - |
+| **Run branch** (`fabro/run/{run_id}`) | File changes made by agents and commands |
+| **Durable run store** | Events and event-derived projections for checkpoints, stages, configuration, and conclusions |
+| **Content-addressed store (CAS)** | Artifact and offloaded context payloads referenced by events and checkpoints |
 
 The run branch is a regular Git branch. Checkpoint events record its commit SHAs, which link execution state to the corresponding code.
 
@@ -33,11 +33,11 @@ Fabro-Completed: 2
 
 The commit message follows a structured format:
 
-| Part                      | Description                             |
-| ------------------------- | --------------------------------------- |
-| Subject line              | `fabro({run_id}): {node_id} ({status})` |
-| `Fabro-Run` trailer       | The run ID                              |
-| `Fabro-Completed` trailer | Number of completed nodes so far        |
+| Part | Description |
+| - | - |
+| Subject line | `fabro({run_id}): {node_id} ({status})` |
+| `Fabro-Run` trailer | The run ID |
+| `Fabro-Completed` trailer | Number of completed nodes so far |
 
 The `git_commit_sha` in a `checkpoint.completed` event identifies the run branch commit. New commits do not include a `Fabro-Checkpoint` trailer.
 
@@ -59,37 +59,30 @@ Fabro no longer creates or pushes `fabro/meta/{run_id}` branches. Existing metad
 
 The checkpoint projection captures the execution state needed to resume a run:
 
-| Field                        | Description                                                           |
-| ---------------------------- | --------------------------------------------------------------------- |
-| `timestamp`                  | When the checkpoint was created                                       |
-| `current_node`               | The node that just completed                                          |
-| `next_node_id`               | The next node the engine would execute                                |
-| `completed_nodes`            | Ordered list of all completed node IDs                                |
-| `node_retries`               | How many retry attempts each node has used                            |
-| `node_outcomes`              | Full outcome (status, context updates, usage) for each completed node |
-| `context_values`             | Snapshot of the entire [run context](/execution/context)              |
-| `git_commit_sha`             | SHA of the run branch commit at this checkpoint                       |
-| `loop_failure_signatures`    | Failure signature counts for loop detection                           |
-| `restart_failure_signatures` | Failure signature counts across loop-restart edges                    |
+| Field | Description |
+| - | - |
+| `timestamp` | When the checkpoint was created |
+| `current_node` | The node that just completed |
+| `next_node_id` | The next node the engine would execute |
+| `completed_nodes` | Ordered list of all completed node IDs |
+| `node_retries` | How many retry attempts each node has used |
+| `node_outcomes` | Full outcome (status, context updates, usage) for each completed node |
+| `context_values` | Snapshot of the entire [run context](/execution/context) |
+| `git_commit_sha` | SHA of the run branch commit at this checkpoint |
+| `loop_failure_signatures` | Failure signature counts for loop detection |
+| `restart_failure_signatures` | Failure signature counts across loop-restart edges |
 
 The durable run store also keeps the current checkpoint so `resume`, `inspect`, and API reads do not need to rely on scratch files.
 
-## Worktrees
+## Run workspaces
 
-Fabro uses Git worktrees to isolate workflow runs from your working directory. When a local run starts in a Git repository:
+A GitHub target is checked out inside the run workspace. For Docker and Daytona, checkout, checkpoint commits, diffs, and pushes execute inside the sandbox. The host provider performs those operations in its local run workspace. Fabro keeps no second checkout, bare snapshot repository, or Git checkpoint bundle on the server for a remote sandbox.
 
-1. Fabro records the current HEAD as the **base SHA**
-2. Creates a new branch `fabro/run/{run_id}` at that SHA
-3. Adds a worktree at `{run_dir}/worktree` on that branch
-4. Changes into the worktree directory for the duration of the run
+When pushing is configured, Fabro pushes `fabro/run/{run_id}` after each checkpoint and again before successful completion. Execution records and artifact payloads remain in the run store and CAS.
 
-This means your original working directory stays untouched while the agent makes changes in the worktree. When the run completes, Fabro removes the worktree and restores your original directory.
+Ordinary resume requires the original workspace to survive. Git-backed workspaces reset to their recorded checkpoint; non-Git workspaces continue with their surviving files. Losing the workspace does not trigger automatic reconstruction or sandbox replacement.
 
-<Note>
-  If the working directory has uncommitted changes, the worktree starts from committed `HEAD` and those uncommitted changes are not included. Fabro logs a warning so you can commit, stash, or run explicitly in place when that is what you want.
-</Note>
-
-For Docker and Daytona sandboxes, the repository is cloned into the sandbox and checkpoint Git operations run there. The run branch is pushed to origin from the sandbox after each checkpoint when pushing is configured.
+A GitHub-backed fork or rewind fetches the source run's published branch inside a fresh workspace and checks out the selected checkpoint. This requires run-branch pushes to be enabled and the commit to be available on origin. Select a checkpoint with remaining work: the final terminal checkpoint is refused because no stage remains to acquire a workspace. A retry starts the workflow from the beginning using its saved specification, without requiring the previous workspace or any Git checkpoint.
 
 ## Resuming a run
 
@@ -123,10 +116,10 @@ After a node completes, Fabro:
 
 1. Stores offloaded context payloads in CAS.
 2. Creates a code checkpoint commit when Git checkpointing is enabled.
-3. Pushes the run branch when configured and collects the code diff.
+3. Collects the code diff.
 4. Emits a checkpoint event with execution state and the code commit SHA. The run store persists this event and updates the projection.
 
-A checkpoint commit failure stops execution. Intermediate push and diff failures emit warning notices. A required final publish failure marks the run as failed.
+A checkpoint commit failure stops execution. A stage diff failure emits a warning notice. An intermediate push failure warns and is retried at later checkpoints and final publication. Failure to prepare required final publication, push the final commit, or open the pull request marks an otherwise successful run as failed with `publish_failed`.
 
 ## Inspecting run history
 
@@ -150,56 +143,17 @@ fabro events 01JKXYZ
 fabro dump 01JKXYZ --output ./run-dump
 ```
 
-## Rewinding to an earlier checkpoint
-
-If a later stage goes off-track, you can rewind a terminal run to an earlier checkpoint and resume from there instead of restarting the entire workflow. Rewind creates a replacement run at the target checkpoint, archives the source run, and prints the new run ID to resume:
-
-```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-# List the checkpoint timeline
-fabro rewind <RUN_ID> --list
-
-# Rewind to a specific checkpoint
-fabro rewind <RUN_ID> plan@2
-
-# Resume from the rewound point
-fabro resume <NEW_RUN_ID>
-```
-
-The source run must already be terminal (`succeeded`, `failed`, or `dead`). If the source is archived, unarchive it first. If archive fails after the replacement run is created, do not retry `fabro rewind`; archive the source run manually.
-
-See [`fabro rewind`](/reference/cli#fabro-rewind) for the full command reference.
-
-## Forking a run
-
-If you want to explore an alternate path from a checkpoint without archiving the original run, use `fabro fork` instead of `fabro rewind`. Fork creates a new independent run branching from the target checkpoint; the original run stays intact.
-
-```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-# List checkpoints
-fabro fork <RUN_ID> --list
-
-# Fork from a specific checkpoint
-fabro fork <RUN_ID> plan@2
-
-# Resume the forked run
-fabro resume <NEW_RUN_ID>
-```
-
-Use **rewind** when a terminal run should be abandoned and replaced from an earlier point. Use **fork** when you want to try a different approach while keeping the original run as a reference.
-
-`fabro rewind --list`, `fabro fork --list`, `fabro rewind`, and `fabro fork` are server-backed. Timeline listing reads checkpoints from the durable run store.
-
-See [`fabro fork`](/reference/cli#fabro-fork) for the full command reference.
-
 ## When checkpointing is active
 
-Git checkpointing activates automatically when:
+Git checkpointing activates automatically when run branches are enabled and either:
 
-* The run uses a Git repository and checkpointing has not been explicitly disabled
-* Local runs can create a Git worktree under the run scratch directory
-* Docker or Daytona can clone the configured GitHub origin into the sandbox
+* The run targets a GitHub repository with cloning enabled, or
+* The run's workspace is on the host: a Local environment, or any `--dry-run`
 
 It is skipped when:
 
-* The working directory is not a Git repository
-* The run uses `--dry-run`
-* The run is explicitly started in place with checkpointing disabled
+* Run branches are disabled
+* A Docker or Daytona run has no GitHub target, or its cloning is disabled
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

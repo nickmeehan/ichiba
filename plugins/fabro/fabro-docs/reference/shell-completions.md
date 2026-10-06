@@ -71,3 +71,6 @@ Run `fabro completion --help` to see all supported shells:
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 fabro completion --help
 ```
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

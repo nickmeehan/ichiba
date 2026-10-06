@@ -20,10 +20,10 @@ VPN connections enable sandboxes to connect to private networks, giving agents a
 
 ## Supported providers
 
-| Provider      | Authentication            | Best for                                        |
-| ------------- | ------------------------- | ----------------------------------------------- |
-| **Tailscale** | Browser login or auth key | Mesh networking, zero-config connectivity       |
-| **OpenVPN**   | Client configuration file | Corporate VPNs, existing OpenVPN infrastructure |
+| Provider | Authentication | Best for |
+| - | - | - |
+| **Tailscale** | Browser login or auth key | Mesh networking, zero-config connectivity |
+| **OpenVPN** | Client configuration file | Corporate VPNs, existing OpenVPN infrastructure |
 
 ## How it works
 
@@ -68,3 +68,6 @@ digraph InvestigateSlowQuery {
 ## Verification
 
 After connecting, Fabro verifies the VPN connection by checking that the sandbox has a VPN interface and can reach the private network. If the connection fails, the run reports the error before workflow execution begins.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

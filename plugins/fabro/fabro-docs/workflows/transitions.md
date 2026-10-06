@@ -26,11 +26,11 @@ If no edge or retry target supplies a next node, the workflow ends. A failed nod
 
 The `on_failure` attribute controls what happens to a failed node when no explicit recovery route matches:
 
-| Policy            | Effective outcome   | Fallback routing                                                         |
-| ----------------- | ------------------- | ------------------------------------------------------------------------ |
-| `route` (default) | stays `failed`      | takes the unconditional edge                                             |
-| `exit`            | stays `failed`      | skips the unconditional edge; the run ends unless a retry target applies |
-| `succeed`         | becomes `succeeded` | uses normal success routing                                              |
+| Policy | Effective outcome | Fallback routing |
+| - | - | - |
+| `route` (default) | stays `failed` | takes the unconditional edge |
+| `exit` | stays `failed` | skips the unconditional edge; the run ends unless a retry target applies |
+| `succeed` | becomes `succeeded` | uses normal success routing |
 
 Set it at the graph level to apply the policy to every node, or on a node to control that node alone. A node-level `on_failure` overrides the graph level. A node without the attribute inherits the graph policy.
 
@@ -101,11 +101,11 @@ For a parallel node, `exit` and `succeed` see the final outcome returned by the 
 
 ## Edge attributes
 
-| Attribute   | Description                                                             |
-| ----------- | ----------------------------------------------------------------------- |
-| `label`     | Display text on the edge; also used for human gate option matching      |
+| Attribute | Description |
+| - | - |
+| `label` | Display text on the edge; also used for human gate option matching |
 | `condition` | Boolean expression that must evaluate to true for this edge (see below) |
-| `weight`    | Numeric priority for tiebreaking (higher wins, default: 0)              |
+| `weight` | Numeric priority for tiebreaking (higher wins, default: 0) |
 
 ## Conditions
 
@@ -118,25 +118,25 @@ gate -> implement [label="Fix", condition="outcome=failed"]
 
 ### Available keys
 
-| Key               | Resolves to                                                                                                              |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `outcome`         | The stage outcome: `succeeded`, `failed`, `partially_succeeded`, or `skipped`. See [Node Outcomes](/execution/outcomes). |
-| `preferred_label` | The label selected by a human gate                                                                                       |
-| `context.KEY`     | A value from the run context (e.g. `context.tests_passed`)                                                               |
-| `KEY`             | Shorthand for context lookup (without the `context.` prefix)                                                             |
+| Key | Resolves to |
+| - | - |
+| `outcome` | The stage outcome: `succeeded`, `failed`, `partially_succeeded`, or `skipped`. See [Node Outcomes](/execution/outcomes). |
+| `preferred_label` | The label selected by a human gate |
+| `context.KEY` | A value from the run context (e.g. `context.tests_passed`) |
+| `KEY` | Shorthand for context lookup (without the `context.` prefix) |
 
 ### Operators
 
-| Operator   | Example                          | Description                          |
-| ---------- | -------------------------------- | ------------------------------------ |
-| `=`        | `outcome=succeeded`              | Equality                             |
-| `!=`       | `outcome!=failed`                | Inequality                           |
-| `>`        | `context.score > 80`             | Greater than (numeric)               |
-| `<`        | `context.count < 5`              | Less than (numeric)                  |
-| `>=`       | `context.score >= 80`            | Greater than or equal (numeric)      |
-| `<=`       | `context.count <= 10`            | Less than or equal (numeric)         |
+| Operator | Example | Description |
+| - | - | - |
+| `=` | `outcome=succeeded` | Equality |
+| `!=` | `outcome!=failed` | Inequality |
+| `>` | `context.score > 80` | Greater than (numeric) |
+| `<` | `context.count < 5` | Less than (numeric) |
+| `>=` | `context.score >= 80` | Greater than or equal (numeric) |
+| `<=` | `context.count <= 10` | Less than or equal (numeric) |
 | `contains` | `context.message contains error` | Substring match, or array membership |
-| `matches`  | `context.version matches ^v\d+`  | Regular expression match             |
+| `matches` | `context.version matches ^v\d+` | Regular expression match |
 
 A bare key with no operator is a **truthiness check** — it passes if the value is non-empty, not `"false"`, and not `"0"`:
 
@@ -174,11 +174,11 @@ Agent and prompt nodes can influence which edge is taken by including a JSON obj
 }
 ```
 
-| Field                  | Effect                                                                |
-| ---------------------- | --------------------------------------------------------------------- |
-| `preferred_next_label` | Matched against edge labels (same as human gate selection)            |
-| `suggested_next_ids`   | Ordered list of preferred target node IDs                             |
-| `context_updates`      | Key-value pairs merged into the run context for downstream conditions |
+| Field | Effect |
+| - | - |
+| `preferred_next_label` | Matched against edge labels (same as human gate selection) |
+| `suggested_next_ids` | Ordered list of preferred target node IDs |
+| `context_updates` | Key-value pairs merged into the run context for downstream conditions |
 
 Fabro automatically scans LLM output for these JSON objects — no special configuration is needed. However, you do need to instruct the LLM to emit the JSON in your prompt. For example:
 
@@ -257,3 +257,6 @@ In this example, `path_a` is chosen \~75% of the time and `path_b` \~25%. Edges 
 <Note>
   `selection="random"` cannot be combined with conditional edges on the same node. Validation rejects this combination because condition evaluation order would conflict with random selection. Use unconditional edges with weights instead.
 </Note>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

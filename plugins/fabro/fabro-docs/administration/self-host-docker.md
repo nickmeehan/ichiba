@@ -14,13 +14,13 @@ The supported deployment artifact is the official Fabro image at `ghcr.io/fabro-
 
 ## Requirements
 
-| Requirement           | Value                                                                                                              |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| **Image**             | `ghcr.io/fabro-sh/fabro:nightly` (multi-arch; pin a version for production)                                        |
-| **Persistent volume** | Mount at `/storage`. Stores run history, checkpoints, sessions, the dev token, and JWT keys.                       |
-| **Port**              | The container binds to `$PORT` (default `32276`). Expose it.                                                       |
-| **LLM provider key**  | Add at least one provider key during the install wizard or later with `fabro secret set` / `fabro provider login`. |
-| **Replicas**          | One. The server expects exclusive ownership of `/storage`.                                                         |
+| Requirement | Value |
+| - | - |
+| **Image** | `ghcr.io/fabro-sh/fabro:nightly` (multi-arch; pin a version for production) |
+| **Persistent volume** | Mount at `/storage`. Stores run history, checkpoints, sessions, the dev token, and JWT keys. |
+| **Port** | The container binds to `$PORT` (default `32276`). Expose it. |
+| **LLM provider key** | Add at least one provider key during the install wizard or later with `fabro secret set` / `fabro provider login`. |
+| **Replicas** | One. The server expects exclusive ownership of `/storage`. |
 
 ## Quickstart with docker compose
 
@@ -105,19 +105,19 @@ Generate one with `openssl rand -hex 32`.
 
 `server.env` and container process env are for bootstrap values only:
 
-| Variable                                                          | Purpose                                                                                         |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `SESSION_SECRET`                                                  | Session encryption secret                                                                       |
-| `FABRO_DEV_TOKEN`                                                 | Optional — pre-set the dev token instead of reading the one written to `/storage` on first boot |
-| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Optional static S3 object-store credentials                                                     |
+| Variable | Purpose |
+| - | - |
+| `SESSION_SECRET` | Session encryption secret |
+| `FABRO_DEV_TOKEN` | Optional — pre-set the dev token instead of reading the one written to `/storage` on first boot |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Optional static S3 object-store credentials |
 
 Do not put optional integration secrets in `.env` for server runtime. Configure LLM provider keys, Slack, Daytona, Brave Search, Venice Search, `GITHUB_TOKEN`, and GitHub App secrets in the vault with `fabro secret set`, `fabro provider login`, or `fabro install`.
 
 Optional:
 
-| Variable        | Purpose                                                                                             |
-| --------------- | --------------------------------------------------------------------------------------------------- |
-| `FABRO_DOMAIN`  | Public hostname when using the Caddy reverse-proxy overlay                                          |
+| Variable | Purpose |
+| - | - |
+| `FABRO_DOMAIN` | Public hostname when using the Caddy reverse-proxy overlay |
 | `FABRO_WEB_URL` | Canonical external web origin when TLS is terminated by a platform layer such as Tailscale Services |
 
 See [Server Configuration](/administration/server-configuration) for the full settings reference, and [`.env.example`](https://github.com/fabro-sh/fabro/blob/main/.env.example) for the complete list.
@@ -181,3 +181,6 @@ See [Server Operations](/reference/server-operations#pointing-the-cli-at-a-serve
     The Docker sandbox provider's security model and trust assumptions.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

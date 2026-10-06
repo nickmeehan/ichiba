@@ -12,13 +12,13 @@
 
 ## Supported platforms
 
-| OS      | Architecture          | Supported |
-| ------- | --------------------- | --------- |
-| Linux   | x86\_64               | Yes       |
-| Linux   | arm64 (aarch64)       | Yes       |
-| macOS   | arm64 (Apple Silicon) | Yes       |
-| macOS   | x86\_64 (Intel)       | No        |
-| Windows | any                   | No        |
+| OS | Architecture | Supported |
+| - | - | - |
+| Linux | x86\_64 | Yes |
+| Linux | arm64 (aarch64) | Yes |
+| macOS | arm64 (Apple Silicon) | Yes |
+| macOS | x86\_64 (Intel) | No |
+| Windows | any | No |
 
 <Note>
   On Intel Macs, run Fabro in a Linux x86\_64 container or VM. Native Windows isn't supported; use WSL2 with a supported Linux architecture.
@@ -106,3 +106,6 @@ fabro run hello
     Learn how to define workflow graphs in Graphviz.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

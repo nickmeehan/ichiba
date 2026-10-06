@@ -97,3 +97,6 @@ digraph Research {
     How tool permissions control web search access.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

@@ -54,3 +54,6 @@ Once connected, VS Code operates as if the sandbox filesystem were local:
 * **Use `--preserve-sandbox`** — Without it, the sandbox is destroyed when the workflow finishes and your VS Code session disconnects. Combine with `auto_stop_interval` in your [run config](/execution/run-configuration) to control idle timeout.
 * **Pair with human gates** — When a workflow pauses at a [human gate](/workflows/human-in-the-loop), connect via VS Code to review the agent's changes before approving.
 * **SSH credential lifetime** — Daytona SSH credentials expire after 60 minutes by default. If your VS Code session disconnects, run `fabro sandbox ssh <run-id>` again to get fresh credentials (use `--ttl` to set a custom expiry).
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

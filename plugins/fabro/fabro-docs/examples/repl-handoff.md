@@ -189,13 +189,13 @@ A final `cargo fmt --all` ensures consistent formatting. This is also a goal gat
 
 This workflow is Rust-specific, but the pattern generalizes. Replace the shell commands for your language:
 
-| Stage     | Rust                | TypeScript          | Python              |
-| --------- | ------------------- | ------------------- | ------------------- |
-| Toolchain | `rustup`            | `bun --version`     | `python3 --version` |
-| Compile   | `cargo check`       | `bun run typecheck` | `mypy .`            |
-| Lint      | `cargo clippy`      | `bun run lint`      | `ruff check .`      |
-| Test      | `cargo nextest run` | `bun test`          | `pytest`            |
-| Format    | `cargo fmt`         | `bun run format`    | `ruff format .`     |
+| Stage | Rust | TypeScript | Python |
+| - | - | - | - |
+| Toolchain | `rustup` | `bun --version` | `python3 --version` |
+| Compile | `cargo check` | `bun run typecheck` | `mypy .` |
+| Lint | `cargo clippy` | `bun run lint` | `ruff check .` |
+| Test | `cargo nextest run` | `bun test` | `pytest` |
+| Format | `cargo fmt` | `bun run format` | `ruff format .` |
 
 The agent stages (implement, simplify, fixup) work with any language — they use the Fabro agent's standard tools (Read, Write, Edit, Bash) and follow the plan file regardless of language.
 
@@ -218,3 +218,6 @@ The agent stages (implement, simplify, fixup) work with any language — they us
     Running workflows on cloud resources with sandboxed execution.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

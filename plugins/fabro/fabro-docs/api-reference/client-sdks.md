@@ -68,3 +68,6 @@ let client = Client::new("http://localhost:3000");
 ```
 
 All generated types derive `serde::Deserialize` and `serde::Serialize`. The client uses builder-style methods for each endpoint.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

@@ -204,10 +204,10 @@ over the configured repository.
 
 Target selection depends on the environment:
 
-| Selection                                                    | Local environment                                    | Clone-based environment (Docker, Daytona, or plugin)                                                         |
-| ------------------------------------------------------------ | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Default cwd or `--target-from PATH`                          | Uses the live directory, including uncommitted files | Uses the enclosing Git repository and exact available commit; a non-Git directory selects an empty workspace |
-| `--target-repo OWNER/REPO` or `--target OWNER/REPO[@BRANCH]` | Rejected                                             | Uses the selected repository and exact observed branch commit; cloning must be enabled                       |
+| Selection | Local environment | Clone-based environment (Docker, Daytona, or plugin) |
+| - | - | - |
+| Default cwd or `--target-from PATH` | Uses the live directory, including uncommitted files | Uses the enclosing Git repository and exact available commit; a non-Git directory selects an empty workspace |
+| `--target-repo OWNER/REPO` or `--target OWNER/REPO[@BRANCH]` | Rejected | Uses the selected repository and exact observed branch commit; cloning must be enabled |
 
 For clone-based execution, a target path selects a repository, not a subdirectory
 working-directory override. Local target files are not uploaded. Existing target
@@ -233,3 +233,6 @@ sandbox still needs its own target-clone credentials.
 
 `--dry-run` simulates execution; it can still fetch and upload workflow source,
 and existing local target observation can still publish committed changes.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

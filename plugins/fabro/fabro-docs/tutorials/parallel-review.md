@@ -170,3 +170,6 @@ created.
 <Card title="Multi-Model Routing" icon="arrow-right" href="/tutorials/multi-model">
   Assign different models to different workflow nodes using stylesheets.
 </Card>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

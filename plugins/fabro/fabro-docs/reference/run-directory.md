@@ -20,10 +20,10 @@ The naming format is `YYYYMMDD-{run_id}`, where `run_id` is the ULID assigned to
 
 ## Root-level files
 
-| File                   | Format | When written | Description                                                                                                                                                                          |
-| ---------------------- | ------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `workflow_bundle.json` | JSON   | Run create   | Bundled workflow input used to restart the run without re-reading the original workflow files. Includes the root workflow path plus bundled child workflow sources and inline files. |
-| `run.pid`              | Text   | Legacy only  | Legacy process ID file from older runs. Current detached launches use launcher records instead, and current attach/resume no longer read `run.pid`.                                  |
+| File | Format | When written | Description |
+| - | - | - | - |
+| `workflow_bundle.json` | JSON | Run create | Bundled workflow input used to restart the run without re-reading the original workflow files. Includes the root workflow path plus bundled child workflow sources and inline files. |
+| `run.pid` | Text | Legacy only | Legacy process ID file from older runs. Current detached launches use launcher records instead, and current attach/resume no longer read `run.pid`. |
 
 ## Local-only directories
 
@@ -85,3 +85,6 @@ fabro ps --filter workflow=my-workflow
 │   │           └── worktree/
 │   └── worktree/                     # Git worktree (git checkpoint mode)
 ```
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

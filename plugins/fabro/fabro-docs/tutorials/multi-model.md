@@ -54,23 +54,23 @@ The `model_stylesheet` graph attribute contains CSS-like rules that assign model
 
 ### Selectors
 
-| Selector  | Syntax             | Matches                        | Specificity |
-| --------- | ------------------ | ------------------------------ | ----------- |
-| Universal | `*`                | All nodes                      | 0           |
-| Shape     | `box`, `tab`, etc. | Nodes with that shape          | 1           |
-| Class     | `.classname`       | Nodes with `class="classname"` | 2           |
-| ID        | `#nodeid`          | A specific node by ID          | 3           |
+| Selector | Syntax | Matches | Specificity |
+| - | - | - | - |
+| Universal | `*` | All nodes | 0 |
+| Shape | `box`, `tab`, etc. | Nodes with that shape | 1 |
+| Class | `.classname` | Nodes with `class="classname"` | 2 |
+| ID | `#nodeid` | A specific node by ID | 3 |
 
 Higher specificity wins. If two rules have the same specificity, the last one in the stylesheet wins.
 
 ### How this workflow routes
 
-| Node        | Matches           | Model  | Why                                       |
-| ----------- | ----------------- | ------ | ----------------------------------------- |
-| `spec`      | `*` (universal)   | Haiku  | Simple generation task — fast and cheap   |
-| `implement` | `.coding` (class) | Sonnet | Coding requires a capable model           |
-| `test`      | `.coding` (class) | Sonnet | Test writing also needs coding capability |
-| `review`    | `#review` (ID)    | Sonnet | Review needs careful analysis             |
+| Node | Matches | Model | Why |
+| - | - | - | - |
+| `spec` | `*` (universal) | Haiku | Simple generation task — fast and cheap |
+| `implement` | `.coding` (class) | Sonnet | Coding requires a capable model |
+| `test` | `.coding` (class) | Sonnet | Test writing also needs coding capability |
+| `review` | `#review` (ID) | Sonnet | Review needs careful analysis |
 
 ### Assigning classes
 
@@ -86,12 +86,12 @@ Separate multiple classes with spaces: `class="coding critical"`.
 
 Stylesheets support four properties:
 
-| Property           | Description                                                                  |
-| ------------------ | ---------------------------------------------------------------------------- |
-| `model`            | Model ID or alias (e.g. `claude-sonnet-4-5`, `opus`, `gemini-pro`)           |
-| `provider`         | Provider name (optional — auto-inferred from the model catalog when omitted) |
-| `reasoning_effort` | `low`, `medium`, or `high`                                                   |
-| `backend`          | `api` (default), `cli`, or `acp`                                             |
+| Property | Description |
+| - | - |
+| `model` | Model ID or alias (e.g. `claude-sonnet-4-5`, `opus`, `gemini-pro`) |
+| `provider` | Provider name (optional — auto-inferred from the model catalog when omitted) |
+| `reasoning_effort` | `low`, `medium`, or `high` |
+| `backend` | `api` (default), `cli`, or `acp` |
 
 ## Why route models?
 
@@ -127,3 +127,6 @@ See [Model Stylesheets](/workflows/stylesheets) for the full reference and [Mode
 <Card title="Ensemble" icon="arrow-right" href="/tutorials/ensemble">
   Fan out to multiple providers and synthesize their independent opinions.
 </Card>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

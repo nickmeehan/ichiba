@@ -117,3 +117,6 @@ The provider's `default_model` names its default. You may also mark one small ut
     Full reference for provider settings and provider-scoped model offerings.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

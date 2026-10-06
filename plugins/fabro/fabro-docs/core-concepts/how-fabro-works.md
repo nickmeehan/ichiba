@@ -72,11 +72,11 @@ When the engine hits a [parallel fan-out node](/workflows/stages-and-nodes#paral
 
 Node handlers execute tools (bash commands, file edits) inside a **sandbox**. Fabro supports three sandbox providers:
 
-| Sandbox   | Description                                   |
-| --------- | --------------------------------------------- |
-| `docker`  | Tools run inside a Docker container (default) |
-| `local`   | Tools run directly on the host machine        |
-| `daytona` | Tools run in a cloud VM with SSH access       |
+| Sandbox | Description |
+| - | - |
+| `docker` | Tools run inside a Docker container (default) |
+| `local` | Tools run directly on the host machine |
+| `daytona` | Tools run in a cloud VM with SSH access |
 
 Runs select a named environment via CLI flags (`--environment ci`) or run config TOML (`[run.environment] id = "ci"`). Fabro then creates a concrete sandbox from that environment. See [Environments](/execution/environments) for details.
 
@@ -99,3 +99,6 @@ fabro resume <RUN_ID>
 ```
 
 The engine restores the full context, node visit counts, and retry state from the run directory, then continues execution from the next node.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

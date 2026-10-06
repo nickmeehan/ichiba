@@ -14,42 +14,42 @@ Fabro ships with several interviewer implementations for different environments:
 
 Every human interaction is modeled as a `Question` with a type that determines how it's presented:
 
-| Type             | Description                    | CLI presentation                    |
-| ---------------- | ------------------------------ | ----------------------------------- |
-| `YesNo`          | Binary yes/no decision         | `[Y/N]` prompt                      |
-| `Confirmation`   | Confirm an action (like YesNo) | `[Y/N]` prompt                      |
-| `MultipleChoice` | Pick one option from a list    | Arrow-key selector or numbered list |
-| `MultiSelect`    | Pick one or more from a list   | Checkbox selector                   |
-| `Freeform`       | Open-ended text input          | `>` prompt                          |
+| Type | Description | CLI presentation |
+| - | - | - |
+| `YesNo` | Binary yes/no decision | `[Y/N]` prompt |
+| `Confirmation` | Confirm an action (like YesNo) | `[Y/N]` prompt |
+| `MultipleChoice` | Pick one option from a list | Arrow-key selector or numbered list |
+| `MultiSelect` | Pick one or more from a list | Checkbox selector |
+| `Freeform` | Open-ended text input | `>` prompt |
 
 ### Question structure
 
 Each question carries metadata beyond the prompt text:
 
-| Field             | Description                                                      |
-| ----------------- | ---------------------------------------------------------------- |
-| `text`            | The question displayed to the user                               |
-| `question_type`   | One of the types above                                           |
-| `options`         | List of `{key, label}` pairs for choice questions                |
-| `allow_freeform`  | Whether free-text input is accepted in addition to fixed options |
-| `default`         | Default answer used on timeout                                   |
-| `timeout_seconds` | How long to wait before using the default or timing out          |
-| `stage`           | The node ID that generated this question                         |
-| `metadata`        | Arbitrary key-value metadata for integrations                    |
+| Field | Description |
+| - | - |
+| `text` | The question displayed to the user |
+| `question_type` | One of the types above |
+| `options` | List of `{key, label}` pairs for choice questions |
+| `allow_freeform` | Whether free-text input is accepted in addition to fixed options |
+| `default` | Default answer used on timeout |
+| `timeout_seconds` | How long to wait before using the default or timing out |
+| `stage` | The node ID that generated this question |
+| `metadata` | Arbitrary key-value metadata for integrations |
 
 ## Answer values
 
 Answers are one of seven variants:
 
-| Value           | Meaning                                                                                                           |
-| --------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `Yes`           | Affirmative response to a yes/no or confirmation question                                                         |
-| `No`            | Negative response                                                                                                 |
-| `Selected(key)` | A specific option was chosen (carries the option key)                                                             |
-| `Text(string)`  | Free-text input                                                                                                   |
-| `Interrupted`   | No answer was obtained because the prompt ended early (EOF, cancel, disconnected session, exhausted replay/queue) |
-| `Skipped`       | Legacy skip-style answer; not treated as approval by human gates                                                  |
-| `Timeout`       | The question's timeout elapsed without a response                                                                 |
+| Value | Meaning |
+| - | - |
+| `Yes` | Affirmative response to a yes/no or confirmation question |
+| `No` | Negative response |
+| `Selected(key)` | A specific option was chosen (carries the option key) |
+| `Text(string)` | Free-text input |
+| `Interrupted` | No answer was obtained because the prompt ended early (EOF, cancel, disconnected session, exhausted replay/queue) |
+| `Skipped` | Legacy skip-style answer; not treated as approval by human gates |
+| `Timeout` | The question's timeout elapsed without a response |
 
 An answer can also carry a `selected_option` (the full `{key, label}` pair) and a `text` field for freeform input.
 
@@ -130,3 +130,6 @@ approve [shape=hexagon, label="Approve?", human.default_choice="deploy"]
 ```
 
 Outside of timeout defaults, human gates fail closed: `Interrupted` and `Skipped` answers do not fall through to ordinary approval edges. To model an explicit unanswered path, add an edge such as `condition="outcome=failed"` or configure a `retry_target`.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

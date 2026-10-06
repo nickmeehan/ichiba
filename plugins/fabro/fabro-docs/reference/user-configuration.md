@@ -32,28 +32,32 @@ Files that omit `_version` are treated as version `1`. The legacy top-level `ver
 
 ## Who reads what
 
-`settings.toml` uses the same schema as `.fabro/project.toml` and `workflow.toml`, but each process only reads the fields it understands. The top-level schema is strictly namespaced — the only allowed domains are `[project]`, `[workflow]`, `[run]`, `[cli]`, `[server]`, and `[features]`.
+`settings.toml` uses the same schema as `.fabro/project.toml` and `workflow.toml`, but each process only reads the fields it understands. The top-level schema is strictly namespaced — the only allowed domains are `[project]`, `[workflow]`, `[run]`, `[llm]`, `[cli]`, and `[server]`.
 
-| Scope               | Examples                                                                                                                                                                                            |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CLI-only            | `[cli.target]`, `[cli.auth]`, `[cli.exec]`, `[cli.output]`, `[cli.updates]`, `[cli.logging]`                                                                                                        |
-| Shared run defaults | `[run.model]`, `[run.sandbox]`, `[run.checkpoint]`, `[run.inputs]`, `[run.prepare]`, `[run.pull_request]`, `[run.hooks]`, `[run.agent.mcps]`                                                        |
-| Server-only         | `[server.listen]`, `[server.api]`, `[server.web]`, `[server.auth]`, `[server.storage]`, `[server.artifacts]`, `[server.slatedb]`, `[server.scheduler]`, `[server.logging]`, `[server.integrations]` |
+| Scope | Examples |
+| - | - |
+| CLI-only | `[cli.target]`, `[cli.auth]`, `[cli.exec]`, `[cli.output]`, `[cli.updates]`, `[cli.logging]` |
+| Server-side run policy | `[run.model]`, `[run.environment]`, `[environments.<slug>]`, `[run.checkpoint]`, `[run.inputs]`, `[run.prepare]`, `[run.pull_request]`, `[run.integrations.github]`, `[run.hooks]`, `[run.agent.mcps]` |
+| Shared LLM catalog | `[llm]`, a lithos-llm catalog overlay: `[llm.providers.<id>]`, `[llm.providers.<id>.models.<id>]`, and the agent harness under `metadata.agent` |
+| Server-only | `[server.listen]`, `[server.api]`, `[server.web]`, `[server.auth]`, `[server.storage]`, `[server.artifacts]`, `[server.scheduler]`, `[server.logging]`, `[server.integrations]` |
 
 `[cli.*]` and `[server.*]` stanzas are owner-specific: they are only consumed from `~/.fabro/settings.toml` (plus process-local flags and env overrides). The same stanzas in `.fabro/project.toml` or `workflow.toml` remain schema-valid but runtime-inert.
+
+`fabro run` and `fabro create` do not copy the CLI machine's `[run]` or
+`[environments]` tables into an intent request. They warn with only the file
+path and affected key names when those tables are present. Put workflow-owned
+behavior in `workflow.toml` and configure placement in environments managed by
+the target server. The server may still use its own active `settings.toml`
+independently.
 
 See [Server Configuration](/administration/server-configuration) for the server-owned sections.
 
 ## Precedence
 
-Shared layered domains (`[project]`, `[workflow]`, `[run]`, `[features]`) use this override order:
-
-1. **CLI flags** — always win
-2. **Environment overrides** — Fabro-defined override channels
-3. **`workflow.toml`** — per-workflow overrides
-4. **`.fabro/project.toml`** — project defaults
-5. **`~/.fabro/settings.toml`** — machine defaults
-6. **Built-in defaults**
+For CLI-created workflow runs, sparse CLI flags override immutable
+`workflow.toml` behavior. The CLI does not layer local project or machine run
+defaults into the request. A target server resolves its own server-side policy
+and environment catalog during admission.
 
 Owner-specific domains (`[cli.*]`, `[server.*]`) use a narrower trust boundary — only CLI flags, env overrides, `~/.fabro/settings.toml`, and built-in defaults apply.
 
@@ -86,157 +90,40 @@ check = true
 [cli.logging]
 level = "info"
 
-[run.model]
-name = "claude-sonnet-4-5"
+[llm.providers.proxy]
+display_name = "Acme Gateway"
+base_url = "https://llm-gateway.example.com/v1"
+auth = { type = "bearer" }
+aliases = ["gateway"]
+default_model = "team-code-large"
 
-[run.git.author]
-name = "fabro-bot"
-email = "fabro-bot@company.com"
+[llm.providers.proxy.default_headers]
+x-portkey-api-key = "{{ secrets.PORTKEY_API_KEY }}"
+x-portkey-config = "@bedrock-prod"
 
-[run.pull_request]
-enabled = true
+[llm.providers.proxy.metadata.agent]
+profile = "anthropic"
 
-[run.agent.mcps.filesystem]
-type = "stdio"
-command = ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/workspace"]
-startup_timeout = "15s"
-tool_timeout = "90s"
-
-[run.agent.mcps.filesystem.env]
-NODE_ENV = "production"
-
-[run.agent.mcps.sentry]
-type = "http"
-url = "https://mcp.sentry.dev/mcp"
-
-[run.agent.mcps.sentry.headers]
-Authorization = "Bearer sk-xxx"
+[llm.providers.proxy.models."team-code-large"]
+display_name = "Team Code Large"
+aliases = ["team-code"]
+api_model = "provider-wire-model-name"
+limits = { context_tokens = 200000, max_output_tokens = 32000 }
+capabilities = { text = true, tools = true, reasoning = true, reasoning_effort = { low = true, medium = true, high = true } }
+protocol_options = { reasoning_effort_levels = true }
+pricing = { input_usd_micros_per_million = 1500000, output_usd_micros_per_million = 8000000 }
 ```
 
 All fields are optional. Include only the sections and keys you want to override. A single file can still include both CLI and server sections when you run both processes on one machine, but explicit remote targets do not read remote server state from the local machine.
 
-## `[cli.updates]`
-
-Controls whether Fabro runs a daily background check for new releases. The check runs during `run`, `exec`, `init`, and `install` commands and prints a notice to stderr when a newer version is available.
-
-```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[cli.updates]
-check = true
-```
-
-| Key     | Value   | Description                      |
-| ------- | ------- | -------------------------------- |
-| `check` | `true`  | Check for new releases (default) |
-| `check` | `false` | Disable automatic upgrade checks |
-
-The `--no-upgrade-check` CLI flag overrides this for a single invocation. See [`fabro upgrade`](/reference/cli#fabro-upgrade) for manual upgrades.
-
-## `[cli.output]`
-
-Generic CLI output defaults.
-
-```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[cli.output]
-format = "text"
-verbosity = "verbose"
-```
-
-| Key         | Values                             | Default    |
-| ----------- | ---------------------------------- | ---------- |
-| `format`    | `"text"`, `"json"`                 | `"text"`   |
-| `verbosity` | `"quiet"`, `"normal"`, `"verbose"` | `"normal"` |
-
-The `-v` / `--verbose` CLI flag always takes effect regardless of this setting.
-
-## `[cli.exec]` section
-
-Defaults for `fabro exec` sessions.
-
-```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[cli.exec]
-prevent_idle_sleep = true
-
-[cli.exec.model]
-provider = "anthropic"
-name = "claude-opus-4-6"
-
-[cli.exec.agent]
-permissions = "read-write"
-```
-
-`[cli.exec.model]` selects the default LLM for exec:
-
-| Key        | Description  | Values                                      |
-| ---------- | ------------ | ------------------------------------------- |
-| `provider` | LLM provider | `"anthropic"`, `"openai"`, `"gemini"`, etc. |
-| `name`     | Model name   | Any model ID from `fabro model list`        |
-
-`[cli.exec.agent]` controls agent behavior during exec:
-
-| Key           | Description           | Values                                  | Default        |
-| ------------- | --------------------- | --------------------------------------- | -------------- |
-| `permissions` | Tool permission level | `"read-only"`, `"read-write"`, `"full"` | `"read-write"` |
-
-### Permission levels
-
-* **`read-only`** — auto-approves read tools (`read_file`, `grep`, `glob`, `list_dir`) and subagent tools
-* **`read-write`** — adds write tools (`write_file`, `edit_file`, `apply_patch`)
-* **`full`** — allows all tools including shell commands
-
-Tools outside the permission level are interactively prompted (if a TTY is present) or denied (with `--auto-approve`).
-
-## `[run.model]` section
-
-Defaults for workflow model selection in commands like `fabro run` and `fabro preflight`.
-
-```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[run.model]
-provider = "anthropic"
-name = "claude-sonnet-4-5"
-fallbacks = ["openai", "gpt-5.4", "gemini/gemini-flash"]
-```
-
-| Key         | Description                               | Values                                         | Default                          |
-| ----------- | ----------------------------------------- | ---------------------------------------------- | -------------------------------- |
-| `name`      | Model name                                | Any model ID from `fabro model list`           | Per provider                     |
-| `provider`  | Provider name                             | `"anthropic"`, `"openai"`, `"gemini"`, etc.    | Auto-inferred from model/catalog |
-| `fallbacks` | Ordered list of fallback model references | bare provider, bare alias, or `provider/model` | `[]`                             |
-
 <Note>
-  Use `[cli.exec.model]` to configure provider and model for `fabro exec`. Use `[run.model]` for workflow-oriented defaults.
+  The `[run]` schemas below remain valid for a server's own active configuration,
+  but they are not CLI-side defaults for `fabro run` or `fabro create`. Put
+  automatic pull-request settings and other workflow-owned behavior in
+  `workflow.toml`; there is no compatibility request field or CLI global default.
 </Note>
 
-## `[cli.logging]` section
-
-Configure the default CLI log level. Precedence: `FABRO_LOG` env var > `--debug` flag > `[cli.logging].level` > `"info"`.
-
-```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[cli.logging]
-level = "info"
-```
-
-| Key     | Values                                              | Default  |
-| ------- | --------------------------------------------------- | -------- |
-| `level` | `"error"`, `"warn"`, `"info"`, `"debug"`, `"trace"` | `"info"` |
-
-Server-side logging is a separate namespace at `[server.logging]`.
-
-## `[run.git.author]`
-
-Customize the git author identity used for checkpoint commits.
-
-```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[run.git.author]
-name = "fabro-bot"
-email = "fabro-bot@company.com"
-```
-
-| Key     | Description      | Default         |
-| ------- | ---------------- | --------------- |
-| `name`  | Git author name  | `"fabro"`       |
-| `email` | Git author email | `"fabro@local"` |
-
-## `[cli.target]` section
+## `[cli.target]`
 
 Connection info for commands that target a remote Fabro server.
 
@@ -246,49 +133,262 @@ type = "http"
 url = "https://fabro.example.com/api/v1"
 ```
 
-| Key    | Description                                                  |
-| ------ | ------------------------------------------------------------ |
-| `type` | `"http"` or `"unix"` — explicit transport selection          |
-| `url`  | Required for `type = "http"` — the API base URL              |
-| `path` | Required for `type = "unix"` — the absolute Unix socket path |
+| Key | Type / values | Default | Description |
+| - | - | - | - |
+| `type` | `"http"` \| `"unix"` | None | Explicit transport selection. |
+| `url` | string | None | Required for `type = "http"`; the API base URL. |
+| `path` | string | None | Required for `type = "unix"`; the absolute Unix socket path. |
 
-`fabro model` uses `[cli.target]` by default when no explicit `--storage-dir` is passed. An explicit `--server` flag overrides the configured target:
+## `[llm]`
 
-```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-fabro model list --server https://fabro.example.com/api/v1
+The `[llm]` table is a [lithos-llm](https://docs.rs/lithos-llm) catalog
+overlay. Fabro builds its model catalog from two layers: the lithos built-in
+providers and models, and this table. Later layers win; tables merge key by
+key and every other value replaces. Fabro does not interpret the table itself.
+lithos validates it when the catalog is built, and rejects unknown provider or
+model fields.
+
+Several built-in providers ship with `enabled = false`. Turn one on by setting
+`enabled = true` on its provider table.
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[llm.providers.proxy]
+display_name = "Acme Gateway"
+base_url = "https://llm-gateway.example.com/v1"
+auth = { type = "bearer" }
+priority = 50
+aliases = ["gateway"]
+default_model = "team-code-large"
+
+[llm.providers.proxy.default_headers]
+x-portkey-api-key = "{{ secrets.PORTKEY_API_KEY }}"
+x-portkey-config = "@bedrock-prod"
+
+[llm.providers.proxy.metadata.agent]
+profile = "anthropic"
+
+[llm.providers.proxy.models."team-code-large"]
+display_name = "Team Code Large"
+aliases = ["team-code"]
+api_model = "provider-wire-model-name"
+limits = { context_tokens = 200000, max_output_tokens = 32000 }
+capabilities = { text = true, tools = true, reasoning = true, caching = true, reasoning_effort = { low = true, medium = true, high = true } }
+protocol_options = { reasoning_effort_levels = true }
+pricing = { input_usd_micros_per_million = 1500000, output_usd_micros_per_million = 8000000, cached_input_usd_micros_per_million = 300000 }
+family = "team-code"
+small_default = true
+estimated_output_tps = 80
 ```
 
-An explicit `http(s)://...` target is always remote-by-contract. Fabro does not derive auth for that target from a local storage dir, an active local daemon record, or `~/.fabro/dev-token`. Use CLI OAuth (`fabro auth login --server ...`) or an explicit `FABRO_DEV_TOKEN` when you need remote auth.
+A provider's API key is the secret lithos names for it: `OPENAI_API_KEY` for
+`openai`, `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` for `modal`, and
+`<PROVIDER>_API_KEY` (upper case, `-` and `.` as `_`) for a provider you
+define, so the gateway above reads `PROXY_API_KEY`. Store it in the server
+vault with `fabro secret set`, or export it for `fabro exec` and SDK use.
 
-`fabro auth login` only works with `type = "http"` targets. Unix-socket targets use the local dev-token flow instead of browser OAuth. Plain `http://...` targets are supported for local or trusted deployments; operators remain responsible for providing HTTPS anywhere real credentials cross an untrusted network.
+## `[llm.providers.<id>]`
 
-`fabro exec` does not automatically use `[cli.target]`. It only routes model traffic through a Fabro server when you pass `--server` for that invocation.
+Define or override an LLM provider. The keys are the lithos provider record.
+
+| Key | Type / values | Default | Description |
+| - | - | - | - |
+| `display_name` | string | required for new providers | Human-readable provider name. |
+| `adapter` | string | `"http"` | lithos adapter id: `http` or `bedrock`. Any other id names a custom adapter the application registered. |
+| `codecs` | `array<string>` | `["openai-chat"]` | Wire codecs the host speaks, in preference order: `openai-chat`, `openai-responses`, `anthropic-messages`, `gemini-generate`, or `bedrock-converse`. A Chat Completions host needs no line. |
+| `base_url` | string | required for new providers | Provider API base URL. The `openai-chat` codec appends `/v1/chat/completions` unless the URL already ends in a version segment. |
+| `auth` | table | required for new providers | Auth scheme: `{ type = "bearer" }`, `{ type = "header", name = "x-api-key" }`, `{ type = "headers" }`, `{ type = "none" }`, or `{ type = "aws" }`. |
+| `enabled` | boolean | `true` | Set `false` to hide a provider from Fabro. `bedrock`, `bedrock-openai`, `litellm`, `modal`, and `ollama` ship disabled. |
+| `priority` | integer | `0` | Higher-priority ready providers win unqualified model and default selection. |
+| `aliases` | `array<string>` | `[]` | Additional provider names accepted by model routing and fallback config. |
+| `default_model` | string | None | The provider's default model id. |
+| `allow_passthrough` | boolean | `false` | Whether `provider/model` selectors may name models the catalog does not list. |
+| `api_key_url` | string | None | Where an operator obtains an API key. Shown by `fabro provider login` and the install flow. |
+| `stands_in_for` | string | None | Another provider this one answers for when that provider has no credentials. `openai-codex` stands in for `openai`. |
+| `default_headers` | table | `{}` | Headers attached to every request. A value may be literal text or a `{{ secrets.NAME }}` token resolved against the vault. |
+
+## `[llm.providers.<id>.metadata.agent]`
+
+Which coding harness the provider's models expect. Pebble reads the same
+namespace. Every key is optional; a model row overrides the provider.
+
+| Key | Type / values | Default | Description |
+| - | - | - | - |
+| `profile` | `"anthropic"` \| `"claude-5"` \| `"openai"` \| `"gemini"` \| `"kimi"` \| `"gpt56"` \| `"gpt6"` | derived from `adapter` | Agent profile for models on this provider. |
+| `reasoning_by_default` | boolean | reasoning models with effort levels: `true` | Whether requests reason when no `reasoning_effort` is supplied. |
+
+## `[llm.providers.<provider>.models.<model-id>]`
+
+Define or override one provider's offering of a model. The table key is the
+model id Fabro users reference. An offering's identity is the pair
+`(provider, model id)`, so different providers may use the same id and
+aliases. `api_model` is the string sent to the provider and defaults to the id.
+
+| Key | Type / values | Default | Description |
+| - | - | - | - |
+| `display_name` | string | required for new models | Human-readable model name. |
+| `aliases` | `array<string>` | `[]` | Additional selectors. Aliases may repeat across providers. |
+| `api_model` | string | model id | Wire model identifier sent to this provider. |
+| `limits` | `{ context_tokens, max_output_tokens }` | None | Token limits. |
+| `capabilities` | table | unknown | Per-capability `true`, `false`, or `"unknown"`: `text`, `images`, `audio`, `documents`, `tools`, `reasoning`, `caching`, `cache_routing`, `sampling`, plus `tool_choice = { required, named }`, `response_format = { json_object, json_schema }`, `reasoning_effort = { minimal, low, medium, high, xhigh, max }`, and `speed = { fast, balanced, economical }`. |
+| `protocol_options` | table | `{}` | Encoding flags: `reasoning_effort_levels`, `cache_breakpoints`, `system_turns`. |
+| `pricing` | table | None | USD micros per million tokens: `input_usd_micros_per_million`, `output_usd_micros_per_million`, `cached_input_usd_micros_per_million`, `cache_write_usd_micros_per_million`, plus optional `long_context` and `speed` tiers. |
+| `family` | string | model id | Family label for display and grouping. |
+| `training_cutoff` | string | None | Training data cutoff, as the provider states it. |
+| `knowledge_cutoff` | string | None | Public knowledge cutoff label, as a person would write it. |
+| `estimated_output_tps` | number | None | Estimated output tokens per second. |
+| `small_default` | boolean | `false` | Preferred for small utility calls such as generated run titles. |
+| `probe` | boolean | `false` | Preferred for provider connectivity probes. |
+
+## `[llm.providers.<provider>.models.<model-id>.metadata.agent]`
+
+The same keys as the provider-level `metadata.agent` table, applied to one
+model. `profile` here is how a Kimi or GPT-5.6 model keeps its own harness on
+a gateway whose other models use the provider default.
+
+## `[cli.updates]`
+
+`[cli.updates]` — upgrade check toggle
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[cli.updates]
+check = true
+```
+
+| Key | Type / values | Default | Description |
+| - | - | - | - |
+| `check` | boolean | true | Check for new Fabro releases during supported CLI commands. |
+
+## `[cli.output]`
+
+`[cli.output]` — generic CLI output defaults
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[cli.output]
+format = "text"
+verbosity = "verbose"
+```
+
+| Key | Type / values | Default | Description |
+| - | - | - | - |
+| `format` | "text" \| "json" | "text" | Output format for commands that support machine-readable output. |
+| `verbosity` | "quiet" \| "normal" \| "verbose" | "normal" | Default output verbosity. |
+
+## `[cli.exec]`
+
+`[cli.exec]` — `fabro exec` defaults
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[cli.exec]
+prevent_idle_sleep = true
+```
+
+| Key | Type / values | Default | Description |
+| - | - | - | - |
+| `prevent_idle_sleep` | boolean | false | Prevent idle sleep on macOS while an exec run is in flight. |
+
+## `[cli.exec.model]`
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[cli.exec.model]
+provider = "anthropic"
+name = "claude-opus-4-6"
+```
+
+| Key | Type / values | Default | Description |
+| - | - | - | - |
+| `name` | string | None | Model name for `fabro exec`. |
+| `provider` | string | None | LLM provider for `fabro exec`. |
+
+## `[cli.exec.agent]`
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[cli.exec.agent]
+permissions = "read-write"
+```
+
+| Key | Type / values | Default | Description |
+| - | - | - | - |
+| `mcps` | table | None | Agent-scoped MCP entries for `fabro exec`. |
+| `permissions` | "read-only" \| "read-write" \| "full" | "read-write" | Tool permission level for `fabro exec`. |
+
+## `[run.model]`
+
+`[run.model]` — provider-neutral default model selection
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.model]
+provider = "anthropic"
+name = "claude-sonnet-4-5"
+
+[run.model.fallbacks]
+"claude-sonnet-4-5" = ["openrouter:kimi-k3", "gpt-terra"]
+```
+
+| Key | Type / values | Default | Description |
+| - | - | - | - |
+| `fallbacks` | `table<string, array<string>>` | {} | Model-keyed fallback chains. Each value is an ordered list of bare<br />providers, bare model IDs or aliases, or provider-qualified<br />`provider:selector` values. A qualified selector may be a model ID,<br />alias, or provider API ID. Legacy `provider/model` values remain<br />accepted. Each list supports the `...` splice marker at layering time.<br />Fabro selects one chain from the original requested model. A fallback<br />target never activates another model's chain.<br /><br />Model keys stay unresolved in this sparse layer because `fabro<br />validate` is offline and has no server model catalog. |
+| `name` | string | None | Model name for workflow runs. |
+| `provider` | string | None | Provider name for workflow model selection. |
+
+## `[cli.logging]`
+
+`[cli.logging]` — process-owned logging configuration for the CLI
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[cli.logging]
+level = "info"
+```
+
+| Key | Type / values | Default | Description |
+| - | - | - | - |
+| `level` | "error" \| "warn" \| "info" \| "debug" \| "trace" | "info" | Default CLI log level. |
+
+## `[run.git.author]`
+
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.git.author]
+name = "fabro-bot"
+email = "fabro-bot@company.com"
+```
+
+| Key | Type / values | Default | Description |
+| - | - | - | - |
+| `email` | string | resolved from the run's GitHub credential | Git author and committer email for every commit the run creates. When<br />unset, the run uses the credential's noreply address, else<br />`noreply@fabro.sh`. |
+| `name` | string | resolved from the run's GitHub credential | Git author and committer name for every commit the run creates. When<br />unset, the run uses its GitHub App bot or PAT user, else `Fabro`. |
 
 ## `[run.pull_request]`
 
-Enable auto-PR globally so workflows open a GitHub pull request on successful completion.
+`[run.pull_request]` — provider-neutral PR behavior
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [run.pull_request]
 enabled = true
 ```
 
-| Key              | Description                                                          | Default    |
-| ---------------- | -------------------------------------------------------------------- | ---------- |
-| `enabled`        | Automatically create a PR after successful runs                      | `false`    |
-| `draft`          | Open the PR as a draft                                               | `true`     |
-| `auto_merge`     | Enable GitHub auto-merge on the created PR (implies `draft = false`) | `false`    |
-| `merge_strategy` | One of `"squash"`, `"merge"`, `"rebase"`                             | `"squash"` |
+| Key | Type / values | Default | Description |
+| - | - | - | - |
+| `auto_merge` | boolean | false | Enable GitHub auto-merge for created pull requests. Implies `draft =<br />false`. |
+| `draft` | boolean | true | Open created pull requests as drafts. |
+| `enabled` | boolean | false | Automatically create a PR after successful runs. |
+| `merge_strategy` | "merge" \| "squash" \| "rebase" | "squash" | Merge method to configure for the pull request. |
 
-Precedence: `workflow.toml` > `.fabro/project.toml` > `~/.fabro/settings.toml` > built-in default (`false`).
+## `[run.agent]`
 
-## `[run.agent.mcps]` section
+`[run.agent]` — agent knobs only (Fabro tools and MCPs)
 
-Configure [MCP servers](/agents/mcp) to connect to during agent-driven runs. Each server is a named TOML table under `[run.agent.mcps]`. For `fabro exec`-only MCPs, use `[cli.exec.agent.mcps.*]` with the same shape.
+```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.agent]
+fabro_tools = true
+```
 
-### Stdio transport
+| Key | Type / values | Default | Description |
+| - | - | - | - |
+| `fabro_tools` | boolean | false | Allow workflow agents to use Fabro run-management tools. |
+| `mcps` | table | None | Agent-scoped MCP server entries, keyed by name. |
 
-Spawn a local process and communicate over stdin/stdout:
+## `[run.agent.mcps.<name>]`
+
+Configure MCP servers for workflow agents. For `fabro exec`-only MCPs, use `[cli.exec.agent.mcps.<name>]` with the same shape.
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [run.agent.mcps.filesystem]
@@ -296,60 +396,21 @@ type = "stdio"
 command = ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/workspace"]
 startup_timeout = "15s"
 tool_timeout = "90s"
-
-[run.agent.mcps.filesystem.env]
-NODE_ENV = "production"
 ```
 
-| Key               | Description                                                | Default |
-| ----------------- | ---------------------------------------------------------- | ------- |
-| `type`            | Must be `"stdio"`                                          | —       |
-| `command`         | Array: executable + arguments                              | —       |
-| `env`             | Additional environment variables for the child process     | `{}`    |
-| `startup_timeout` | Max duration for the MCP handshake (e.g. `"10s"`, `"30s"`) | `"10s"` |
-| `tool_timeout`    | Max duration for a single tool call (e.g. `"60s"`, `"2m"`) | `"60s"` |
+| Key | Type / values | Default | Description |
+| - | - | - | - |
+| `type` | `"stdio"` \| `"http"` \| `"sandbox"` | None | MCP transport type. |
+| `command` | `array<string>` | None | Command and arguments for `stdio` or `sandbox` transports. |
+| `script` | string | None | Shell script alternative to `command` for process-launching transports. A `stdio` script runs on the host through `sh -c`; a `sandbox` script is evaluated inside the sandbox by non-login Bash. |
+| `url` | string | None | Remote MCP URL for `http` transport. |
+| `port` | integer | None | Sandbox port for `sandbox` transport. |
+| `env` | table | `{}` | Additional environment variables for process-launching transports. |
+| `headers` | table | `{}` | HTTP headers for `http` transport. |
+| `startup_timeout` | duration | `"10s"` | Max duration for startup and MCP handshake. |
+| `tool_timeout` | duration | `"60s"` | Max duration for a single MCP tool call. |
 
-### HTTP transport
+See [MCP](/agents/mcp) for transport-specific examples.
 
-Connect to a remote MCP server over Streamable HTTP:
 
-```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[run.agent.mcps.sentry]
-type = "http"
-url = "https://mcp.sentry.dev/mcp"
-
-[run.agent.mcps.sentry.headers]
-Authorization = "Bearer sk-xxx"
-```
-
-| Key               | Description                                             | Default |
-| ----------------- | ------------------------------------------------------- | ------- |
-| `type`            | Must be `"http"`                                        | —       |
-| `url`             | The MCP server endpoint URL                             | —       |
-| `headers`         | Optional HTTP headers (for example, for authentication) | `{}`    |
-| `startup_timeout` | Max duration for the MCP handshake                      | `"10s"` |
-| `tool_timeout`    | Max duration for a single tool call                     | `"60s"` |
-
-### Sandbox transport
-
-Run an MCP server inside the workflow's sandbox and connect via preview URL. Only available with remote sandbox providers ([Daytona](/integrations/daytona)) that support port previews. Typically configured in `workflow.toml` rather than `settings.toml`:
-
-```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[run.agent.mcps.playwright]
-type = "sandbox"
-command = ["npx", "@playwright/mcp@latest", "--port", "3100", "--headless"]
-port = 3100
-startup_timeout = "60s"
-tool_timeout = "2m"
-```
-
-| Key               | Description                                             | Default |
-| ----------------- | ------------------------------------------------------- | ------- |
-| `type`            | Must be `"sandbox"`                                     | —       |
-| `command`         | Array: the command to run inside the sandbox            | —       |
-| `port`            | Port the server listens on inside the sandbox           | —       |
-| `env`             | Additional environment variables for the server process | `{}`    |
-| `startup_timeout` | Max duration for startup + MCP handshake                | `"10s"` |
-| `tool_timeout`    | Max duration for a single tool call                     | `"60s"` |
-
-See [MCP — Sandbox transport](/agents/mcp#sandbox) for how Fabro launches and connects to sandbox MCP servers.
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

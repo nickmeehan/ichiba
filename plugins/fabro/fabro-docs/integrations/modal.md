@@ -75,9 +75,9 @@ Modal does not use a bearer API key for these endpoints. Fabro sends the vault v
 
 ## Included model
 
-| Fabro model slug | Modal API ID         | Context   | Input / cached input / output    | Estimated speed |
-| ---------------- | -------------------- | --------- | -------------------------------- | --------------- |
-| `kimi-k3`        | `moonshotai/Kimi-K3` | 1M tokens | $3.00 / $0.30 / \$15.00 per MTok | 460 tok/s       |
+| Fabro model slug | Modal API ID | Context | Input / cached input / output | Estimated speed |
+| - | - | - | - | - |
+| `kimi-k3` | `moonshotai/Kimi-K3` | 1M tokens | $3.00 / $0.30 / \$15.00 per MTok | 460 tok/s |
 
 The catalog marks Kimi K3 as supporting tools, vision, reasoning, and prompt caching. Modal's model ID is case-sensitive.
 
@@ -155,3 +155,6 @@ Dedicated Auto Endpoints use Modal compute billing instead of the Shared API tok
     Proxy-token headers and endpoint calling conventions.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

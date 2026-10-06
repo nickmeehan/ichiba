@@ -83,22 +83,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 **Lifecycle methods:**
 
-| Method                                            | Description                                                                                                                             |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `prompt(input).await`                             | Runs one user prompt and every queued follow-up to completion. Returns a `PromptReport` with the result, token usage, cost, and timing. |
-| `prompt_with_cancellation(input, &token).await`   | The same, ending early when the token fires. The agent stays reusable.                                                                  |
-| `continue_prompt_with_cancellation(&token).await` | Continues an unfinished prompt on the history as it stands, such as after a model failover.                                             |
-| `shutdown(reason).await`                          | Ends the agent, emits `SessionEnded`, and flushes events.                                                                               |
-| `control_handle()`                                | A cloneable handle for steering, interrupting, and aborting from another task.                                                          |
+| Method | Description |
+| - | - |
+| `prompt(input).await` | Runs one user prompt and every queued follow-up to completion. Returns a `PromptReport` with the result, token usage, cost, and timing. |
+| `prompt_with_cancellation(input, &token).await` | The same, ending early when the token fires. The agent stays reusable. |
+| `continue_prompt_with_cancellation(&token).await` | Continues an unfinished prompt on the history as it stands, such as after a model failover. |
+| `shutdown(reason).await` | Ends the agent, emits `SessionEnded`, and flushes events. |
+| `control_handle()` | A cloneable handle for steering, interrupting, and aborting from another task. |
 
 **Inspection:**
 
-| Method        | Description                                                                         |
-| ------------- | ----------------------------------------------------------------------------------- |
-| `history()`   | The conversation as `History` (a sequence of `Message` values).                     |
-| `snapshot()`  | The agent's identity, route, tools, memory, and skills at the last committed event. |
-| `subscribe()` | A broadcast receiver for `CodingAgentEvent` values.                                 |
-| `to_record()` | The durable `SessionRecord`, restored with `CodingAgent::resume`.                   |
+| Method | Description |
+| - | - |
+| `history()` | The conversation as `History` (a sequence of `Message` values). |
+| `snapshot()` | The agent's identity, route, tools, memory, and skills at the last committed event. |
+| `subscribe()` | A broadcast receiver for `CodingAgentEvent` values. |
+| `to_record()` | The durable `SessionRecord`, restored with `CodingAgent::resume`. |
 
 **Steering** goes through the control handle: `queue_steering(message)` injects guidance at the next turn boundary, `steer_now(message)` interrupts the round first, `interrupt()` parks the prompt until a steer arrives, and `queue_follow_up(message)` queues another user turn.
 
@@ -106,17 +106,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 Set with the builder's `.options(...)`. Key settings with their defaults:
 
-| Setter                                 | Default         | Description                                                                                          |
-| -------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------- |
-| `with_reasoning_effort` / `with_speed` | `None`          | Request controls for the model.                                                                      |
-| `with_max_tokens`                      | catalog default | The most tokens the model may produce per turn.                                                      |
-| `with_loop_detection`                  | `true`          | Stop a session that is repeating itself.                                                             |
-| `with_context_compaction`              | `true`          | Summarize old turns when approaching the context window limit.                                       |
-| `with_compaction_threshold_percent`    | `80`            | Context window usage that triggers compaction.                                                       |
-| `with_wall_clock_timeout`              | `None`          | Hard timeout for a prompt. Reported as `InterruptReason::WallClockTimeout`.                          |
-| `with_max_turns`                       | unlimited       | The most model turns one prompt may use.                                                             |
-| `with_memory_files`                    | none            | Files loaded into the system prompt as memory (Fabro passes `AGENTS.md` and the profile's own file). |
-| `with_skill_dirs`                      | none            | Directories searched for `SKILL.md` files.                                                           |
+| Setter | Default | Description |
+| - | - | - |
+| `with_reasoning_effort` / `with_speed` | `None` | Request controls for the model. |
+| `with_max_tokens` | catalog default | The most tokens the model may produce per turn. |
+| `with_loop_detection` | `true` | Stop a session that is repeating itself. |
+| `with_context_compaction` | `true` | Summarize old turns when approaching the context window limit. |
+| `with_compaction_threshold_percent` | `80` | Context window usage that triggers compaction. |
+| `with_wall_clock_timeout` | `None` | Hard timeout for a prompt. Reported as `InterruptReason::WallClockTimeout`. |
+| `with_max_turns` | unlimited | The most model turns one prompt may use. |
+| `with_memory_files` | none | Files loaded into the system prompt as memory (Fabro passes `AGENTS.md` and the profile's own file). |
+| `with_skill_dirs` | none | Directories searched for `SKILL.md` files. |
 
 Subagents are enabled with `.subagents(SubagentOptions::enabled())`; `SubagentLimits` bounds how many child sessions may be open at once.
 
@@ -165,9 +165,9 @@ types, re-exported from `fabro_sandbox`.
 
 **Constructors:**
 
-| Function                      | Description                                                                                                                   |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `local_sandbox(directory)`    | Executes directly on the local filesystem through the sandbox driver Host provider.                                           |
+| Function | Description |
+| - | - |
+| `local_sandbox(directory)` | Executes directly on the local filesystem through the sandbox driver Host provider. |
 | `provider_sandbox(kind, ...)` | Runs on any sandbox driver provider by kind: the bundled `docker` and `daytona` providers in process, or a configured plugin. |
 
 **Testing:** `fabro_sandbox::test_support::MockSandbox` (behind the
@@ -206,25 +206,25 @@ tokio::spawn(async move {
 
 Key `CodingEvent` variants:
 
-| Variant                                                               | Description                               |
-| --------------------------------------------------------------------- | ----------------------------------------- |
-| `SessionStarted` / `SessionEnded`                                     | Session lifecycle.                        |
-| `TextDelta { delta }`                                                 | Incremental text from the model.          |
-| `ReasoningDelta { delta }`                                            | Incremental reasoning/thinking text.      |
-| `AssistantMessage { text, model, usage, tool_call_count, .. }`        | Complete assistant turn with token usage. |
-| `ToolCallStarted { tool_name, tool_call_id, arguments }`              | A tool call is about to execute.          |
-| `ToolCallCompleted { tool_name, tool_call_id, output, is_error, .. }` | A tool call finished.                     |
-| `Error { error }`                                                     | An `ErrorData` occurred.                  |
-| `LoopDetected`                                                        | The agent is repeating itself.            |
-| `CompactionStarted` / `CompactionCompleted`                           | Context window compaction.                |
-| `SubAgentSpawned` / `SubAgentCompleted`                               | Sub-agent lifecycle.                      |
-| `SteeringInjected` / `RoundInterrupted`                               | Steering and interrupts.                  |
+| Variant | Description |
+| - | - |
+| `SessionStarted` / `SessionEnded` | Session lifecycle. |
+| `TextDelta { delta }` | Incremental text from the model. |
+| `ReasoningDelta { delta }` | Incremental reasoning/thinking text. |
+| `AssistantMessage { text, model, usage, tool_call_count, .. }` | Complete assistant turn with token usage. |
+| `ToolCallStarted { tool_name, tool_call_id, arguments }` | A tool call is about to execute. |
+| `ToolCallCompleted { tool_name, tool_call_id, output, is_error, .. }` | A tool call finished. |
+| `Error { error }` | An `ErrorData` occurred. |
+| `LoopDetected` | The agent is repeating itself. |
+| `CompactionStarted` / `CompactionCompleted` | Context window compaction. |
+| `SubAgentSpawned` / `SubAgentCompleted` | Sub-agent lifecycle. |
+| `SteeringInjected` / `RoundInterrupted` | Steering and interrupts. |
 
 Fabro stores every one of these as an `agent.*` run event whose properties are the `CodingAgentEvent` envelope; `fabro_types::coding_event_name` maps a variant to its run event name.
 
 ### Tool middleware
 
-Implement pebble's `ToolMiddleware` to intercept tool calls for approval, logging, or transformation, and install it with the builder's `.tool_middleware(...)`. Fabro's `fabro_hooks::WorkflowToolHookCallback` is one: it runs the workflow's `pre_tool_use` hooks before each call and the `post_tool_use` hooks after.
+Implement pebble's `ToolMiddleware` to intercept tool calls for approval, logging, or transformation, and install it with the builder's `.tool_middleware(...)`. Petri's Attractor agent step installs one for Fabro's `pre_tool_use` and `post_tool_use` hooks.
 
 ```rust theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 use async_trait::async_trait;
@@ -253,14 +253,14 @@ For permission gating, `PermissionMiddleware::new(policy)` hides tools a `ToolPe
 
 `PromptReport::result` is `Result<PromptOutput, pebble_coding_agent::Error>`:
 
-| Variant                        | Description                                                                                |
-| ------------------------------ | ------------------------------------------------------------------------------------------ |
-| `Llm(lithos_llm::Error)`       | An error from the LLM provider. `llm_source()` reaches it from any variant that wraps one. |
-| `SessionClosed`                | A prompt was sent to a closed agent.                                                       |
-| `InvalidState(String)`         | The agent is in an unexpected state.                                                       |
-| `ToolExecution(String)`        | A tool execution failed in a way that stops the prompt.                                    |
-| `Interrupted(InterruptReason)` | The prompt was cancelled, timed out, or used every allowed turn.                           |
-| `EventSink(EventSinkError)`    | The durable event sink refused an event; the recorded stream is untrustworthy.             |
+| Variant | Description |
+| - | - |
+| `Llm(lithos_llm::Error)` | An error from the LLM provider. `llm_source()` reaches it from any variant that wraps one. |
+| `SessionClosed` | A prompt was sent to a closed agent. |
+| `InvalidState(String)` | The agent is in an unexpected state. |
+| `ToolExecution(String)` | A tool execution failed in a way that stops the prompt. |
+| `Interrupted(InterruptReason)` | The prompt was cancelled, timed out, or used every allowed turn. |
+| `EventSink(EventSinkError)` | The durable event sink refused an event; the recorded stream is untrustworthy. |
 
 ***
 
@@ -418,13 +418,13 @@ Every fallible operation returns `Result<T, fabro_llm::Error>`, the lithos error
 
 Both `Error` and `ErrorData` answer the policy questions directly; only the loop-detection signature is Fabro's:
 
-| Function                                   | Description                                                              |
-| ------------------------------------------ | ------------------------------------------------------------------------ |
-| `error.is_retryable()`                     | Safe to retry with the same provider, from lithos's retry classification |
-| `error.failover_eligible()`                | Safe to try a different provider                                         |
-| `error.is_auth_error()`                    | The credential was missing or rejected                                   |
-| `error.is_cancelled()`                     | The caller cancelled the call                                            |
-| `fabro_llm::failure_signature_hint(&data)` | A stable string for loop and restart detection                           |
+| Function | Description |
+| - | - |
+| `error.is_retryable()` | Safe to retry with the same provider, from lithos's retry classification |
+| `error.failover_eligible()` | Safe to try a different provider |
+| `error.is_auth_error()` | The credential was missing or rejected |
+| `error.is_cancelled()` | The caller cancelled the call |
+| `fabro_llm::failure_signature_hint(&data)` | A stable string for loop and restart detection |
 
 ### Retries
 
@@ -469,3 +469,6 @@ let built = fabro_llm::build_offline_client(
     ClientOptions::default().with_adapter(ProviderId::new("anthropic"), adapter),
 )?;
 ```
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

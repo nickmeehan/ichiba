@@ -85,3 +85,6 @@ Start an API server in the sandbox and use the preview URL as the base for `curl
 * **Multiple ports** — generate separate preview URLs for different ports (e.g. frontend on 3000, API on 8080) by making multiple API calls.
 * **TTL selection** — use shorter TTLs (300–900 seconds) for quick checks and longer TTLs (3600+ seconds) when you need sustained access during a review.
 * **Sandbox must be running** — preview URLs only work while the sandbox is active. If the sandbox has been stopped or destroyed, the URL will stop working even if the token hasn't expired.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

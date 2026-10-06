@@ -98,16 +98,14 @@
 - [Create Run Pull Request](https://docs.fabro.sh/api-reference/runs/create-run-pull-request.md): Durably requests creation of a pull request for a completed run. The server generates the pull request content and creates the GitHub pull request after this request returns. Poll the URL in the Location response header until the creation succeeds or fails.
 - [Get Run Pull Request Creation](https://docs.fabro.sh/api-reference/runs/get-run-pull-request-creation.md): Returns the latest explicit pull request creation requested for this run.
 - [Render SVG](https://docs.fabro.sh/api-reference/runs/render-svg.md): Renders the workflow graph as an SVG image using Graphviz.
-- [List Run Events](https://docs.fabro.sh/api-reference/run-internals/list-run-events.md): Returns a paginated JSON list of stored run events. Ascending order uses `since_seq` as an inclusive cursor. Descending order uses `before_seq` as an exclusive cursor and starts at the newest event when `before_seq` is omitted.
+- [List Run Events](https://docs.fabro.sh/api-reference/run-internals/list-run-events.md): Returns one page of the run's stream (`PaginatedRunStreamList`): one ordered delivery of Petri's own `RunEvent`s and Fabro's platform records in the `RunStreamItem` envelope, in `stream_seq` order. The cursor is `after`: the last `stream_seq` the client saw, exclusive; the first page is `after=0`. A…
 - [List Run Questions](https://docs.fabro.sh/api-reference/human-in-the-loop/list-run-questions.md): Returns pending human-in-the-loop questions for a run. Questions are generated when the workflow needs user input to proceed.
 - [Submit Run Answer](https://docs.fabro.sh/api-reference/human-in-the-loop/submit-run-answer.md): Submits an answer to a pending question. The answer can be freeform text or a selected option key, depending on the question type.
 - [Preview URL](https://docs.fabro.sh/api-reference/human-in-the-loop/preview-url.md): Generates a preview URL for a port exposed by the run's sandbox environment.
 - [List Run Artifacts](https://docs.fabro.sh/api-reference/run-internals/list-run-artifacts.md): Lists captured artifact files for a run.
 - [Download Run Artifacts](https://docs.fabro.sh/api-reference/run-internals/download-run-artifacts.md): Streams a ZIP archive with the latest captured version of each artifact path. Stage order, retry number, and then stage ID determine the latest version, matching the artifacts page. Captures from the graph's boundary nodes are excluded, identified by their `start` and `exit` handler type rather than…
 - [Retrieve Run Usage](https://docs.fabro.sh/api-reference/run-outputs/retrieve-run-usage.md): Returns token counts and costs broken down by stage and model for a specific run.
-- [Retrieve Run Checkpoint](https://docs.fabro.sh/api-reference/run-internals/retrieve-run-checkpoint.md): Returns the latest checkpoint data for a run, or null if no checkpoint has been recorded yet.
 - [List Run Stages](https://docs.fabro.sh/api-reference/run-internals/list-run-stages.md): Returns the ordered list of stages in a run's workflow graph with their current status and timing. Stages are bounded by the workflow graph size, typically fewer than 20.
-- [List Stage Events](https://docs.fabro.sh/api-reference/run-internals/list-stage-events.md): Returns a paginated JSON list of stored run events scoped to a single stage visit.
 - [Retrieve Run Settings](https://docs.fabro.sh/api-reference/run-internals/retrieve-run-settings.md): Returns the persisted dense `WorkflowSettings` snapshot used to launch this run.
 - [List automations](https://docs.fabro.sh/api-reference/automations/list-automations.md): Returns all configured automation definitions.
 - [Create automation](https://docs.fabro.sh/api-reference/automations/create-automation.md): Creates a new automation definition.
@@ -277,3 +275,6 @@
 ## OpenAPI Specs
 
 - [fabro-api](/api-reference/fabro-api.yaml)
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

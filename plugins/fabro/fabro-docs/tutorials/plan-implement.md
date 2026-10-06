@@ -112,3 +112,6 @@ The agent reads `plan.md` (as instructed by its prompt), but the preamble gives 
 <Card title="Branch & Loop" icon="arrow-right" href="/tutorials/branch-loop">
   Add conditional branching and automated test validation loops.
 </Card>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

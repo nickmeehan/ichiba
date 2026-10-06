@@ -6,11 +6,11 @@
 
 > How Fabro's CLI and API modes work under the hood
 
-Fabro provides two interfaces — a CLI for local development and an HTTP API for production use. Both share a common workflow engine.
+Fabro provides two interfaces — a CLI for local development and an HTTP API for production use. Both submit runs to the same server, and every run executes on the same engine.
 
-## Shared engine
+## The engine
 
-At the core of both modes is the `WorkflowRunEngine`. It parses the Graphviz graph, walks nodes, dispatches to handlers (agent, command, human, etc.), selects edges, and checkpoints after each stage. The engine is parameterized by an `Interviewer` trait that controls how human-in-the-loop questions are presented — terminal prompts in CLI mode, HTTP request/response in API mode.
+Every run executes on Petri, the workflow engine. At create time the server hands Petri the workflow bundle and the run's settings; Petri lowers the Graphviz graph, checks it, pins the models its nodes name, and either admits the graph or refuses the run with its diagnostics. At execution a worker process runs the admitted graph: it walks the nodes, dispatches each stage (agent, command, human, etc.), selects edges, and records every step in the run's log, from which the run resumes after an interruption. Human-in-the-loop questions reach the server's questions API; the CLI answers them from the terminal, the web app from the run page.
 
 ## CLI mode
 
@@ -18,7 +18,7 @@ At the core of both modes is the `WorkflowRunEngine`. It parses the Graphviz gra
 fabro run workflow.fabro --goal "Implement the login feature"
 ```
 
-The CLI parses the workflow, creates the engine with a `ConsoleInterviewer`, and executes synchronously. Events are printed to stderr, progress is shown with terminal indicators, and human-in-the-loop questions are answered via interactive terminal prompts. When the run finishes, the process exits.
+The CLI builds the run manifest, submits it to the server (starting a local one when none is running), and follows the run: events are printed to stderr, progress is shown with terminal indicators, and human-in-the-loop questions are answered via interactive terminal prompts. When the run finishes, the process exits.
 
 CLI mode is ideal for:
 
@@ -40,13 +40,13 @@ The server reads `~/.fabro/settings.toml` for default settings (model, sandbox, 
 
 Key server config options:
 
-| Setting                                | Description                                                       |
-| -------------------------------------- | ----------------------------------------------------------------- |
-| `server.listen`                        | Bind transport: Unix socket or plain TCP listener                 |
-| `server.api.url` / `server.web.url`    | External API base URL and the single canonical browser/API origin |
-| `server.auth.methods`                  | Bootstrap auth methods: `dev-token`, `github`, or both            |
-| `server.scheduler.max_concurrent_runs` | Scheduler concurrency limit (default 5)                           |
-| `[run.*]`                              | Defaults applied to every run (overridable per-run)               |
+| Setting | Description |
+| - | - |
+| `server.listen` | Bind transport: Unix socket or plain TCP listener |
+| `server.api.url` / `server.web.url` | External API base URL and the single canonical browser/API origin |
+| `server.auth.methods` | Bootstrap auth methods: `dev-token`, `github`, or both |
+| `server.scheduler.max_concurrent_runs` | Scheduler concurrency limit (default 5) |
+| `[run.*]` | Defaults applied to every run (overridable per-run) |
 
 ### Run lifecycle
 
@@ -54,7 +54,7 @@ Key server config options:
 2. **Start request** — `POST /api/v1/runs/{id}/start` moves normal runs to `runnable`. Parent-generated [child runs](/execution/child-runs) may move to `pending` with `approval_required`.
 3. **Approve if needed** — `POST /api/v1/runs/{id}/approve` moves an approval-gated run to `runnable`; `deny` fails it with `approval_denied`.
 4. **Schedule** — A background scheduler promotes `runnable` runs to `running` in FIFO order, up to the concurrency limit.
-5. **Execute** — The engine walks the graph, streaming events to all subscribers.
+5. **Execute** — A worker runs the admitted graph on Petri, streaming events to all subscribers.
 6. **Complete** — The run transitions to `succeeded`, `failed`, or `dead`.
 
 ### Event streaming
@@ -97,3 +97,6 @@ The UI provides:
 ## Comparison
 
 See [Deployment](/administration/deployment) for where the Fabro server runs and the trade-offs between local and self-hosted modes.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

@@ -80,13 +80,13 @@ The child workflow runs through its own start → implement → validate → gat
 
 ### Sub-workflow attributes
 
-| Attribute                | Description                                                               |
-| ------------------------ | ------------------------------------------------------------------------- |
-| `stack.child_workflow`   | Path to the child workflow file (resolved relative to the parent).        |
-| `stack.child_dot_source` | Inline child Graphviz source (alternative to `child_workflow`)            |
-| `manager.max_cycles`     | Safety limit on poll cycles before the child is cancelled (default: 1000) |
-| `manager.poll_interval`  | How often to check for completion or stop conditions (default: `45s`)     |
-| `manager.stop_condition` | Condition expression that, when true, cancels the child early             |
+| Attribute | Description |
+| - | - |
+| `stack.child_workflow` | Path to the child workflow file (resolved relative to the parent). |
+| `stack.child_dot_source` | Inline child Graphviz source (alternative to `child_workflow`) |
+| `manager.max_cycles` | Safety limit on poll cycles before the child is cancelled (default: 1000) |
+| `manager.poll_interval` | How often to check for completion or stop conditions (default: `45s`) |
+| `manager.stop_condition` | Condition expression that, when true, cancels the child early |
 
 Use `stack.child_workflow` when you want to reuse the child workflow across multiple parents. Use `stack.child_dot_source` for one-off child workflows that are specific to the parent.
 
@@ -153,3 +153,6 @@ Use [child runs](/execution/child-runs) instead when the delegated work should b
     The implement-test-fix pattern used in the child workflow.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

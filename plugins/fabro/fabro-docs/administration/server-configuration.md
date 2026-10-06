@@ -18,10 +18,10 @@ On a same-machine setup, the CLI and server share one `settings.toml`. On a remo
 
 ### Which sections are server-owned
 
-| Scope                                                                       | Examples                                                                                                                                                                                                                |
-| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Server-owned (runtime-only from local `settings.toml`)                      | `[server.listen]`, `[server.api]`, `[server.web]`, `[server.auth]`, `[server.sandbox]`, `[server.storage]`, `[server.artifacts]`, `[server.slatedb]`, `[server.scheduler]`, `[server.logging]`, `[server.integrations]` |
-| Shared run defaults (layered through `.fabro/project.toml`/`workflow.toml`) | `[run.model]`, `[run.prepare]`, `[run.environment]`, `[environments.<slug>]`, `[run.checkpoint]`, `[run.inputs]`, `[run.pull_request]`, `[run.git]`, `[run.hooks]`, `[run.agent]`                                       |
+| Scope | Examples |
+| - | - |
+| Server-owned (runtime-only from local `settings.toml`) | `[server.listen]`, `[server.api]`, `[server.web]`, `[server.auth]`, `[server.sandbox]`, `[server.storage]`, `[server.artifacts]`, `[server.scheduler]`, `[server.logging]`, `[server.integrations]` |
+| Shared run defaults (layered through `.fabro/project.toml`/`workflow.toml`) | `[run.model]`, `[run.prepare]`, `[run.environment]`, `[environments.<slug>]`, `[run.checkpoint]`, `[run.inputs]`, `[run.pull_request]`, `[run.git]`, `[run.hooks]`, `[run.agent]` |
 
 The CLI-only `[cli.*]` sections (including `[cli.target]`) belong in the client machine's `settings.toml`. They tell CLI commands how to reach a server. The server process does not read `[cli.*]` for its own binding or routing.
 
@@ -76,15 +76,6 @@ prefix = "artifacts"
 bucket = "my-fabro-data"
 region = "us-east-1"
 
-[server.slatedb]
-provider = "s3"
-prefix = "slatedb"
-disk_cache = true
-
-[server.slatedb.s3]
-bucket = "my-fabro-data"
-region = "us-east-1"
-
 [server.scheduler]
 max_concurrent_runs = 8
 
@@ -131,17 +122,17 @@ email = "fabro-bot@company.com"
 
 Several `settings.toml` settings can be overridden via `fabro server start` flags:
 
-| Flag                    | Default                                                                                            | Description                                                                     |
-| ----------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `--bind`                | Resolved `[server.listen]`, falling back to `~/.fabro/fabro.sock` when `[server.listen]` is absent | Address to bind: `IP` or `IP:port` for TCP, or a path for Unix socket           |
-| `--web`                 | enabled                                                                                            | Enable the embedded web UI, browser auth routes, and web-only helper endpoints  |
-| `--no-web`              | disabled                                                                                           | Disable the embedded web UI, browser auth routes, and web-only helper endpoints |
-| `--foreground`          | —                                                                                                  | Run in the foreground instead of daemonizing                                    |
-| `--model`               | —                                                                                                  | Override default LLM model                                                      |
-| `--provider`            | —                                                                                                  | Override default LLM provider                                                   |
-| `--environment`         | —                                                                                                  | Override default environment slug                                               |
-| `--max-concurrent-runs` | `5`                                                                                                | Maximum concurrent run executions                                               |
-| `--config`              | `~/.fabro/settings.toml`                                                                           | Path to server config file                                                      |
+| Flag | Default | Description |
+| - | - | - |
+| `--bind` | Resolved `[server.listen]`, falling back to `~/.fabro/fabro.sock` when `[server.listen]` is absent | Address to bind: `IP` or `IP:port` for TCP, or a path for Unix socket |
+| `--web` | enabled | Enable the embedded web UI, browser auth routes, and web-only helper endpoints |
+| `--no-web` | disabled | Disable the embedded web UI, browser auth routes, and web-only helper endpoints |
+| `--foreground` | — | Run in the foreground instead of daemonizing |
+| `--model` | — | Override default LLM model |
+| `--provider` | — | Override default LLM provider |
+| `--environment` | — | Override default environment slug |
+| `--max-concurrent-runs` | `5` | Maximum concurrent run executions |
+| `--config` | `~/.fabro/settings.toml` | Path to server config file |
 
 CLI flags take precedence over `settings.toml` values. See [Run Configuration — Precedence](/execution/run-configuration#precedence) for the full resolution order.
 
@@ -149,10 +140,10 @@ CLI flags take precedence over `settings.toml` values. See [Run Configuration �
 
 Control the embedded SPA and browser-oriented routes.
 
-| Key       | Description                                                                                                                                     | Default                 |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `enabled` | Serve the embedded SPA, `/auth/*`, and the web-only helper endpoints under `/api/v1`                                                            | `true`                  |
-| `url`     | Required single canonical origin for the server. The browser UI and `/auth/*` routes use this origin, and it must be an absolute `http(s)` URL. | `http://localhost:3000` |
+| Key | Description | Default |
+| - | - | - |
+| `enabled` | Serve the embedded SPA, `/auth/*`, and the web-only helper endpoints under `/api/v1` | `true` |
+| `url` | Required single canonical origin for the server. The browser UI and `/auth/*` routes use this origin, and it must be an absolute `http(s)` URL. | `http://localhost:3000` |
 
 When `enabled = false`, the server still exposes the machine API and `/health`, but `/`, `/auth/*`, SPA client routes, `/api/v1/auth/me`, and `/api/v1/setup/*` all return `404`.
 
@@ -164,8 +155,8 @@ When the external origin is assigned at deployment time, set `FABRO_WEB_URL` in 
 
 Configure how users authenticate with the server.
 
-| Key       | Description                                                      | Default         |
-| --------- | ---------------------------------------------------------------- | --------------- |
+| Key | Description | Default |
+| - | - | - |
 | `methods` | Ordered list of enabled bootstrap methods: `dev-token`, `github` | `["dev-token"]` |
 
 When `"dev-token"` is enabled, the API accepts `Authorization: Bearer fabro_dev_...` and the login page can authenticate with the dev token directly.
@@ -176,8 +167,8 @@ When `"github"` is enabled, browser users can sign in with GitHub OAuth and rece
 
 GitHub-specific auth policy.
 
-| Key                 | Description                                      |
-| ------------------- | ------------------------------------------------ |
+| Key | Description |
+| - | - |
 | `allowed_usernames` | GitHub usernames allowed to complete OAuth login |
 
 The GitHub OAuth client ID still lives under `[server.integrations.github].client_id`.
@@ -201,16 +192,25 @@ enabled = true
 enabled = true
 ```
 
+The built-in `local`, `docker`, and `daytona` providers run in process. `local` selects Petri's
+Host provider. Built-in entries reject `path`, `sha256`, `dev`, `args`, `env`, and `inherit_env`;
+no plugin executable or checksum is needed. The legacy built-in
+`PETRI_SANDBOX_{HOST,DOCKER,DAYTONA}_{PLUGIN,SHA256}` variables are ignored.
+
 Any other key names a [sandbox-driver](https://github.com/lithoscomputer/sandbox-driver) plugin:
 an executable that speaks the sandbox-driver JSON-RPC protocol on stdin and stdout. The kind must
 be lowercase ASCII letters, digits, and interior hyphens. The plugin starts with a scrubbed
 environment: only `env` and the ambient variables listed in `inherit_env` reach it. Bundled
 providers reject these plugin keys.
 
+The server launches the plugin to reach a sandbox after the fact (the sandbox tab, files,
+terminal, Ask Fabro). Runs execute only on the built-in providers for now, so a run's worker
+never launches a plugin and receives none of these settings.
+
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [server.sandbox.providers.e2b]
 enabled = true
-path = "/opt/fabro/plugins/fabro-sandbox-e2b"   # default: `fabro-sandbox-<kind>` on PATH
+path = "/opt/fabro/plugins/sandbox-driver-e2b"  # default: `sandbox-driver-<kind>` on PATH
 sha256 = "0123…cdef"                            # pin the executable; `dev = true` skips it
 args = []
 inherit_env = ["PATH"]
@@ -219,50 +219,29 @@ inherit_env = ["PATH"]
 E2B_API_URL = "https://api.e2b.example"
 ```
 
-| Key           | Description                                                   | Default                          |
-| ------------- | ------------------------------------------------------------- | -------------------------------- |
-| `enabled`     | Whether runs may select this provider                         | `true`                           |
-| `path`        | Plugin executable path                                        | `fabro-sandbox-<kind>` on `PATH` |
-| `sha256`      | Pinned SHA-256 of the executable, hex                         | none                             |
-| `dev`         | Allow launching without a checksum                            | `false`                          |
-| `args`        | Arguments passed to the executable                            | `[]`                             |
-| `env`         | Complete environment for the plugin, apart from `inherit_env` | `{}`                             |
-| `inherit_env` | Ambient variables forwarded from the server process           | `[]`                             |
+| Key | Description | Default |
+| - | - | - |
+| `enabled` | Whether runs may select this provider | `true` |
+| `path` | Plugin executable path | `sandbox-driver-<kind>` on `PATH` |
+| `sha256` | Pinned SHA-256 of the executable, hex | none |
+| `dev` | Allow launching without a checksum | `false` |
+| `args` | Arguments passed to the executable | `[]` |
+| `env` | Complete environment for the plugin, apart from `inherit_env` | `{}` |
+| `inherit_env` | Ambient variables forwarded from the server process | `[]` |
 
-### `[server.slatedb]` section
+### Removed: `[server.slatedb]`
 
-Configure the embedded SlateDB key-value store used for the remaining
-object-store-backed indexes and as the read-only source for temporary storage
-migrations. Run history and content-addressed blobs live in SQLite; artifacts
-use `[server.artifacts]`.
+Earlier releases kept an embedded SlateDB key-value store beside the
+artifact store. Run history and content-addressed blobs now live in SQLite,
+so the section has no store behind it. A `settings.toml` that still carries
+`[server.slatedb]` is rewritten once at startup: the section is removed, a
+backup is written beside the file, and a warning names both. Delete the
+section yourself to avoid the rewrite.
 
-| Key              | Description                                      | Default   |
-| ---------------- | ------------------------------------------------ | --------- |
-| `provider`       | Object store backend: `local` or `s3`            | `"local"` |
-| `prefix`         | Key prefix within the object store               | `""`      |
-| `flush_interval` | How often to flush the write-ahead log           | `"1ms"`   |
-| `disk_cache`     | Enable a local disk cache for object store reads | `false`   |
-
-When `disk_cache = true`, Fabro creates a cache directory at `<storage_root>/cache/slatedb` and
-configures SlateDB to cache object store bytes on local disk (16 GB max, 4 MB parts). This
-significantly reduces read latency and costs for S3-backed deployments. A warning is emitted if
-enabled with `provider = "local"` since the disk cache adds overhead when the object store is
-already local.
-
-```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[server.slatedb]
-provider = "s3"
-disk_cache = true
-
-[server.slatedb.s3]
-bucket = "fabro-production"
-region = "us-east-1"
-```
-
-The browser install wizard's `Object store` step manages both `[server.slatedb]` and
-`[server.artifacts]` together. `Local disk` uses the detected local object-store root, defaulting
-to `<storage_root>/objects`, with fixed prefixes `slatedb` and `artifacts`. `AWS S3` writes one
-shared bucket with the same fixed prefixes.
+The browser install wizard's `Object store` step manages `[server.artifacts]`.
+`Local disk` uses the detected local object-store root, defaulting to
+`<storage_root>/objects`, with the fixed prefix `artifacts`. `AWS S3` writes
+one bucket with the same fixed prefix.
 
 ```toml title="Local disk object store" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [server.artifacts]
@@ -270,13 +249,6 @@ provider = "local"
 prefix = "artifacts"
 
 [server.artifacts.local]
-root = "/var/lib/fabro/objects"
-
-[server.slatedb]
-provider = "local"
-prefix = "slatedb"
-
-[server.slatedb.local]
 root = "/var/lib/fabro/objects"
 ```
 
@@ -287,16 +259,14 @@ The wizard only covers AWS S3 bucket/region plus one of:
 
 Advanced S3-compatible settings such as custom `endpoint` or `path_style` remain a manual
 configuration path. If you need MinIO, R2, or another S3-compatible backend, configure
-`[server.slatedb]` and `[server.artifacts]` directly in `settings.toml`. The runtime still
-honors those hand-edited values even though the browser wizard does not manage them.
+`[server.artifacts]` directly in `settings.toml`. The runtime still honors those hand-edited
+values even though the browser wizard does not manage them.
 
 ### SQLite state and migration backups
 
-Shared relational state, including run events and current run rows,
+Shared relational state, including run records and current run rows,
 content-addressed blobs, vault entries, server-managed definitions, and CLI
-auth sessions, lives at `<storage_root>/db/fabro.sqlite3`. The
-`[server.slatedb]` object store remains configured for compatibility imports
-and session-to-run reverse indexes during the storage transition.
+auth sessions, lives at `<storage_root>/db/fabro.sqlite3`.
 
 CLI auth sessions are stored as an `auth_sessions` row per signed-in CLI, with the rotating refresh tokens for that session in `refresh_tokens`. Pending browser-to-CLI handoffs live briefly in `oauth_authorization_codes`; the table contains a SHA-256 hash of each one-time code, never the raw bearer value. Revoking a session from **Settings → Sessions**, or with `DELETE /api/v1/auth/sessions/{id}`, deletes the session row and its tokens together.
 
@@ -320,9 +290,9 @@ Merge rules follow the normative matrix: TOML `[run.inputs]` tables replace whol
 
 Configure the server log level and destination.
 
-| Key           | Description                                                                               | Default                                  |
-| ------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `level`       | Log level: `error`, `warn`, `info`, `debug`, `trace`                                      | `"info"`                                 |
+| Key | Description | Default |
+| - | - | - |
+| `level` | Log level: `error`, `warn`, `info`, `debug`, `trace` | `"info"` |
 | `destination` | Where server logs are written: `file` (rotated daily under `<storage>/logs/`) or `stdout` | Daemon: `"file"`; foreground: `"stdout"` |
 
 Level precedence: `FABRO_LOG` env var > `--debug` flag > `[server.logging].level` > `"info"`.
@@ -337,17 +307,17 @@ Override the Git author and committer identity for every commit a run creates: F
 
 When a field is not set, Fabro derives it from the run's GitHub credential:
 
-| Credential                      | Name                   | Email                                       |
-| ------------------------------- | ---------------------- | ------------------------------------------- |
-| GitHub App (`strategy = "app"`) | `<slug>[bot]`          | `<id>+<slug>[bot]@users.noreply.github.com` |
-| Token (`strategy = "token"`)    | the token's user login | `<id>+<login>@users.noreply.github.com`     |
-| None                            | `Fabro`                | `noreply@fabro.sh`                          |
+| Credential | Name | Email |
+| - | - | - |
+| GitHub App (`strategy = "app"`) | `<slug>[bot]` | `<id>+<slug>[bot]@users.noreply.github.com` |
+| Token (`strategy = "token"`) | the token's user login | `<id>+<login>@users.noreply.github.com` |
+| None | `Fabro` | `noreply@fabro.sh` |
 
 Setting both `name` and `email` skips the credential lookup. Setting one field overlays it on the derived identity. A lookup failure for the selected credential fails the run at setup; Fabro never silently switches to another author. The resolved identity is recorded in the run's event stream as `git.identity.resolved` and in the run state as `git_identity`.
 
-| Key     | Description                    | Default                                  |
-| ------- | ------------------------------ | ---------------------------------------- |
-| `name`  | Git author and committer name  | derived from the run's GitHub credential |
+| Key | Description | Default |
+| - | - | - |
+| `name` | Git author and committer name | derived from the run's GitHub credential |
 | `email` | Git author and committer email | derived from the run's GitHub credential |
 
 ### `[server.integrations.github]` section
@@ -389,11 +359,11 @@ Incoming webhooks are authenticated only by GitHub's `X-Hub-Signature-256` HMAC 
 
 Configure checkpoint behavior for all runs.
 
-| Key              | Description                                                                                                                                                                               |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exclude_globs`  | Glob patterns for files to exclude from checkpoint commits (for example, `["**/node_modules/**"]`)                                                                                        |
+| Key | Description |
+| - | - |
+| `exclude_globs` | Glob patterns for files to exclude from checkpoint commits (for example, `["**/node_modules/**"]`) |
 | `skip_git_hooks` | When `true`, Fabro-managed run-branch checkpoint commits bypass local Git commit hooks. Defaults to `false`. Does not affect Fabro workflow `[[run.hooks]]` or metadata-branch snapshots. |
-| `commit_timeout` | Max duration for the per-node run-branch checkpoint commit (e.g. `"30s"`, `"10m"`). This commit runs repository commit hooks unless `skip_git_hooks` is `true`. Defaults to `"30s"`.      |
+| `commit_timeout` | Max duration for the per-node run-branch checkpoint commit (e.g. `"30s"`, `"10m"`). This commit runs repository commit hooks unless `skip_git_hooks` is `true`. Defaults to `"30s"`. |
 
 `exclude_globs` replaces across layers — the highest-precedence layer wins wholesale. `skip_git_hooks` and `commit_timeout` use normal override semantics. See [Run Configuration — Checkpoint](/execution/run-configuration#runcheckpoint) for per-run configuration.
 
@@ -429,20 +399,20 @@ fabro secret set GEMINI_API_KEY AI...
 
 `fabro exec` and direct library usage can opt into env-backed credential sources explicitly. Runs cannot: the Fabro server reads provider keys from the vault after the temporary startup migration, and workers start from a cleared environment that does not inherit provider keys.
 
-| Variable                                  | Provider                                         |
-| ----------------------------------------- | ------------------------------------------------ |
-| `ANTHROPIC_API_KEY`                       | Anthropic (Claude)                               |
-| `OPENAI_API_KEY`                          | OpenAI (GPT)                                     |
-| `GEMINI_API_KEY`                          | Google (Gemini)                                  |
-| `MOONSHOT_API_KEY` or `KIMI_API_KEY`      | Moonshot AI; `MOONSHOT_API_KEY` takes precedence |
-| `ZAI_API_KEY`                             | Zai (GLM)                                        |
-| `MINIMAX_API_KEY`                         | Minimax                                          |
-| `INCEPTION_API_KEY`                       | Inception (Mercury)                              |
-| `POOLSIDE_API_KEY`                        | Poolside (Laguna)                                |
-| `DEEPSEEK_API_KEY`                        | DeepSeek                                         |
-| `OPENROUTER_API_KEY`                      | OpenRouter (when enabled)                        |
-| `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` | Modal (when enabled)                             |
-| `FIREWORKS_API_KEY`                       | Fireworks AI (when enabled)                      |
+| Variable | Provider |
+| - | - |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) |
+| `OPENAI_API_KEY` | OpenAI (GPT) |
+| `GEMINI_API_KEY` | Google (Gemini) |
+| `MOONSHOT_API_KEY` or `KIMI_API_KEY` | Moonshot AI; `MOONSHOT_API_KEY` takes precedence |
+| `ZAI_API_KEY` | Zai (GLM) |
+| `MINIMAX_API_KEY` | Minimax |
+| `INCEPTION_API_KEY` | Inception (Mercury) |
+| `POOLSIDE_API_KEY` | Poolside (Laguna) |
+| `DEEPSEEK_API_KEY` | DeepSeek |
+| `OPENROUTER_API_KEY` | OpenRouter (when enabled) |
+| `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` | Modal (when enabled) |
+| `FIREWORKS_API_KEY` | Fireworks AI (when enabled) |
 
 Modal requires both vault tokens. Its provider definition resolves them into the `Modal-Key` and `Modal-Secret` request headers.
 
@@ -458,37 +428,37 @@ fabro secret set VENICE_API_KEY venice-...
 
 The built-in [`web_search`](/agents/tools#web_search) tool selects its backend from these credentials. It uses direct Brave Search when `BRAVE_SEARCH_API_KEY` exists. Otherwise it uses Venice Search when `VENICE_API_KEY` exists. When neither exists, the tool is not registered.
 
-| Variable               | Description                                                                                  |
-| ---------------------- | -------------------------------------------------------------------------------------------- |
-| `DAYTONA_API_KEY`      | Daytona cloud sandbox API key                                                                |
-| `BRAVE_SEARCH_API_KEY` | Brave Search API key; the preferred `web_search` backend when present                        |
-| `VENICE_API_KEY`       | Venice API key; used by the Venice LLM provider and by `web_search` when no Brave key exists |
+| Variable | Description |
+| - | - |
+| `DAYTONA_API_KEY` | Daytona cloud sandbox API key |
+| `BRAVE_SEARCH_API_KEY` | Brave Search API key; the preferred `web_search` backend when present |
+| `VENICE_API_KEY` | Venice API key; used by the Venice LLM provider and by `web_search` when no Brave key exists |
 
 ### Server authentication
 
 Fabro resolves these from `process env -> server.env`.
 
-| Variable          | Description                                         |
-| ----------------- | --------------------------------------------------- |
-| `SESSION_SECRET`  | Session encryption secret (64-character hex string) |
-| `FABRO_DEV_TOKEN` | Optional fixed development auth token               |
+| Variable | Description |
+| - | - |
+| `SESSION_SECRET` | Session encryption secret (64-character hex string) |
+| `FABRO_DEV_TOKEN` | Optional fixed development auth token |
 
 ### Object store runtime secrets (optional)
 
 Fabro resolves these from `process env -> server.env`.
 
-| Variable                | Description                                                                      |
-| ----------------------- | -------------------------------------------------------------------------------- |
-| `AWS_ACCESS_KEY_ID`     | Static AWS access key ID for S3-backed `[server.slatedb]` / `[server.artifacts]` |
-| `AWS_SECRET_ACCESS_KEY` | Matching static AWS secret access key                                            |
-| `AWS_SESSION_TOKEN`     | Optional matching AWS session token for temporary static credentials             |
+| Variable | Description |
+| - | - |
+| `AWS_ACCESS_KEY_ID` | Static AWS access key ID for an S3-backed `[server.artifacts]` |
+| `AWS_SECRET_ACCESS_KEY` | Matching static AWS secret access key |
+| `AWS_SESSION_TOKEN` | Optional matching AWS session token for temporary static credentials |
 
 The browser install wizard can write these into `server.env` for the AWS S3 manual-credential
 path. It does not support manual STS/session-token input; use runtime credentials instead for ECS,
 EC2 instance profiles, IRSA, or web-identity flows.
 
-For the narrowest production policy, scope access to one bucket and the `slatedb/` and
-`artifacts/` prefixes with `s3:ListBucket` plus `s3:GetObject`, `s3:PutObject`, and
+For the narrowest production policy, scope access to one bucket and the `artifacts/` prefix
+with `s3:ListBucket` plus `s3:GetObject`, `s3:PutObject`, and
 `s3:DeleteObject`. Prefer a dedicated IAM user or role for Fabro instead of reusing broad AWS
 credentials.
 
@@ -508,19 +478,19 @@ GitHub token mode is vault-only:
 fabro secret set GITHUB_TOKEN ghp_...
 ```
 
-| Variable       | Description                                                                       |
-| -------------- | --------------------------------------------------------------------------------- |
+| Variable | Description |
+| - | - |
 | `GITHUB_TOKEN` | GitHub personal access token, stored by `fabro install` when `strategy = "token"` |
 
 ### GitHub App extras (optional)
 
 GitHub App mode stores these secrets in the vault. `fabro install` writes them automatically when it registers an app; do not put them in `server.env`.
 
-| Variable                    | Description                             |
-| --------------------------- | --------------------------------------- |
-| `GITHUB_APP_CLIENT_SECRET`  | GitHub App client secret                |
-| `GITHUB_APP_WEBHOOK_SECRET` | GitHub App webhook secret               |
-| `GITHUB_APP_PRIVATE_KEY`    | GitHub App private key (base64-encoded) |
+| Variable | Description |
+| - | - |
+| `GITHUB_APP_CLIENT_SECRET` | GitHub App client secret |
+| `GITHUB_APP_WEBHOOK_SECRET` | GitHub App webhook secret |
+| `GITHUB_APP_PRIVATE_KEY` | GitHub App private key (base64-encoded) |
 
 ### Slack integration (optional)
 
@@ -533,14 +503,17 @@ fabro secret set FABRO_SLACK_BOT_TOKEN xoxb-...
 fabro secret set FABRO_SLACK_APP_TOKEN xapp-...
 ```
 
-| Variable                | Description           |
-| ----------------------- | --------------------- |
+| Variable | Description |
+| - | - |
 | `FABRO_SLACK_APP_TOKEN` | Slack App-level token |
-| `FABRO_SLACK_BOT_TOKEN` | Slack Bot token       |
+| `FABRO_SLACK_BOT_TOKEN` | Slack Bot token |
 
 ### Logging
 
-| Variable                | Default              | Description                                 |
-| ----------------------- | -------------------- | ------------------------------------------- |
-| `FABRO_LOG`             | `info`               | Log level: `error`, `warn`, `info`, `debug` |
-| `FABRO_LOG_DESTINATION` | Command-mode default | Server log destination: `file` or `stdout`  |
+| Variable | Default | Description |
+| - | - | - |
+| `FABRO_LOG` | `info` | Log level: `error`, `warn`, `info`, `debug` |
+| `FABRO_LOG_DESTINATION` | Command-mode default | Server log destination: `file` or `stdout` |
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

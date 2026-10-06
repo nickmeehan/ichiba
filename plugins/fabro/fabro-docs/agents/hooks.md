@@ -36,11 +36,11 @@ url = "https://hooks.example.com/done"
 X-Deployment-Environment = "{{ vars.DEPLOY_ENV }}"
 ```
 
-| Field     | Description                                                                                                                                                                                   |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `url`     | The endpoint to POST to. Must use `https://` unless `tls = "off"`. Supports `{{ vars.NAME }}` interpolation.                                                                                  |
+| Field | Description |
+| - | - |
+| `url` | The endpoint to POST to. Must use `https://` unless `tls = "off"`. Supports `{{ vars.NAME }}` interpolation. |
 | `headers` | Optional HTTP headers. Values support `{{ vars.NAME }}` interpolation. A token that is still unresolved when the hook fires blocks it (fail-closed), so a header is never sent half-rendered. |
-| `tls`     | TLS mode: `"verify"` (default), `"no_verify"`, or `"off"`.                                                                                                                                    |
+| `tls` | TLS mode: `"verify"` (default), `"no_verify"`, or `"off"`. |
 
 `{{ vars.NAME }}` is substituted when the run is created. Use variables only for non-sensitive metadata. Do not store tokens, API keys, or other credentials in variables or literal hook configuration. `{{ env.NAME }}` and `{{ secrets.NAME }}` are not available in hooks.
 
@@ -57,10 +57,10 @@ model = "haiku"
 blocking = true
 ```
 
-| Field    | Description                             |
-| -------- | --------------------------------------- |
-| `prompt` | Instructions for the LLM evaluator.     |
-| `model`  | Model alias or ID. Defaults to `haiku`. |
+| Field | Description |
+| - | - |
+| `prompt` | Instructions for the LLM evaluator. |
+| `model` | Model alias or ID. Defaults to `haiku`. |
 
 ### Agent
 
@@ -76,34 +76,34 @@ max_tool_rounds = 10
 blocking = true
 ```
 
-| Field             | Description                                                        |
-| ----------------- | ------------------------------------------------------------------ |
-| `prompt`          | Task instructions for the agent.                                   |
-| `model`           | Model alias or ID. Defaults to `haiku`.                            |
+| Field | Description |
+| - | - |
+| `prompt` | Task instructions for the agent. |
+| `model` | Model alias or ID. Defaults to `haiku`. |
 | `max_tool_rounds` | Maximum tool call rounds before the agent gives up. Default: `50`. |
 
 ## Lifecycle events
 
 Each hook fires on a specific lifecycle event:
 
-| Event                   | When it fires                              | Blocking by default |
-| ----------------------- | ------------------------------------------ | ------------------- |
-| `run_start`             | Before the first node executes             | Yes                 |
-| `run_complete`          | After the run finishes successfully        | No                  |
-| `run_failed`            | After the run fails                        | No                  |
-| `stage_start`           | Before a node handler begins               | Yes                 |
-| `stage_complete`        | After a node handler finishes successfully | No                  |
-| `stage_failed`          | After a node handler fails                 | No                  |
-| `stage_retrying`        | Before a failed node is retried            | No                  |
-| `edge_selected`         | After an edge is chosen for traversal      | Yes                 |
-| `parallel_start`        | Before parallel branches fan out           | No                  |
-| `parallel_complete`     | After parallel branches merge              | No                  |
-| `sandbox_ready`         | After the sandbox is initialized and ready | Yes                 |
-| `sandbox_cleanup`       | Before the sandbox is torn down            | No                  |
-| `checkpoint_saved`      | After a checkpoint is written to disk      | No                  |
-| `pre_tool_use`          | Before an agent tool call executes         | Yes                 |
-| `post_tool_use`         | After an agent tool call succeeds          | No                  |
-| `post_tool_use_failure` | After an agent tool call fails             | No                  |
+| Event | When it fires | Blocking by default |
+| - | - | - |
+| `run_start` | Before the first node executes | Yes |
+| `run_complete` | After the run finishes successfully | No |
+| `run_failed` | After the run fails | No |
+| `stage_start` | Before a node handler begins | Yes |
+| `stage_complete` | After a node handler finishes successfully | No |
+| `stage_failed` | After a node handler fails | No |
+| `stage_retrying` | Before a failed node is retried | No |
+| `edge_selected` | After an edge is chosen for traversal | Yes |
+| `parallel_start` | Before parallel branches fan out | No |
+| `parallel_complete` | After parallel branches merge | No |
+| `sandbox_ready` | After the sandbox is initialized and ready | Yes |
+| `sandbox_cleanup` | Before the sandbox is torn down | No |
+| `checkpoint_saved` | After a checkpoint is written to disk | No |
+| `pre_tool_use` | Before an agent tool call executes | Yes |
+| `post_tool_use` | After an agent tool call succeeds | No |
+| `post_tool_use_failure` | After an agent tool call fails | No |
 
 ## Configuration
 
@@ -126,16 +126,16 @@ timeout_ms = 30000
 sandbox = false
 ```
 
-| Field        | Description                                                                                          |
-| ------------ | ---------------------------------------------------------------------------------------------------- |
-| `name`       | Optional display name. Auto-generated from event and type if omitted.                                |
-| `event`      | The lifecycle event to listen for (required).                                                        |
-| `command`    | Shell command shorthand — implies `type = "command"`.                                                |
-| `type`       | Explicit hook type: `"command"`, `"http"`, `"prompt"`, or `"agent"`.                                 |
-| `matcher`    | Regex pattern to filter which stages trigger this hook.                                              |
-| `blocking`   | Whether the hook must complete before execution continues. Defaults vary by event.                   |
+| Field | Description |
+| - | - |
+| `name` | Optional display name. Auto-generated from event and type if omitted. |
+| `event` | The lifecycle event to listen for (required). |
+| `command` | Shell command shorthand — implies `type = "command"`. |
+| `type` | Explicit hook type: `"command"`, `"http"`, `"prompt"`, or `"agent"`. |
+| `matcher` | Regex pattern to filter which stages trigger this hook. |
+| `blocking` | Whether the hook must complete before execution continues. Defaults vary by event. |
 | `timeout_ms` | Hook timeout in milliseconds. Default: `60000` (60s) for most types, `30000` (30s) for prompt hooks. |
-| `sandbox`    | Run inside the sandbox (`true`, default) or on the host (`false`).                                   |
+| `sandbox` | Run inside the sandbox (`true`, default) or on the host (`false`). |
 
 ## Blocking vs. non-blocking
 
@@ -151,11 +151,11 @@ When multiple blocking hooks match the same event, they run sequentially. If any
 
 Blocking hooks return a decision that controls what happens next:
 
-| Decision   | Effect                                                |
-| ---------- | ----------------------------------------------------- |
-| `proceed`  | Continue normal execution.                            |
-| `skip`     | Skip the current stage (with optional reason).        |
-| `block`    | Stop execution with an error (with optional reason).  |
+| Decision | Effect |
+| - | - |
+| `proceed` | Continue normal execution. |
+| `skip` | Skip the current stage (with optional reason). |
+| `block` | Stop execution with an error (with optional reason). |
 | `override` | Redirect to a different node by specifying `edge_to`. |
 
 When multiple blocking hooks run, decisions are merged with this precedence: **Block > Skip/Override > Proceed**.
@@ -164,11 +164,11 @@ When multiple blocking hooks run, decisions are merged with this precedence: **B
 
 Command hooks communicate decisions via exit code and stdout:
 
-| Exit code | Behavior                                                                        |
-| --------- | ------------------------------------------------------------------------------- |
-| `0`       | Proceed. If stdout contains valid JSON decision, use that instead.              |
-| `2`       | Block. If stdout contains valid JSON decision (e.g., `skip`), use that instead. |
-| Any other | Block with reason "hook exited with code N".                                    |
+| Exit code | Behavior |
+| - | - |
+| `0` | Proceed. If stdout contains valid JSON decision, use that instead. |
+| `2` | Block. If stdout contains valid JSON decision (e.g., `skip`), use that instead. |
+| Any other | Block with reason "hook exited with code N". |
 
 To return an explicit decision from a command hook, print JSON to stdout:
 
@@ -198,13 +198,13 @@ If the LLM fails to produce valid JSON, the hook **fails open** (proceeds). This
 
 The `matcher` field is a regex that filters when a hook fires. Omit `matcher` to match all occurrences of the event. Each event type matches against different context fields:
 
-| Event                                                                                                                | What the matcher filters             | Example matcher values             |
-| -------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | ---------------------------------- |
-| `stage_start`, `stage_complete`, `stage_failed`, `stage_retrying`                                                    | node ID and handler type             | `implement`, `^agent$`, `test`     |
-| `edge_selected`                                                                                                      | edge source and edge target node IDs | `implement`, `deploy`              |
-| `pre_tool_use`, `post_tool_use`, `post_tool_use_failure`                                                             | tool name and node ID                | `write_file\|edit_file`, `^shell$` |
-| `checkpoint_saved`                                                                                                   | node ID                              | `implement`                        |
-| `run_start`, `run_complete`, `run_failed`, `parallel_start`, `parallel_complete`, `sandbox_ready`, `sandbox_cleanup` | no matcher support                   | always fires on every occurrence   |
+| Event | What the matcher filters | Example matcher values |
+| - | - | - |
+| `stage_start`, `stage_complete`, `stage_failed`, `stage_retrying` | node ID and handler type | `implement`, `^agent$`, `test` |
+| `edge_selected` | edge source and edge target node IDs | `implement`, `deploy` |
+| `pre_tool_use`, `post_tool_use`, `post_tool_use_failure` | tool name and node ID | `write_file\|edit_file`, `^shell$` |
+| `checkpoint_saved` | node ID | `implement` |
+| `run_start`, `run_complete`, `run_failed`, `parallel_start`, `parallel_complete`, `sandbox_ready`, `sandbox_cleanup` | no matcher support | always fires on every occurrence |
 
 The matcher is a regex, so `write_file|edit_file` matches either tool and `^agent$` matches exactly the handler type `agent`. When an event has multiple matchable fields (e.g., tool events match against both `tool_name` and `node_id`), the hook fires if **any** field matches the regex.
 
@@ -261,12 +261,12 @@ HTTP, prompt, and agent hooks ignore this setting — HTTP calls are always made
 
 Command hooks receive these environment variables:
 
-| Variable             | Value                                                                |
-| -------------------- | -------------------------------------------------------------------- |
-| `FABRO_EVENT`        | The event name (e.g., `stage_start`)                                 |
-| `FABRO_RUN_ID`       | The run's unique identifier                                          |
-| `FABRO_WORKFLOW`     | The workflow name                                                    |
-| `FABRO_NODE_ID`      | The current node ID (when applicable)                                |
+| Variable | Value |
+| - | - |
+| `FABRO_EVENT` | The event name (e.g., `stage_start`) |
+| `FABRO_RUN_ID` | The run's unique identifier |
+| `FABRO_WORKFLOW` | The workflow name |
+| `FABRO_NODE_ID` | The current node ID (when applicable) |
 | `FABRO_HOOK_CONTEXT` | Path to a JSON file containing the full event context (sandbox only) |
 
 ### Hook context
@@ -298,13 +298,13 @@ Fields vary by event — `edge_from`/`edge_to`/`edge_label` are only set for `ed
 
 For tool-level events (`pre_tool_use`, `post_tool_use`, `post_tool_use_failure`), the context includes additional fields:
 
-| Field           | Events                                   | Description                                                 |
-| --------------- | ---------------------------------------- | ----------------------------------------------------------- |
-| `tool_name`     | All tool events                          | Name of the tool being called (e.g., `shell`, `write_file`) |
-| `tool_input`    | `pre_tool_use`                           | JSON object with the tool's input arguments                 |
-| `tool_call_id`  | `post_tool_use`, `post_tool_use_failure` | Unique identifier for the tool call                         |
-| `tool_output`   | `post_tool_use`                          | The tool's output string                                    |
-| `error_message` | `post_tool_use_failure`                  | The error message from the failed tool call                 |
+| Field | Events | Description |
+| - | - | - |
+| `tool_name` | All tool events | Name of the tool being called (e.g., `shell`, `write_file`) |
+| `tool_input` | `pre_tool_use` | JSON object with the tool's input arguments |
+| `tool_call_id` | `post_tool_use`, `post_tool_use_failure` | Unique identifier for the tool call |
+| `tool_output` | `post_tool_use` | The tool's output string |
+| `error_message` | `post_tool_use_failure` | The error message from the failed tool call |
 
 <Accordion title="Example pre_tool_use context JSON">
   ```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
@@ -324,11 +324,11 @@ For tool-level events (`pre_tool_use`, `post_tool_use`, `post_tool_use_failure`)
 Each hook type has a default timeout:
 
 | Hook type | Default timeout |
-| --------- | --------------- |
-| Command   | 60 seconds      |
-| HTTP      | 60 seconds      |
-| Prompt    | 30 seconds      |
-| Agent     | 60 seconds      |
+| - | - |
+| Command | 60 seconds |
+| HTTP | 60 seconds |
+| Prompt | 30 seconds |
+| Agent | 60 seconds |
 
 Override with `timeout_ms` on any hook definition. Prompt and agent hooks **fail open** on timeout — execution proceeds as if the hook returned `ok: true`.
 
@@ -404,3 +404,6 @@ command = "cargo fmt"
 matcher = "write_file|edit_file|apply_patch"
 blocking = true
 ```
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

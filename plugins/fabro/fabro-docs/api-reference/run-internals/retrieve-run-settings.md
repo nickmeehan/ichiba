@@ -336,6 +336,12 @@ components:
           description: >-
             Server-generated request identifier; matches the x-request-id
             response header.
+        meta:
+          type: object
+          additionalProperties: true
+          description: >-
+            Optional structured details specific to the error `code`, for
+            clients that act on them. Each code documents the members it sets.
     StringMap:
       type: object
       additionalProperties:
@@ -835,10 +841,8 @@ components:
       discriminator:
         propertyName: type
         mapping:
-          script:
-            $ref: '#/components/schemas/PreparedScriptStep'
-          command:
-            $ref: '#/components/schemas/PreparedCommandStep'
+          script: '#/components/schemas/PreparedScriptStep'
+          command: '#/components/schemas/PreparedCommandStep'
     RunMode:
       type: string
       enum:
@@ -1005,12 +1009,9 @@ components:
       discriminator:
         propertyName: type
         mapping:
-          stdio:
-            $ref: '#/components/schemas/McpTransportStdio'
-          http:
-            $ref: '#/components/schemas/McpTransportHttp'
-          sandbox:
-            $ref: '#/components/schemas/McpTransportSandbox'
+          stdio: '#/components/schemas/McpTransportStdio'
+          http: '#/components/schemas/McpTransportHttp'
+          sandbox: '#/components/schemas/McpTransportSandbox'
     McpTransportStdio:
       description: Stdio transport that launches a local MCP server subprocess.
       type: object
@@ -1116,3 +1117,5 @@ components:
         verifies and decodes the cookie before authenticating the request.
 
 ````
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

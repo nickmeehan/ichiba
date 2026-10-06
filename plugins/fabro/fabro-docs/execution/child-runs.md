@@ -33,16 +33,16 @@ fabro_tools = true
 
 This exposes the same Fabro run tools available through [MCP](/agents/mcp):
 
-| Tool                            | Purpose                                                                                           |
-| ------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `fabro_workflow_version_create` | Register supplied workflow files and return an immutable version ID                               |
-| `fabro_run_create`              | Create one or more child runs, starting them by default                                           |
-| `fabro_run_search`              | Search runs, including direct children by `parent_id`                                             |
-| `fabro_run_get`                 | Inspect a run without mutating it                                                                 |
-| `fabro_run_interact`            | Start, message, interrupt, cancel, archive, unarchive, link, unlink, inspect, or answer questions |
-| `fabro_run_gather`              | Wait for runs to reach terminal states                                                            |
-| `fabro_run_events`              | Read stored events for a run                                                                      |
-| `fabro_run_pair`                | Pair with an active API-mode agent stage                                                          |
+| Tool | Purpose |
+| - | - |
+| `fabro_workflow_version_create` | Register supplied workflow files and return an immutable version ID |
+| `fabro_run_create` | Create one or more child runs, starting them by default |
+| `fabro_run_search` | Search runs, including direct children by `parent_id` |
+| `fabro_run_get` | Inspect a run without mutating it |
+| `fabro_run_interact` | Start, message, interrupt, cancel, archive, unarchive, link, unlink, inspect, or answer questions |
+| `fabro_run_gather` | Wait for runs to reach terminal states |
+| `fabro_run_events` | Read stored events for a run |
+| `fabro_run_pair` | Pair with an active API-mode agent stage |
 
 <Note>
   When a workflow agent calls `fabro_run_create`, Fabro always parents the created runs to the current run. If the agent supplies `parent_id`, it must match the current run ID.
@@ -210,14 +210,14 @@ fabro parent unlink child-run
 
 The HTTP API exposes the same model:
 
-| Operation                            | Purpose                        |
-| ------------------------------------ | ------------------------------ |
-| `POST /api/v1/runs` with `parent_id` | Create a run under a parent    |
-| `GET /api/v1/runs?parent_id=...`     | List direct children           |
-| `PUT /api/v1/runs/{id}/parent`       | Link or replace a run's parent |
-| `DELETE /api/v1/runs/{id}/parent`    | Remove a run's parent link     |
-| `POST /api/v1/runs/{id}/approve`     | Approve a pending child run    |
-| `POST /api/v1/runs/{id}/deny`        | Deny a pending child run       |
+| Operation | Purpose |
+| - | - |
+| `POST /api/v1/runs` with `parent_id` | Create a run under a parent |
+| `GET /api/v1/runs?parent_id=...` | List direct children |
+| `PUT /api/v1/runs/{id}/parent` | Link or replace a run's parent |
+| `DELETE /api/v1/runs/{id}/parent` | Remove a run's parent link |
+| `POST /api/v1/runs/{id}/approve` | Approve a pending child run |
+| `POST /api/v1/runs/{id}/deny` | Deny a pending child run |
 
 ## Relationship rules
 
@@ -232,11 +232,14 @@ Parent-child links are orchestration metadata:
 
 ## Related concepts
 
-| Concept           | Runtime boundary                               | Use it for                                                   |
-| ----------------- | ---------------------------------------------- | ------------------------------------------------------------ |
-| Child runs        | Separate durable runs connected by `parent_id` | Orchestrating independent workflows                          |
-| Sub-agents        | Separate LLM sessions inside one agent stage   | Delegating small agent subtasks without creating runs        |
-| Sub-workflows     | A child workflow engine inside the same run    | Reusing a workflow with runtime isolation but one parent run |
-| Imports           | Parse-time graph expansion                     | Reusing graph structure without a runtime boundary           |
-| Forks and rewinds | New runs from an existing checkpoint           | Exploring or replacing execution from prior run state        |
-| Parallel branches | Concurrent branches inside one workflow run    | Splitting work within a single graph                         |
+| Concept | Runtime boundary | Use it for |
+| - | - | - |
+| Child runs | Separate durable runs connected by `parent_id` | Orchestrating independent workflows |
+| Sub-agents | Separate LLM sessions inside one agent stage | Delegating small agent subtasks without creating runs |
+| Sub-workflows | A child workflow engine inside the same run | Reusing a workflow with runtime isolation but one parent run |
+| Imports | Parse-time graph expansion | Reusing graph structure without a runtime boundary |
+| Forks and rewinds | New runs from an existing checkpoint | Exploring or replacing execution from prior run state |
+| Parallel branches | Concurrent branches inside one workflow run | Splitting work within a single graph |
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

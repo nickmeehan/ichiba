@@ -40,16 +40,16 @@ fabro mcp init claude --name fabro-testing --server https://fabro-testing.exampl
 
 `fabro mcp init` keeps entries with other names and replaces only the entry that matches `--name`.
 
-| Tool                            | Purpose                                                                                                                                    |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `fabro_workflow_version_create` | Register supplied workflow contents and local dependencies as an immutable version ID, without creating a run.                             |
-| `fabro_run_create`              | Create one or more workflow runs, optionally under a parent run, starting them by default.                                                 |
-| `fabro_run_search`              | Search runs by ID, parent, workflow, labels, status, archive state, and creation time.                                                     |
-| `fabro_run_get`                 | Read-only inspection of a run: returns its summary, projection, and pending questions without mutating state.                              |
-| `fabro_run_interact`            | Control a run: start, approve, deny, message, interrupt, cancel, archive, unarchive, link or unlink a parent, inspect or answer questions. |
-| `fabro_run_gather`              | Wait for runs to reach terminal states, returning current state on timeout.                                                                |
-| `fabro_run_pair`                | Inspect, start, message, end, or read transcript for a live run pairing session.                                                           |
-| `fabro_run_events`              | List, inspect, or search stored events for a run.                                                                                          |
+| Tool | Purpose |
+| - | - |
+| `fabro_workflow_version_create` | Register supplied workflow contents and local dependencies as an immutable version ID, without creating a run. |
+| `fabro_run_create` | Create one or more workflow runs, optionally under a parent run, starting them by default. |
+| `fabro_run_search` | Search runs by ID, parent, workflow, labels, status, archive state, and creation time. |
+| `fabro_run_get` | Read-only inspection of a run: returns its summary, projection, and pending questions without mutating state. |
+| `fabro_run_interact` | Control a run: start, approve, deny, message, interrupt, cancel, archive, unarchive, link or unlink a parent, inspect or answer questions. |
+| `fabro_run_gather` | Wait for runs to reach terminal states, returning current state on timeout. |
+| `fabro_run_pair` | Inspect, start, message, end, or read transcript for a live run pairing session. |
+| `fabro_run_events` | List, inspect, or search stored events for a run. |
 
 ### Register workflow contents from a sandbox
 
@@ -225,9 +225,9 @@ enabled = false
 
 Inline transport fields can interpolate values at the run boundary:
 
-| Syntax               | Resolution time                                                                        |
-| -------------------- | -------------------------------------------------------------------------------------- |
-| `{{ vars.NAME }}`    | When the server creates the run, using that run's variable snapshot                    |
+| Syntax | Resolution time |
+| - | - |
+| `{{ vars.NAME }}` | When the server creates the run, using that run's variable snapshot |
 | `{{ secrets.NAME }}` | When the worker launches the MCP transport, using a token secret from the server vault |
 
 Interpolation applies to stdio and sandbox commands and env values, plus HTTP URLs and headers. Variable tokens are replaced in the created run configuration. Secret expressions remain in persisted configuration, while resolved secret values do not. A missing or non-token secret fails MCP startup instead of passing an unresolved token to the transport. `{{ env.* }}` is unsupported and also fails before launch.
@@ -251,15 +251,15 @@ tool_timeout = "90s"
 NODE_ENV = "production"
 ```
 
-| Field             | Description                                                              | Default |
-| ----------------- | ------------------------------------------------------------------------ | ------- |
-| `enabled`         | Whether to connect to this server.                                       | `true`  |
-| `type`            | Must be `"stdio"`.                                                       | —       |
-| `command`         | Array: the executable followed by its arguments.                         | —       |
-| `script`          | Shell script alternative to `command`. Runs on the host through `sh -c`. | —       |
-| `env`             | Additional environment variables for the child process.                  | `{}`    |
-| `startup_timeout` | Max duration to wait for the MCP handshake.                              | `"10s"` |
-| `tool_timeout`    | Max duration for a single tool call.                                     | `"60s"` |
+| Field | Description | Default |
+| - | - | - |
+| `enabled` | Whether to connect to this server. | `true` |
+| `type` | Must be `"stdio"`. | — |
+| `command` | Array: the executable followed by its arguments. | — |
+| `script` | Shell script alternative to `command`. Runs on the host through `sh -c`. | — |
+| `env` | Additional environment variables for the child process. | `{}` |
+| `startup_timeout` | Max duration to wait for the MCP handshake. | `"10s"` |
+| `tool_timeout` | Max duration for a single tool call. | `"60s"` |
 
 ### HTTP
 
@@ -274,15 +274,15 @@ url = "https://mcp.sentry.dev/mcp"
 Authorization = "Bearer sk-xxx"
 ```
 
-| Field             | Description                                               | Default             |
-| ----------------- | --------------------------------------------------------- | ------------------- |
-| `enabled`         | Whether to connect to this server.                        | `true`              |
-| `type`            | Must be `"http"`.                                         | —                   |
-| `protocol`        | HTTP MCP protocol: `"streamable_http"` or legacy `"sse"`. | `"streamable_http"` |
-| `url`             | The MCP server endpoint URL.                              | —                   |
-| `headers`         | Optional HTTP headers (e.g., for authentication).         | `{}`                |
-| `startup_timeout` | Max duration to wait for the MCP handshake.               | `"10s"`             |
-| `tool_timeout`    | Max duration for a single tool call.                      | `"60s"`             |
+| Field | Description | Default |
+| - | - | - |
+| `enabled` | Whether to connect to this server. | `true` |
+| `type` | Must be `"http"`. | — |
+| `protocol` | HTTP MCP protocol: `"streamable_http"` or legacy `"sse"`. | `"streamable_http"` |
+| `url` | The MCP server endpoint URL. | — |
+| `headers` | Optional HTTP headers (e.g., for authentication). | `{}` |
+| `startup_timeout` | Max duration to wait for the MCP handshake. | `"10s"` |
+| `tool_timeout` | Max duration for a single tool call. | `"60s"` |
 
 ### Sandbox
 
@@ -298,17 +298,17 @@ startup_timeout = "60s"
 tool_timeout = "2m"
 ```
 
-| Field             | Description                                                                                                                          | Default             |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------- |
-| `enabled`         | Whether to connect to this server.                                                                                                   | `true`              |
-| `type`            | Must be `"sandbox"`.                                                                                                                 | —                   |
-| `protocol`        | HTTP MCP protocol exposed by the sandbox server: `"streamable_http"` or legacy `"sse"`.                                              | `"streamable_http"` |
-| `command`         | Array: the command to run inside the sandbox. Must include a flag that makes the server listen on `port`.                            | —                   |
-| `script`          | Shell script alternative to `command`. Evaluated inside the sandbox by non-login Bash (`bash -c`), like every other sandbox command. | —                   |
-| `port`            | The port the MCP server listens on inside the sandbox.                                                                               | —                   |
-| `env`             | Additional environment variables for the server process.                                                                             | `{}`                |
-| `startup_timeout` | Max duration to wait for the server to start listening and complete the MCP handshake.                                               | `"10s"`             |
-| `tool_timeout`    | Max duration for a single tool call.                                                                                                 | `"60s"`             |
+| Field | Description | Default |
+| - | - | - |
+| `enabled` | Whether to connect to this server. | `true` |
+| `type` | Must be `"sandbox"`. | — |
+| `protocol` | HTTP MCP protocol exposed by the sandbox server: `"streamable_http"` or legacy `"sse"`. | `"streamable_http"` |
+| `command` | Array: the command to run inside the sandbox. Must include a flag that makes the server listen on `port`. | — |
+| `script` | Shell script alternative to `command`. Evaluated inside the sandbox by non-login Bash (`bash -c`), like every other sandbox command. | — |
+| `port` | The port the MCP server listens on inside the sandbox. | — |
+| `env` | Additional environment variables for the server process. | `{}` |
+| `startup_timeout` | Max duration to wait for the server to start listening and complete the MCP handshake. | `"10s"` |
+| `tool_timeout` | Max duration for a single tool call. | `"60s"` |
 
 The sandbox transport requires a remote sandbox provider (Daytona) that supports preview URLs. During session initialization, Fabro:
 
@@ -345,12 +345,12 @@ Tool calls are subject to the `tool_timeout` configured on the server. If a call
 
 MCP tool results can contain multiple content blocks. Fabro converts them to text:
 
-| Content type | Conversion                         |
-| ------------ | ---------------------------------- |
-| Text         | Used as-is                         |
-| Image        | Replaced with `[image content]`    |
-| Audio        | Replaced with `[audio content]`    |
-| Resource     | Replaced with `[resource content]` |
+| Content type | Conversion |
+| - | - |
+| Text | Used as-is |
+| Image | Replaced with `[image content]` |
+| Audio | Replaced with `[audio content]` |
+| Resource | Replaced with `[resource content]` |
 
 If the server marks the result as an error (`is_error: true`), the tool result is returned to the LLM as an error.
 
@@ -413,3 +413,6 @@ For agent-side MCP connections, Fabro implements the MCP client side using the `
 * Progress notifications
 * Resource update notifications
 * Cancellation notifications
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

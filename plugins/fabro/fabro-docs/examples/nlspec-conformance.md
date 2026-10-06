@@ -177,3 +177,6 @@ The pattern works for any spec that has automated verification: API contracts wi
 * **Shared threads** (`thread_id`) give the fix node context from prior iterations
 * **`max_visits`** prevents infinite loops when the agent can't pass
 * **`goal_gate`** makes conformance a hard requirement for workflow success
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

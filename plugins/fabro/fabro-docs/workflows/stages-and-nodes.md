@@ -48,25 +48,25 @@ implement [label="Implement", prompt="Read plan.md and implement every step."]
 
 Key attributes:
 
-| Attribute          | Description                                                                                                          |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| `prompt`           | The task instructions for the agent                                                                                  |
-| `reasoning_effort` | `low`, `medium`, or `high` (default: `high`)                                                                         |
-| `max_tokens`       | Maximum tokens for LLM responses                                                                                     |
-| `fidelity`         | How much prior context is passed to this node (see [Context](/execution/context#fidelity-controlling-agent-context)) |
-| `thread_id`        | Groups nodes into a shared conversation thread (advanced — see below)                                                |
-| `timeout`          | Execution timeout (e.g. `"900s"`). Time spent waiting for an answer to an agent question does not count.             |
+| Attribute | Description |
+| - | - |
+| `prompt` | The task instructions for the agent |
+| `reasoning_effort` | `low`, `medium`, or `high` (default: `high`) |
+| `max_tokens` | Maximum tokens for LLM responses |
+| `fidelity` | How much prior context is passed to this node (see [Context](/execution/context#fidelity-controlling-agent-context)) |
+| `thread_id` | Groups nodes into a shared conversation thread (advanced — see below) |
+| `timeout` | Execution timeout (e.g. `"900s"`). Time spent waiting for an answer to an agent question does not count. |
 
 **Fidelity levels:**
 
-| Value            | Behavior                                                  |
-| ---------------- | --------------------------------------------------------- |
-| `compact`        | Structured summary of prior stages (default)              |
-| `full`           | Complete context from all prior stages — no summarization |
-| `summary:high`   | Detailed summary including outputs and key details        |
-| `summary:medium` | Moderate summary with outcomes and notable findings       |
-| `summary:low`    | Brief summary with just outcomes per stage                |
-| `truncate`       | Minimal — only the goal and run ID                        |
+| Value | Behavior |
+| - | - |
+| `compact` | Structured summary of prior stages (default) |
+| `full` | Complete context from all prior stages — no summarization |
+| `summary:high` | Detailed summary including outputs and key details |
+| `summary:medium` | Moderate summary with outcomes and notable findings |
+| `summary:low` | Brief summary with just outcomes per stage |
+| `truncate` | Minimal — only the goal and run ID |
 
 Fidelity can also be set at the graph level (`default_fidelity`) or on individual edges to control the transition between stages. See [Context](/execution/context#fidelity-controlling-agent-context) for the full reference on fidelity precedence, preamble construction, and thread integration.
 
@@ -112,11 +112,11 @@ merge_results [
 
 When a node has no explicit `shape` or `type`, the presence of `script` makes it a command node. Writing `shape=parallelogram` explicitly is still valid and does the same thing.
 
-| Attribute      | Description                                                                                                                                                                           |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `script`       | The shell command to execute (required). Substitutes `{{ goal }}`, `{{ inputs.NAME }}`, and `{{ vars.NAME }}` — see [command node scripts](/workflows/variables#command-node-scripts) |
-| `language`     | `"shell"` (default) or `"python"`                                                                                                                                                     |
-| `stdin_source` | Flat runtime context key to pass to the command's standard input. `context.NAME` first checks that exact key, then falls back to `NAME`.                                              |
+| Attribute | Description |
+| - | - |
+| `script` | The shell command to execute (required). Substitutes `{{ goal }}`, `{{ inputs.NAME }}`, and `{{ vars.NAME }}` — see [command node scripts](/workflows/variables#command-node-scripts) |
+| `language` | `"shell"` (default) or `"python"` |
+| `stdin_source` | Flat runtime context key to pass to the command's standard input. `context.NAME` first checks that exact key, then falls back to `NAME`. |
 
 For `stdin_source`, strings are passed unchanged. Other JSON values use compact
 JSON. Fabro does not add a newline. A missing source, or a value larger than
@@ -147,8 +147,8 @@ Pauses the workflow for a configured duration before proceeding. Useful for rate
 cooldown [label="Wait 30s", shape=insulator, duration="30s"]
 ```
 
-| Attribute  | Description                                                                                          |
-| ---------- | ---------------------------------------------------------------------------------------------------- |
+| Attribute | Description |
+| - | - |
 | `duration` | How long to pause (required). Supports `ms`, `s`, and `m` suffixes (e.g. `"500ms"`, `"30s"`, `"2m"`) |
 
 ### Conditional
@@ -180,10 +180,10 @@ fork -> architecture
 fork -> quality
 ```
 
-| Attribute      | Description                                                                                              |
-| -------------- | -------------------------------------------------------------------------------------------------------- |
-| `max_parallel` | Maximum concurrent branches (default: 4)                                                                 |
-| `for_each`     | Flat context key containing a runtime JSON array. Requires one outgoing agent or prompt template target. |
+| Attribute | Description |
+| - | - |
+| `max_parallel` | Maximum concurrent branches (default: 4) |
+| `for_each` | Flat context key containing a runtime JSON array. Requires one outgoing agent or prompt template target. |
 
 To run one template node for a runtime array, add `for_each`:
 
@@ -237,23 +237,26 @@ A fan-in node with a `prompt` synthesizes the collected results. It never choose
 
 These attributes can be set on any node type:
 
-| Attribute      | Description                                                                                                     |
-| -------------- | --------------------------------------------------------------------------------------------------------------- |
-| `label`        | Display name shown in the graph visualization                                                                   |
-| `class`        | CSS-like class for [model stylesheet](/workflows/stylesheets) targeting. Separate multiple classes with spaces. |
-| `max_visits`   | Max times this node can execute in a run. Overrides the graph-level `max_node_visits` for this node.            |
-| `goal_gate`    | When `true`, the workflow fails if this node doesn't succeed                                                    |
-| `max_retries`  | Override default retry count for this node                                                                      |
-| `retry_policy` | Named retry preset (see table below)                                                                            |
+| Attribute | Description |
+| - | - |
+| `label` | Display name shown in the graph visualization |
+| `class` | CSS-like class for [model stylesheet](/workflows/stylesheets) targeting. Separate multiple classes with spaces. |
+| `max_visits` | Max times this node can execute in a run. Overrides the graph-level `max_node_visits` for this node. |
+| `goal_gate` | When `true`, the workflow fails if this node doesn't succeed |
+| `max_retries` | Override default retry count for this node |
+| `retry_policy` | Named retry preset (see table below) |
 
 **Retry policies:**
 
-| Preset       | Attempts | Backoff                       | Description                          |
-| ------------ | -------- | ----------------------------- | ------------------------------------ |
-| `none`       | 1        | —                             | No retries, fail immediately         |
-| `standard`   | 5        | 5s initial, 2x exponential    | Good default for transient failures  |
-| `aggressive` | 5        | 500ms initial, 2x exponential | Longer initial delay for rate limits |
-| `linear`     | 3        | 500ms fixed                   | Constant delay between attempts      |
-| `patient`    | 3        | 2s initial, 3x exponential    | Slow ramp for unreliable services    |
+| Preset | Attempts | Backoff | Description |
+| - | - | - | - |
+| `none` | 1 | — | No retries, fail immediately |
+| `standard` | 5 | 5s initial, 2x exponential | Good default for transient failures |
+| `aggressive` | 5 | 500ms initial, 2x exponential | Longer initial delay for rate limits |
+| `linear` | 3 | 500ms fixed | Constant delay between attempts |
+| `patient` | 3 | 2s initial, 3x exponential | Slow ramp for unreliable services |
 
 If neither `retry_policy` nor `max_retries` is set, nodes default to 3 retries with standard backoff.
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

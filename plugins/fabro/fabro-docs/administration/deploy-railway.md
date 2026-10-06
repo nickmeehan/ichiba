@@ -38,11 +38,11 @@ If you override the port in **Service → Settings → Networking → Target Por
 
 Add variables in **Service → Variables** as needed. The [Server Configuration](/administration/server-configuration) reference has the full list. Railway process env is for bootstrap values only:
 
-| Variable                                                          | Purpose                                                                                         |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `FABRO_DEV_TOKEN`                                                 | Optional — pre-set the dev token instead of reading the one written to `/storage` on first boot |
-| `SESSION_SECRET`                                                  | 64-character hex string; required when the web UI is enabled                                    |
-| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Optional static S3 object-store credentials                                                     |
+| Variable | Purpose |
+| - | - |
+| `FABRO_DEV_TOKEN` | Optional — pre-set the dev token instead of reading the one written to `/storage` on first boot |
+| `SESSION_SECRET` | 64-character hex string; required when the web UI is enabled |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Optional static S3 object-store credentials |
 
 Do not put optional integration secrets in Railway variables for server runtime. After the server is running, add LLM provider keys, Slack, Daytona, Brave Search, Venice Search, `GITHUB_TOKEN`, and GitHub App secrets to the server vault with `fabro secret set`, `fabro provider login`, or `fabro install`.
 
@@ -86,3 +86,6 @@ Railway re-pulls the GHCR image on every deploy. The template uses the `:nightly
     Full `settings.toml` reference — reverse-proxy TLS, auth methods, concurrency, and more.
   </Card>
 </Columns>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
