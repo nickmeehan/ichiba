@@ -6,10 +6,6 @@
 
 > Run the Fabro server as a Docker container with docker compose, ECS, or any cloud container service
 
-<Warning>
-  The server interface is in private early access. Contact [bryan@qlty.sh](mailto:bryan@qlty.sh) if you're interested in trying it.
-</Warning>
-
 The supported deployment artifact is the official Fabro image at `ghcr.io/fabro-sh/fabro`. Everything else — `docker compose`, ECS, Cloud Run, Kubernetes, Railway — is just running this image somewhere with the right requirements.
 
 ## Requirements

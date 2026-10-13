@@ -6,10 +6,6 @@
 
 > Operate the Fabro server: starting, install wizard, auth, web UI, and pointing the CLI at it
 
-<Warning>
-  The server interface is in private early access. Contact [bryan@qlty.sh](mailto:bryan@qlty.sh) if you're interested in trying it.
-</Warning>
-
 This page covers operating the Fabro server once it's running, whether locally on your laptop or self-hosted in a container. For where to run it, see [Deployment](/administration/deployment).
 
 ## Starting the server
