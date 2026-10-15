@@ -3,3 +3,5 @@
 commit-workspace/
 audit-lightning-lesson-workspace/
 node_modules/
+# Types the engine lays beside a hooks-module plugin it loads from disk
+plugins/*/.claude-plugin/types/
