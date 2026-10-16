@@ -1,0 +1,46 @@
+{
+  "name": "hygge-cache",
+  "version": "1.0.0",
+  "description": "Keeps an idle session's prompt cache warm with a silent fork ping and refuses idle compaction, so coming back after a break reads the cache instead of rewriting it, with every detail still there.",
+  "author": {
+    "name": "nickmeehan"
+  },
+  "userConfig": {
+    "enabled": {
+      "type": "boolean",
+      "title": "Keep idle sessions warm",
+      "description": "Off stops every ping and lets idle compaction run. Changing it in /config reloads the plugin with the new value.",
+      "default": true
+    },
+    "intervalMinutes": {
+      "type": "number",
+      "title": "Ping after idle minutes",
+      "description": "Minutes since the last request before a ping goes out. Checked every five minutes. Keep it under the cache lifetime.",
+      "default": 50
+    },
+    "ttlMinutes": {
+      "type": "number",
+      "title": "Cache lifetime in minutes",
+      "description": "60 on a subscription inside plan usage. On an API key, a cloud provider, or usage credits it is 5 unless promptCacheTtl says 1h; at 5 nothing pings.",
+      "default": 60
+    },
+    "minContextK": {
+      "type": "number",
+      "title": "Minimum context in thousands of tokens",
+      "description": "Sessions smaller than this are left to cool; a cold read of them is cheap.",
+      "default": 50
+    },
+    "giveUpAfterHours": {
+      "type": "number",
+      "title": "Give up after idle hours",
+      "description": "Stop pinging a session nobody has typed in for this long. Each ping is one cache read; a cold return is one cache write, worth 20 to 80 reads. The context is kept either way.",
+      "default": 12
+    },
+    "compactAbovePercent": {
+      "type": "number",
+      "title": "Let idle compaction through above this much of the context window",
+      "description": "Below it an idle compaction is refused and the full context kept. Above it the engine compacts, since a turn that overflows the window fails.",
+      "default": 85
+    }
+  }
+}

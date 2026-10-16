@@ -48,6 +48,7 @@ See what's available:
 |---|---|
 | [`dev-workflow`](./plugins/dev-workflow) | Conventional Commits + PR creation skills. |
 | [`docs-kb`](./plugins/docs-kb) | Progressive-disclosure docs system that Claude navigates automatically based on task relevance. |
+| [`hygge-cache`](./plugins/hygge-cache) | Keeps an idle session's prompt cache warm with a silent ping and refuses idle compaction. |
 | [`maven`](./plugins/maven) | Audits Maven Lightning Lesson signup pages against Maven's published listing criteria. |
 
 Install any of them with `/plugin install <plugin-name>@ichiba` after
