@@ -335,6 +335,18 @@ goal gate unsatisfied for node verify and no retry target
 
 Fabro runs a background watchdog that monitors event activity. If no events are emitted for longer than the **stall timeout**, the run is canceled. This catches cases where a handler hangs indefinitely without producing errors.
 
+The budget applies to the whole run. Command output, streaming model activity,
+and activity in any child or parallel branch refresh it. A paused run or a run
+with a pending human question parks the clock. Unpausing or answering the last
+pending question starts a full budget again. Resumed runs use their persisted
+graph policy and preserve a recorded pause.
+
+Work that emits no observable activity can exhaust the budget even while it is
+still running, including a one-shot prompt waiting for its model response. Set
+the budget to accommodate the longest expected quiet operation, or disable it
+explicitly. A watchdog cancellation records `StallTimeout` and emits
+`run.stalled` with the configured budget and observed idle time.
+
 | Setting | Default |
 | - | - |
 | `stall_timeout` | 1800 seconds (30 minutes) |

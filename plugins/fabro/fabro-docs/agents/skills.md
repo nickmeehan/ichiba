@@ -34,20 +34,24 @@ Skills can be invoked in two ways.
 
 ### Slash syntax (user input)
 
-Users can reference a skill with a `/` prefix in their input:
+On the native agent backend, start authored input with `/skill-name` to invoke a skill:
 
 ```
 /commit fix the off-by-one error in pagination
 ```
 
-Fabro detects the `/commit` token, finds the matching skill, and expands the input by replacing the skill reference with the full template. The remaining text (`fix the off-by-one error in pagination`) is substituted into the `{{user_input}}` placeholder.
+Fabro detects the leading `/commit` command, finds the matching skill, and expands the authored input using its template. The remaining text (`fix the off-by-one error in pagination`) is substituted into the `{{user_input}}` placeholder. A template without that placeholder replaces the authored input.
 
 Rules for slash syntax:
 
-* The `/` must be preceded by whitespace or be at the start of the input
+* The command must be at the start of authored input, after any leading whitespace
 * The skill name must be followed by whitespace or end of input
-* Only one skill reference per input is allowed
+* Later slash tokens are ordinary arguments or text: `/commit mention /review` invokes only `commit`, while `Please run /commit` invokes no skill
 * File paths like `/usr/bin/bash` are not matched (the character after `/` must be a lowercase letter, and the name cannot contain `/`)
+
+For native workflow agent stages, only the authored node prompt is expanded. Workflow preambles, prior-stage context, `for_each` item data, and output contracts remain outside expansion and are preserved even when the template has no `{{user_input}}` placeholder. For example, prior-stage text mentioning `/tmp` or `/commit` stays literal.
+
+User-delivered follow-ups also support a leading command. Generated output-repair turns bypass expansion. ACP agents receive the assembled workflow input and own any command interpretation; one-shot prompt nodes do not expand skills.
 
 ### use\_skill tool (agent-initiated)
 
@@ -73,7 +77,7 @@ Returns the skill's template text.
 
 1. **Discovery** -- On session startup, Fabro scans the skill directories and parses all valid `SKILL.md` files
 2. **Registration** -- If any skills are found, the `use_skill` tool is registered and the skill list is added to the system prompt
-3. **Expansion** -- When user input contains a `/skill-name` reference, Fabro expands it before sending to the LLM
+3. **Expansion** -- On the native agent backend, a leading `/skill-name` command in authored input is expanded before sending to the LLM. Leading whitespace is allowed; later slash tokens stay literal. Workflow context and output requirements remain outside expansion, and generated output-repair turns bypass it
 4. **Tool use** -- The agent can also call `use_skill` at any time to load a skill's template mid-conversation
 
 

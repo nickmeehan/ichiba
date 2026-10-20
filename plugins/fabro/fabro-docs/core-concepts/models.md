@@ -140,7 +140,9 @@ Model roles are separate: the provider's `default_model` controls normal model s
 
 Provider auth has two parts. The lithos `auth` scheme says how a credential is sent: `{ type = "bearer" }`, `{ type = "header", name = "x-api-key" }`, `{ type = "headers" }` for providers that take several secret headers, `{ type = "none" }`, or `{ type = "aws" }`. lithos also says which secret names a provider reads: `OPENAI_API_KEY` for `openai`, `GEMINI_API_KEY` then `GOOGLE_API_KEY` for `gemini`, `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` for `modal`, and `<PROVIDER>_API_KEY` for a provider you define. Fabro looks each name up in the process environment first and the server vault second. Custom headers for any provider go in `default_headers` as literal text or `{{ secrets.NAME }}` tokens; put credentials in secrets and reference them with `{{ secrets.NAME }}` instead of a bare literal.
 
-Workflow runs also add `x-session-id: <run-id>` to every LLM request so compatible gateways can group requests from the same run. An explicitly configured `x-session-id` in provider `default_headers` takes precedence.
+Workflow runs add `x-session-id: <run-id>` to native HTTP model requests, including model-based hooks, run titles, Ask Fabro and pull request descriptions. The ID stays the same across retries, provider fallback and resume; separate runs get separate IDs. Explicit provider `default_headers` take precedence regardless of header-name casing. Calls outside a run do not receive an automatic session header.
+
+Bedrock applies the header before AWS signing. External ACP agents manage their own model traffic and do not receive it automatically.
 
 Provider `metadata.agent.profile` defaults from `adapter` and controls profile-specific behavior such as which tools the agent registers, project-memory filenames, CLI/ACP command selection, and native session routing. Valid values are `anthropic`, `claude-5`, `openai`, `gemini`, `kimi`, `gpt56`, and `gpt6`; model-level values override provider-level values.
 
