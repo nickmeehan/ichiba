@@ -33,7 +33,7 @@ The rest of this page describes the `app` strategy, which is required for browse
 | **OAuth login** | Users sign in to the web UI with their GitHub account |
 | **Private repo cloning** | Daytona and Docker sandboxes fetch private repositories using short-lived, read-only Installation Access Tokens |
 | **Run branch pushing** | Fabro pushes from the sandbox after each checkpoint and again before a successful run finishes |
-| **Auto-PR** | When `[run.pull_request] enabled = true` in the [run config](/execution/run-configuration#runpull_request), Fabro opens a PR from the agent's working branch after a successful run |
+| **Auto-PR** | When `[run.pull_request] enabled = true` in the [run config](https://docs.fabro.sh/execution/run-configuration.md#runpull_request), Fabro opens a PR from the agent's working branch after a successful run |
 | **Auto-merge** | When `[run.pull_request] auto_merge = true`, Fabro enables GitHub's auto-merge on created PRs so they merge automatically once required checks pass |
 | **Sandbox GITHUB\_TOKEN** | When `[run.integrations.github.permissions]` are declared at any layer (workflow, project, or user settings), Fabro mints a scoped Installation Access Token and injects it as `GITHUB_TOKEN` in the sandbox |
 
@@ -319,11 +319,11 @@ The upper bound on what Fabro will mint is whatever permissions the GitHub App i
 
 ### Commit attribution
 
-Every commit a run creates is authored and committed by the run's GitHub credential identity. In App mode that is the App's bot account, `<slug>[bot] <id+slug[bot]@users.noreply.github.com>`, so GitHub attributes checkpoint commits and workflow-created commits to the App. In token mode it is the token's user with their GitHub noreply address. Fabro resolves the identity once per run and passes it to every prepare step, command stage, agent tool, and ACP agent as `GIT_AUTHOR_*` / `GIT_COMMITTER_*` variables, so a workflow that clones or initializes another repository commits as the same identity without configuring Git itself. `[run.git.author]` overrides either field; see [server configuration](/administration/server-configuration#rungitauthor-section).
+Every commit a run creates is authored and committed by the run's GitHub credential identity. In App mode that is the App's bot account, `<slug>[bot] <id+slug[bot]@users.noreply.github.com>`, so GitHub attributes checkpoint commits and workflow-created commits to the App. In token mode it is the token's user with their GitHub noreply address. Fabro resolves the identity once per run and passes it to every command stage, agent tool, and ACP agent as `GIT_AUTHOR_*` / `GIT_COMMITTER_*` variables, so a workflow that clones or initializes another repository commits as the same identity without configuring Git itself. `[run.git.author]` overrides either field; see [server configuration](https://docs.fabro.sh/administration/server-configuration.md#rungitauthor-section).
 
 ### Checkpoint pushing
 
-After each workflow stage, Fabro [checkpoints](/execution/checkpoints) the workspace on the run branch, `fabro/run/<run-id>`, and pushes it directly from that workspace. Fabro keeps no second Git repository or checkpoint bundles on the server. In App mode, the worker pushes with an Installation Access Token with `contents: write`, reusing one token until it nears expiry and then minting the next, and passes it only to the sandbox Git command. The token is not saved in the repository's remote URL or configuration. `[run.run_branch] push = false` keeps the branch only in the run workspace.
+After each workflow stage, Fabro [checkpoints](https://docs.fabro.sh/execution/checkpoints.md) the workspace on the run branch, `fabro/run/<run-id>`, and pushes it directly from that workspace. Fabro keeps no second Git repository or checkpoint bundles on the server. In App mode, the worker pushes with an Installation Access Token with `contents: write`, reusing one token until it nears expiry and then minting the next, and passes it only to the sandbox Git command. The token is not saved in the repository's remote URL or configuration. `[run.run_branch] push = false` keeps the branch only in the run workspace.
 
 An intermediate push failure logs a warning; later checkpoints and final publication retry the push. After a successful run's last stage and before the run finishes, Fabro awaits one final push.
 

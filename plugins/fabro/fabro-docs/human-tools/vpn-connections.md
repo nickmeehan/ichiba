@@ -6,9 +6,9 @@
 
 > Connect sandbox environments to private networks via VPN
 
-<Warning>
-  VPN connections are **coming soon** and not yet available. This page describes the planned feature.
-</Warning>
+> [!WARNING]
+>
+> VPN connections are **coming soon** and not yet available. This page describes the planned feature.
 
 VPN connections enable sandboxes to connect to private networks, giving agents access to internal services, databases, and APIs that aren't reachable over the public internet.
 
@@ -44,9 +44,7 @@ OpenVPN uses a client configuration file (`.ovpn`) containing connection paramet
 
 With a VPN connection configured, agents can reach internal services like a private database. This workflow investigates a performance issue by querying the staging database directly:
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/vpn-connections-workflow.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=6674ce3faac063602cbc42036a23f711" alt="VPN workflow: Start → Analyze Slow Queries → Fix Query → Review Changes → Exit, with a Revise loop back to Fix Query" width="911" height="59" data-path="images/vpn-connections-workflow.svg" />
-</Frame>
+![VPN workflow: Start → Analyze Slow Queries → Fix Query → Review Changes → Exit, with a Revise loop back to Fix Query](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/vpn-connections-workflow.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=6674ce3faac063602cbc42036a23f711)
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph InvestigateSlowQuery {

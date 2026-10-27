@@ -6,7 +6,7 @@
 
 > Give Fabro agents web search capabilities via Venice's augment/search API
 
-Fabro's [`web_search`](/agents/tools#web_search) tool lets agents search the web during workflow execution. Fabro uses [Venice Search](https://docs.venice.ai/api-reference/endpoint/augment/search) automatically when `VENICE_API_KEY` is available and a direct [Brave Search](/integrations/brave-search) key is not.
+Fabro's [`web_search`](https://docs.fabro.sh/agents/tools#web_search) tool lets agents search the web during workflow execution. Fabro uses [Venice Search](https://docs.venice.ai/api-reference/endpoint/augment/search) automatically when `VENICE_API_KEY` is available and a direct [Brave Search](https://docs.fabro.sh/integrations/brave-search.md) key is not.
 
 Venice Search reuses the same `VENICE_API_KEY` as the Venice LLM provider. Agents keep calling `web_search`; only the HTTP backend changes.
 
@@ -51,11 +51,11 @@ Venice Search is billed by Venice at \$0.01 per request and is rate-limited to 2
 
 If `VENICE_API_KEY` is absent but `BRAVE_SEARCH_API_KEY` exists, Fabro uses direct Brave Search. If neither key exists, the tool is not registered. After selecting Venice, a failed call returns an error; Fabro does not retry through direct Brave Search.
 
-See the [`web_search` tool reference](/agents/tools#web_search) for parameters and details.
+See the [`web_search` tool reference](https://docs.fabro.sh/agents/tools#web_search) for parameters and details.
 
 ## Permissions
 
-`web_search` is classified as a `shell` category tool, requiring the `full` [permission level](/agents/permissions) for auto-approval. At lower permission levels:
+`web_search` is classified as a `shell` category tool, requiring the `full` [permission level](https://docs.fabro.sh/agents/permissions.md) for auto-approval. At lower permission levels:
 
 * **Interactive mode** — the user is prompted to approve each call
 * **Non-interactive mode** (`--auto-approve`) — calls are denied
@@ -72,15 +72,13 @@ See the [`web_search` tool reference](/agents/tools#web_search) for parameters a
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="Tools" icon="wrench" href="/agents/tools#web_search">
-    Full `web_search` tool reference — parameters, output format, and error handling.
-  </Card>
+> **[Tools](https://docs.fabro.sh/agents/tools.md#web_search)**
+>
+> Full `web_search` tool reference — parameters, output format, and error handling.
 
-  <Card title="Brave Search" icon="globe" href="/integrations/brave-search">
-    Direct Brave Search backend, preferred whenever its key is configured.
-  </Card>
-</Columns>
+> **[Brave Search](https://docs.fabro.sh/integrations/brave-search.md)**
+>
+> Direct Brave Search backend, preferred whenever its key is configured.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

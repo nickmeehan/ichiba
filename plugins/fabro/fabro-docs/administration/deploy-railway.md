@@ -32,7 +32,7 @@ If you override the port in **Service → Settings → Networking → Target Por
 
 ### 3. Set bootstrap environment variables
 
-Add variables in **Service → Variables** as needed. The [Server Configuration](/administration/server-configuration) reference has the full list. Railway process env is for bootstrap values only:
+Add variables in **Service → Variables** as needed. The [Server Configuration](https://docs.fabro.sh/administration/server-configuration.md) reference has the full list. Railway process env is for bootstrap values only:
 
 | Variable | Purpose |
 | - | - |
@@ -59,7 +59,7 @@ Once the deploy is healthy, Railway exposes a `*.up.railway.app` URL (or your cu
 
    Then commands like `fabro model list --server <url>` will hit your Railway instance.
 
-See [Server Operations](/reference/server-operations) for the full auth and CLI-pointing story.
+See [Server Operations](https://docs.fabro.sh/reference/server-operations.md) for the full auth and CLI-pointing story.
 
 ## Redeploys and updates
 
@@ -73,15 +73,13 @@ Railway re-pulls the GHCR image on every deploy. The template uses the `:nightly
 
 ## Next steps
 
-<Columns cols={2}>
-  <Card title="Server Operations" icon="server" href="/reference/server-operations">
-    Auth, dev tokens, submitting runs, and pointing the CLI at your deployment.
-  </Card>
+> **[Server Operations](https://docs.fabro.sh/reference/server-operations.md)**
+>
+> Auth, dev tokens, submitting runs, and pointing the CLI at your deployment.
 
-  <Card title="Server Configuration" icon="gear" href="/administration/server-configuration">
-    Full `settings.toml` reference — reverse-proxy TLS, auth methods, concurrency, and more.
-  </Card>
-</Columns>
+> **[Server Configuration](https://docs.fabro.sh/administration/server-configuration.md)**
+>
+> Full `settings.toml` reference — reverse-proxy TLS, auth methods, concurrency, and more.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

@@ -67,9 +67,9 @@ fabro secret --server https://your-fabro.example set MODAL_TOKEN_ID wk-...
 fabro secret --server https://your-fabro.example set MODAL_TOKEN_SECRET ws-...
 ```
 
-<Note>
-  `fabro provider login --provider modal` is not supported in this release because that command accepts one credential value. Use the two `fabro secret set` commands above.
-</Note>
+> [!NOTE]
+>
+> `fabro provider login --provider modal` is not supported in this release because that command accepts one credential value. Use the two `fabro secret set` commands above.
 
 Modal does not use a bearer API key for these endpoints. Fabro sends the vault values as `Modal-Key` and `Modal-Secret` headers and does not send an `Authorization` header.
 
@@ -146,15 +146,13 @@ Dedicated Auto Endpoints use Modal compute billing instead of the Shared API tok
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="Modal Kimi K3" icon="microchip" href="https://modal.com/library/moonshot/kimi-k3">
-    Shared API prices, model specifications, and Auto Endpoint setup.
-  </Card>
+> **[Modal Kimi K3](https://modal.com/library/moonshot/kimi-k3)**
+>
+> Shared API prices, model specifications, and Auto Endpoint setup.
 
-  <Card title="Modal endpoint authentication" icon="key" href="https://modal.com/docs/guide/endpoints#proxy-tokens">
-    Proxy-token headers and endpoint calling conventions.
-  </Card>
-</Columns>
+> **[Modal endpoint authentication](https://modal.com/docs/guide/endpoints#proxy-tokens)**
+>
+> Proxy-token headers and endpoint calling conventions.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

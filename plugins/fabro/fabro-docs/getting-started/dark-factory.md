@@ -46,23 +46,21 @@ The goal is to spend your time on the parts that require human judgment — what
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="Workflows" icon="diagram-project" href="/core-concepts/workflows">
-    Learn how workflow graphs orchestrate agents, commands, and human gates.
-  </Card>
+> **[Workflows](https://docs.fabro.sh/core-concepts/workflows.md)**
+>
+> Learn how workflow graphs orchestrate agents, commands, and human gates.
 
-  <Card title="Human-in-the-Loop" icon="hand" href="/workflows/human-in-the-loop">
-    Control where and how humans intervene in workflows.
-  </Card>
+> **[Human-in-the-Loop](https://docs.fabro.sh/workflows/human-in-the-loop.md)**
+>
+> Control where and how humans intervene in workflows.
 
-  <Card title="Quality Verification" icon="shield-check">
-    Build verification into your workflows.
-  </Card>
+> **Quality Verification**
+>
+> Build verification into your workflows.
 
-  <Card title="Observability" icon="magnifying-glass-chart" href="/execution/observability">
-    Inspect event streams, logs, and exported run state.
-  </Card>
-</Columns>
+> **[Observability](https://docs.fabro.sh/execution/observability.md)**
+>
+> Inspect event streams, logs, and exported run state.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

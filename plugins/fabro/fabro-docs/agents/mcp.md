@@ -10,7 +10,7 @@ MCP ([Model Context Protocol](https://modelcontextprotocol.io/)) lets you connec
 
 Fabro can also run as an MCP server. MCP clients can register reusable workflow versions and use Fabro's run-management tools to create, inspect, control, wait for, and read events from workflow runs through the authenticated `fabro` CLI.
 
-Workflow agents can opt in to that same run-management tool catalog with `[run.agent] fabro_tools = true`. This is not the same as configuring external MCP servers for the agent. When a workflow agent calls `fabro_run_create`, created runs are always [child runs](/execution/child-runs) of the current run; an explicit `parent_id` must match the current run ID.
+Workflow agents can opt in to that same run-management tool catalog with `[run.agent] fabro_tools = true`. This is not the same as configuring external MCP servers for the agent. When a workflow agent calls `fabro_run_create`, created runs are always [child runs](https://docs.fabro.sh/execution/child-runs.md) of the current run; an explicit `parent_id` must match the current run ID.
 
 ## Fabro as an MCP server
 
@@ -70,7 +70,7 @@ referenced `prompt.md`. Submit the actual contents:
 
 Call `fabro_workflow_version_create` with this object and keep the returned
 `workflow_version_id`. You can reuse it in a `RunIntent` submitted through the
-[Create Run API](/api-reference/runs/create-run). Registration packages and uploads
+[Create Run API](https://docs.fabro.sh/api-reference/runs/create-run.md). Registration packages and uploads
 child workflows before their parents; callers do not calculate dependency IDs.
 
 `entrypoint` is an exact supplied key, including when it has no extension. File
@@ -118,7 +118,7 @@ Standalone MCP calls require an explicit `target`: Git coordinates, `kind: none`
 for an empty workspace, or a server-local folder for a compatible Local environment.
 A folder path refers to the server's filesystem, not the MCP client's filesystem.
 Workflow content does not determine the target. Native workflow-agent calls may
-omit `target` to inherit the parent's execution target; see [Child Runs](/execution/child-runs).
+omit `target` to inherit the parent's execution target; see [Child Runs](https://docs.fabro.sh/execution/child-runs.md).
 Supplying `parent_id` in standalone MCP does not enable that inheritance.
 
 `args` uses the same fields as RunIntent: `inputs`, `labels`, `model`, `provider`,
@@ -128,13 +128,13 @@ omission uses the server default. `title`, literal `goal`, and an exact `parent_
 are optional. Caller/project/machine run settings are not read by the tool.
 Workflow-owned settings remain in the registered `workflow.toml`.
 
-<Note>
-  Run creation accepts registered IDs only. Replace workflow strings and inline
-  sources with a preceding `fabro_workflow_version_create` call. Move flat run
-  options into `args`, use `environment_id` instead of `environment`, and send goal
-  text instead of `goal_file`. Obtain local or remote files using the caller's own
-  shell/read tools. Neither Fabro tool fetches remote sources or reads a caller path.
-</Note>
+> [!NOTE]
+>
+> Run creation accepts registered IDs only. Replace workflow strings and inline
+> sources with a preceding `fabro_workflow_version_create` call. Move flat run
+> options into `args`, use `environment_id` instead of `environment`, and send goal
+> text instead of `goal_file`. Obtain local or remote files using the caller's own
+> shell/read tools. Neither Fabro tool fetches remote sources or reads a caller path.
 
 Creation persists a submitted run. A separate start request follows by default;
 set `start: false` to start later. Batches contain 1–50 items and stop at the first
@@ -142,7 +142,7 @@ failure. If creation succeeded before a start, summary lookup, or later item
 failed, the error includes the already-created run IDs. Inspect those runs before
 retrying to avoid creating duplicates.
 
-Run summaries returned by the MCP server include parent metadata. Use `parent_id` on `fabro_run_create` to create a child run, `parent_id` on `fabro_run_search` to list direct children, and the `link_parent` or `unlink_parent` actions on `fabro_run_interact` to change an existing run's parent. See [Child Runs](/execution/child-runs) for the orchestration model.
+Run summaries returned by the MCP server include parent metadata. Use `parent_id` on `fabro_run_create` to create a child run, `parent_id` on `fabro_run_search` to list direct children, and the `link_parent` or `unlink_parent` actions on `fabro_run_interact` to change an existing run's parent. See [Child Runs](https://docs.fabro.sh/execution/child-runs.md) for the orchestration model.
 
 Pending runs can be approved or denied through `fabro_run_interact`:
 
@@ -193,8 +193,8 @@ For example, a server named `filesystem` exposing a `read_file` tool becomes `mc
 
 MCP servers available to Fabro agents can be configured in two places:
 
-* **User configuration** — `~/.fabro/settings.toml` can define shared workflow MCP servers under `[run.agent.mcps.<name>]`, or `fabro exec`-only servers under `[cli.exec.agent.mcps.<name>]`. See [User Configuration](/reference/user-configuration).
-* **Run config TOML** — workflow config can define run-specific MCP servers under `[run.agent.mcps.<name>]`. See [Run Configuration](/execution/run-configuration#runagentmcps).
+* **User configuration** — `~/.fabro/settings.toml` can define shared workflow MCP servers under `[run.agent.mcps.<name>]`, or `fabro exec`-only servers under `[cli.exec.agent.mcps.<name>]`. See [User Configuration](https://docs.fabro.sh/reference/user-configuration.md).
+* **Run config TOML** — workflow config can define run-specific MCP servers under `[run.agent.mcps.<name>]`. See [Run Configuration](https://docs.fabro.sh/execution/run-configuration.md#runagentmcps).
 
 Each server entry specifies a transport type and optional timeouts. The server name is the TOML table key and is used in qualified tool names.
 
@@ -286,7 +286,7 @@ Authorization = "Bearer sk-xxx"
 
 ### Sandbox
 
-Runs the MCP server inside the workflow's sandbox (e.g., a [Daytona](/integrations/daytona) cloud VM). Fabro starts the server as a background process, waits for it to listen on the specified port, obtains an authenticated preview URL, and connects via HTTP. This is the right transport for MCP servers that need access to the sandbox environment — for example, [Playwright](https://github.com/microsoft/playwright-mcp) for browser automation.
+Runs the MCP server inside the workflow's sandbox (e.g., a [Daytona](https://docs.fabro.sh/integrations/daytona.md) cloud VM). Fabro starts the server as a background process, waits for it to listen on the specified port, obtains an authenticated preview URL, and connects via HTTP. This is the right transport for MCP servers that need access to the sandbox environment — for example, [Playwright](https://github.com/microsoft/playwright-mcp) for browser automation.
 
 ```toml theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [run.agent.mcps.playwright]
@@ -394,15 +394,15 @@ After startup, the agent sees 22 Playwright tools including:
 * `mcp__playwright__browser_type`
 * `mcp__playwright__browser_fill_form`
 
-The agent uses `browser_snapshot` (accessibility tree) for structured page understanding and `browser_take_screenshot` to save visual captures. Screenshots saved to `screenshots/` can be collected as [artifacts](/execution/run-configuration#runartifacts) by including `screenshots/**`.
+The agent uses `browser_snapshot` (accessibility tree) for structured page understanding and `browser_take_screenshot` to save visual captures. Screenshots saved to `screenshots/` can be collected as [artifacts](https://docs.fabro.sh/execution/run-configuration.md#runartifacts) by including `screenshots/**`.
 
-<Note>
-  When using Playwright MCP with the sandbox transport, call the `browser_install` tool first to ensure the Playwright browser binaries are available inside the sandbox.
-</Note>
+> [!NOTE]
+>
+> When using Playwright MCP with the sandbox transport, call the `browser_install` tool first to ensure the Playwright browser binaries are available inside the sandbox.
 
-<Note>
-  MCP servers that fail to start do not block the agent session. The agent proceeds with its built-in tools plus any MCP tools from servers that started successfully.
-</Note>
+> [!NOTE]
+>
+> MCP servers that fail to start do not block the agent session. The agent proceeds with its built-in tools plus any MCP tools from servers that started successfully.
 
 ## Protocol details
 

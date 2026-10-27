@@ -10,9 +10,9 @@ Fabro loads machine defaults from `~/.fabro/settings.toml`. The file is optional
 
 The CLI and server each read the sections relevant to their own process. On a remote deployment, the CLI machine and the server machine each have their own `settings.toml`.
 
-<Note>
-  Fabro only reads `settings.toml`. Older `cli.toml`, `user.toml`, and `server.toml` filenames are no longer part of the supported config surface.
-</Note>
+> [!NOTE]
+>
+> Fabro only reads `settings.toml`. Older `cli.toml`, `user.toml`, and `server.toml` filenames are no longer part of the supported config surface.
 
 ## File location
 
@@ -37,7 +37,7 @@ Files that omit `_version` are treated as version `1`. The legacy top-level `ver
 | Scope | Examples |
 | - | - |
 | CLI-only | `[cli.target]`, `[cli.auth]`, `[cli.exec]`, `[cli.output]`, `[cli.updates]`, `[cli.logging]` |
-| Server-side run policy | `[run.model]`, `[run.environment]`, `[environments.<slug>]`, `[run.checkpoint]`, `[run.inputs]`, `[run.prepare]`, `[run.pull_request]`, `[run.integrations.github]`, `[run.hooks]`, `[run.agent.mcps]` |
+| Server-side run policy | `[run.model]`, `[run.environment]`, `[environments.<slug>]`, `[run.checkpoint]`, `[run.inputs]`, `[run.pull_request]`, `[run.integrations.github]`, `[run.hooks]`, `[run.agent.mcps]` |
 | Shared LLM catalog | `[llm]`, a lithos-llm catalog overlay: `[llm.providers.<id>]`, `[llm.providers.<id>.models.<id>]`, and the agent harness under `metadata.agent` |
 | Server-only | `[server.listen]`, `[server.api]`, `[server.web]`, `[server.auth]`, `[server.storage]`, `[server.artifacts]`, `[server.scheduler]`, `[server.logging]`, `[server.integrations]` |
 
@@ -50,7 +50,7 @@ behavior in `workflow.toml` and configure placement in environments managed by
 the target server. The server may still use its own active `settings.toml`
 independently.
 
-See [Server Configuration](/administration/server-configuration) for the server-owned sections.
+See [Server Configuration](https://docs.fabro.sh/administration/server-configuration.md) for the server-owned sections.
 
 ## Precedence
 
@@ -116,12 +116,12 @@ pricing = { input_usd_micros_per_million = 1500000, output_usd_micros_per_millio
 
 All fields are optional. Include only the sections and keys you want to override. A single file can still include both CLI and server sections when you run both processes on one machine, but explicit remote targets do not read remote server state from the local machine.
 
-<Note>
-  The `[run]` schemas below remain valid for a server's own active configuration,
-  but they are not CLI-side defaults for `fabro run` or `fabro create`. Put
-  automatic pull-request settings and other workflow-owned behavior in
-  `workflow.toml`; there is no compatibility request field or CLI global default.
-</Note>
+> [!NOTE]
+>
+> The `[run]` schemas below remain valid for a server's own active configuration,
+> but they are not CLI-side defaults for `fabro run` or `fabro create`. Put
+> automatic pull-request settings and other workflow-owned behavior in
+> `workflow.toml`; there is no compatibility request field or CLI global default.
 
 ## `[cli.target]`
 
@@ -326,7 +326,7 @@ name = "claude-sonnet-4-5"
 
 | Key | Type / values | Default | Description |
 | - | - | - | - |
-| `fallbacks` | `table<string, array<string>>` | {} | Model-keyed fallback chains. Each value is an ordered list of bare<br />providers, bare model IDs or aliases, or provider-qualified<br />`provider:selector` values. A qualified selector may be a model ID,<br />alias, or provider API ID. Legacy `provider/model` values remain<br />accepted. Each list supports the `...` splice marker at layering time.<br />Fabro selects one chain from the original requested model. A fallback<br />target never activates another model's chain.<br /><br />Model keys stay unresolved in this sparse layer because `fabro<br />validate` is offline and has no server model catalog. |
+| `fallbacks` | `table<string, array<string>>` | {} | Model-keyed fallback chains. Each value is an ordered list of bare providers, bare model IDs or aliases, or provider-qualified `provider:selector` values. A qualified selector may be a model ID, alias, or provider API ID. Legacy `provider/model` values remain accepted. Each list supports the `...` splice marker at layering time. Fabro selects one chain from the original requested model. A fallback target never activates another model's chain. Model keys stay unresolved in this sparse layer because `fabro<br />validate` is offline and has no server model catalog. |
 | `name` | string | None | Model name for workflow runs. |
 | `provider` | string | None | Provider name for workflow model selection. |
 
@@ -353,8 +353,8 @@ email = "fabro-bot@company.com"
 
 | Key | Type / values | Default | Description |
 | - | - | - | - |
-| `email` | string | resolved from the run's GitHub credential | Git author and committer email for every commit the run creates. When<br />unset, the run uses the credential's noreply address, else<br />`noreply@fabro.sh`. |
-| `name` | string | resolved from the run's GitHub credential | Git author and committer name for every commit the run creates. When<br />unset, the run uses its GitHub App bot or PAT user, else `Fabro`. |
+| `email` | string | resolved from the run's GitHub credential | Git author and committer email for every commit the run creates. When unset, the run uses the credential's noreply address, else `noreply@fabro.sh`. |
+| `name` | string | resolved from the run's GitHub credential | Git author and committer name for every commit the run creates. When unset, the run uses its GitHub App bot or PAT user, else `Fabro`. |
 
 ## `[run.pull_request]`
 
@@ -410,7 +410,7 @@ tool_timeout = "90s"
 | `startup_timeout` | duration | `"10s"` | Max duration for startup and MCP handshake. |
 | `tool_timeout` | duration | `"60s"` | Max duration for a single MCP tool call. |
 
-See [MCP](/agents/mcp) for transport-specific examples.
+See [MCP](https://docs.fabro.sh/agents/mcp.md) for transport-specific examples.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

@@ -18,47 +18,43 @@ AI coding agents have transformed software engineering productivity, but the sur
 * **Token costs are primed to explode.** ROI per token diverges wildly across tasks, models, and harnesses. Every unnecessary frontier token is one that can't be spent where it matters.
 * **The continuous improvement loop broke.** Data is lost at every sub-process boundary. Organizations can't train LLMs the way they train people, and memory files make no guarantees.
 
-<img src="https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/run-detail.png?fit=max&auto=format&n=_yTKyxnEAApivGto&q=85&s=cf8c007a1272e8a757804f8a671c0c5b" alt="Fabro run detail view showing verifications for a pipeline event types change, including Traceability, Readability, Reliability, Code Coverage, and more" width="2000" height="1556" data-path="images/run-detail.png" />
+![Fabro run detail view showing verifications for a pipeline event types change, including Traceability, Readability, Reliability, Code Coverage, and more](https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/run-detail.png?fit=max\&auto=format\&n=_yTKyxnEAApivGto\&q=85\&s=cf8c007a1272e8a757804f8a671c0c5b)
 
 ## How Fabro solves this
 
 Fabro gives you a deterministic harness around non-deterministic AI. You define **workflow graphs** in Graphviz files that specify exactly what happens, in what order, with which models, and where humans weigh in. Fabro handles orchestration, parallelism, model routing, verification, and observability.
 
-<Columns cols={2}>
-  <Card title="Version-controlled workflows" icon="diagram-project">
-    Define workflows as code in Graphviz. Nodes are agents, shell commands, or human input gates. Fan out, loop, branch, and resume — all traceable and repeatable.
-  </Card>
+> **Version-controlled workflows**
+>
+> Define workflows as code in Graphviz. Nodes are agents, shell commands, or human input gates. Fan out, loop, branch, and resume — all traceable and repeatable.
 
-  <Card title="Multi-model orchestration" icon="microchip">
-    Route tasks to the right model using CSS-like stylesheets. Cross-critique with fresh eyes, delegate simple tasks to fast models, and fail over automatically when providers go down.
-  </Card>
+> **Multi-model orchestration**
+>
+> Route tasks to the right model using CSS-like stylesheets. Cross-critique with fresh eyes, delegate simple tasks to fast models, and fail over automatically when providers go down.
 
-  <Card title="Human-in-the-loop" icon="hand">
-    Steer while the agent runs, not after. Approval gates, interviews, and steering let you intervene at the right moments without waiting for a pull request.
-  </Card>
+> **Human-in-the-loop**
+>
+> Steer while the agent runs, not after. Approval gates, interviews, and steering let you intervene at the right moments without waiting for a pull request.
 
-  <Card title="Adaptive verification" icon="shield-check">
-    Combine LLM-as-judge, test suites, third-party tools, and human review. Verifications act as an eval suite tailored to your organization, building confidence over time.
-  </Card>
+> **Adaptive verification**
+>
+> Combine LLM-as-judge, test suites, third-party tools, and human review. Verifications act as an eval suite tailored to your organization, building confidence over time.
 
-  <Card title="Observability" icon="magnifying-glass-chart">
-    Every tool call, agent turn, and shell command is captured in a unified event stream. Query run data with SQL via DuckDB and inspect the full execution trail.
-  </Card>
+> **Observability**
+>
+> Every tool call, agent turn, and shell command is captured in a unified event stream. Query run data with SQL via DuckDB and inspect the full execution trail.
 
-  <Card title="Open source" icon="code-branch">
-    Licensed under MIT. Written in Rust with minimal dependencies. Runs on a single node with no databases to set up.
-  </Card>
-</Columns>
+> **Open source**
+>
+> Licensed under MIT. Written in Rust with minimal dependencies. Runs on a single node with no databases to set up.
 
-<img src="https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/workflow-example.png?fit=max&auto=format&n=_yTKyxnEAApivGto&q=85&s=03cdb95029ca87b4f7349eee50fe7b4f" alt="Fabro workflow diagram for Fix Build showing stages from Start through Analyze Build Errors, Diagnose Root Cause, Validate Build, and Review Changes to Exit" width="2000" height="1556" data-path="images/workflow-example.png" />
+![Fabro workflow diagram for Fix Build showing stages from Start through Analyze Build Errors, Diagnose Root Cause, Validate Build, and Review Changes to Exit](https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/workflow-example.png?fit=max\&auto=format\&n=_yTKyxnEAApivGto\&q=85\&s=03cdb95029ca87b4f7349eee50fe7b4f)
 
 ## What a workflow looks like
 
 Workflows are defined in Graphviz, a simple graph description language. Here's a plan-approve-implement workflow and its Graphviz source:
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/plan-implement-workflow.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=d31c0e94a013abdd4fb2d2d2fd3680c6" alt="Plan-Implement workflow graph" width="899" height="59" data-path="images/plan-implement-workflow.svg" />
-</Frame>
+![Plan-Implement workflow graph](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/plan-implement-workflow.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=d31c0e94a013abdd4fb2d2d2fd3680c6)
 
 ```dot title="plan-implement.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph PlanImplement {
@@ -83,9 +79,9 @@ This workflow plans a change, asks a human to approve it, implements the plan, a
 
 ## Next steps
 
-<Card title="Quick Start" icon="rocket" href="/getting-started/quick-start" horizontal>
-  Install Fabro and run your first workflow in minutes.
-</Card>
+> **[Quick Start](https://docs.fabro.sh/getting-started/quick-start.md)**
+>
+> Install Fabro and run your first workflow in minutes.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

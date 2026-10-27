@@ -19,9 +19,7 @@ This pattern is useful when you have detailed specs with acceptance criteria (De
 
 ## Single-model variant
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/example-dod.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=d04dcc2e90fba05940f11203fc2c012a" alt="Definition of Done workflow: Start → Audit LLM → Audit Agent → Triage → Fix → Build → Verify → Review → Exit, with Fix self-loop, Build/Build Fix loop, and Verify back to Triage" width="870" height="170" data-path="images/example-dod.svg" />
-</Frame>
+![Definition of Done workflow: Start → Audit LLM → Audit Agent → Triage → Fix → Build → Verify → Review → Exit, with Fix self-loop, Build/Build Fix loop, and Verify back to Triage](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/example-dod.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=d04dcc2e90fba05940f11203fc2c012a)
 
 The simpler variant uses one model throughout, with sequential audits across multiple specs:
 
@@ -265,7 +263,7 @@ Otherwise set preferred_next_label to \"more_work_needed\"."
 
 **Three-category triage** — failures are classified as IMPLEMENTABLE (can fix now), STRUCTURAL (needs architecture work), or DEFERRED (needs external resources). This prevents the agent from wasting cycles on items it can't address in a code-only pass.
 
-**Batched fixes** — the `fix_batch` node tackles up to 5 failures per iteration. The self-loop (`fix_batch -> fix_batch` with `loop_restart=true`) allows it to keep going when more fixes remain, while `goal_gate=true` ensures the workflow only succeeds if fixes were actually applied. Because `loop_restart` begins each round with a fresh, empty context, every iteration re-derives the remaining work from the repository state rather than from accumulated conversation history — see [Failures — Loop restart edges](/execution/failures#loop-restart-edges).
+**Batched fixes** — the `fix_batch` node tackles up to 5 failures per iteration. The self-loop (`fix_batch -> fix_batch` with `loop_restart=true`) allows it to keep going when more fixes remain, while `goal_gate=true` ensures the workflow only succeeds if fixes were actually applied. Because `loop_restart` begins each round with a fresh, empty context, every iteration re-derives the remaining work from the repository state rather than from accumulated conversation history — see [Failures — Loop restart edges](https://docs.fabro.sh/execution/failures.md#loop-restart-edges).
 
 **Build gate** — after each fix batch, a script node runs `cargo build` and `cargo test`. If the build breaks, a dedicated `build_fix` node diagnoses and repairs compilation errors before retrying.
 
@@ -275,9 +273,7 @@ Otherwise set preferred_next_label to \"more_work_needed\"."
 
 ## Multi-model variant
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/example-dod-multimodel.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=c2c398d59aa821129a4dc500f664c991" alt="Multi-model Definition of Done workflow: Start → Dual Audit (Opus+GPT) → Critique → Consensus → Triage (Opus+GPT) → Fix Cycle (Codex↔Opus) → Build → Verify (Opus+GPT) → Review → Exit, with Fix Cycle self-loop, Build/Build Fix loop, and Verify back to Triage" width="1060" height="170" data-path="images/example-dod-multimodel.svg" />
-</Frame>
+![Multi-model Definition of Done workflow: Start → Dual Audit (Opus+GPT) → Critique → Consensus → Triage (Opus+GPT) → Fix Cycle (Codex↔Opus) → Build → Verify (Opus+GPT) → Review → Exit, with Fix Cycle self-loop, Build/Build Fix loop, and Verify back to Triage](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/example-dod-multimodel.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=c2c398d59aa821129a4dc500f664c991)
 
 The multi-model variant applies the same audit-triage-fix-verify structure but uses independent assessments from two models (Claude Opus and GPT-5.4) at each phase, with cross-critique and consensus merging. This catches blind spots that a single model might miss.
 
@@ -923,23 +919,21 @@ Both variants end with a human gate. Even after automated verification, a human 
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="Multi-Model Workflows" icon="users" href="/tutorials/multi-model">
-    Assigning different models to different workflow nodes.
-  </Card>
+> **[Multi-Model Workflows](https://docs.fabro.sh/tutorials/multi-model.md)**
+>
+> Assigning different models to different workflow nodes.
 
-  <Card title="Ensemble Review" icon="scale-balanced" href="/tutorials/ensemble">
-    Independent assessments merged into consensus decisions.
-  </Card>
+> **[Ensemble Review](https://docs.fabro.sh/tutorials/ensemble.md)**
+>
+> Independent assessments merged into consensus decisions.
 
-  <Card title="Model Stylesheets" icon="palette" href="/workflows/stylesheets">
-    CSS-like rules for assigning models to workflow nodes.
-  </Card>
+> **[Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md)**
+>
+> CSS-like rules for assigning models to workflow nodes.
 
-  <Card title="Human-in-the-Loop" icon="hand" href="/workflows/human-in-the-loop">
-    Human approval gates and review checkpoints.
-  </Card>
-</Columns>
+> **[Human-in-the-Loop](https://docs.fabro.sh/workflows/human-in-the-loop.md)**
+>
+> Human approval gates and review checkpoints.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

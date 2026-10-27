@@ -27,7 +27,7 @@ Context is thread-safe and shared across the entire run. Parallel branches recei
 Agents do not have a tool to query the context store directly. Instead, context is made available through two mechanisms:
 
 * **Preamble injection** — When a node starts, Fabro assembles a preamble from the current context and prepends it to the node's prompt. The [fidelity setting](#fidelity-controlling-agent-context) controls how detailed this preamble is.
-* **Context updates** — Agents can write to the context by including a `context_updates` object in a JSON response. See [Transitions](/workflows/transitions#agent-transitions) for the response format.
+* **Context updates** — Agents can write to the context by including a `context_updates` object in a JSON response. See [Transitions](https://docs.fabro.sh/workflows/transitions.md#agent-transitions) for the response format.
 
 ## Keys set by handlers
 
@@ -41,12 +41,12 @@ Each handler type writes specific keys into the context after execution:
 | `last_response` | Truncated LLM response (first 200 characters) |
 | `response.{node_id}` | Full LLM response text |
 
-Agents can also emit arbitrary context updates by including a JSON object with a `context_updates` field in their response. See [Transitions](/workflows/transitions#agent-transitions).
+Agents can also emit arbitrary context updates by including a JSON object with a `context_updates` field in their response. See [Transitions](https://docs.fabro.sh/workflows/transitions.md#agent-transitions).
 
 The `review_target` key has an optional typed convention for human review
 workflows. A human gate with `review_target=true` reads this exact flat key and
 presents its document URL as the primary question link. See
-[Review targets](/workflows/human-in-the-loop#review-targets).
+[Review targets](https://docs.fabro.sh/workflows/human-in-the-loop.md#review-targets).
 
 ### Command nodes
 
@@ -115,7 +115,7 @@ The engine sets several keys automatically. These are prefixed with `internal.` 
 
 ## Using context in conditions
 
-Edge [conditions](/workflows/transitions#conditions) can read context values to route execution:
+Edge [conditions](https://docs.fabro.sh/workflows/transitions.md#conditions) can read context values to route execution:
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 gate -> deploy [condition="outcome=succeeded && context.tests_passed=true"]
@@ -124,7 +124,7 @@ gate -> fix    [condition="outcome=failed"]
 
 The `context.` prefix is optional — `tests_passed=true` and `context.tests_passed=true` are equivalent.
 
-Engine-managed keys like `internal.node_visit_count` work in conditions too. This is useful for [fixed-count loops](/tutorials/branch-loop#fixed-count-loops):
+Engine-managed keys like `internal.node_visit_count` work in conditions too. This is useful for [fixed-count loops](https://docs.fabro.sh/tutorials/branch-loop.md#fixed-count-loops):
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 gate -> exit    [condition="context.internal.node_visit_count >= 5"]
@@ -200,29 +200,29 @@ When a run is resumed from a checkpoint, the first node after resume degrades `f
 
 For non-`full` fidelity modes, Fabro builds a preamble from runtime data and prepends it to the node's prompt.
 
-<Accordion title="Example compact preamble">
-  Given a plan-test-implement workflow where the plan and test stages have completed, the `implement` node would receive a preamble like this prepended to its prompt:
-
-  ```markdown theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-  Goal: Add a /health endpoint to the API server
-
-  ## Completed stages
-  - **plan**: success
-    - Model: claude-sonnet-4-5, 12.4k tokens in / 3.2k out
-    - Files: docs/plan.md
-  - **test**: success
-    - Script: `cargo test 2>&1 || true`
-    - Output:
-  ```
-
-  running 42 tests ... 41 passed, 1 failed
-
-  ```
-
-  ## Context
-  - tests_passed: false
-  ```
-</Accordion>
+> **Example compact preamble**
+>
+> Given a plan-test-implement workflow where the plan and test stages have completed, the `implement` node would receive a preamble like this prepended to its prompt:
+>
+> ```markdown theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+> Goal: Add a /health endpoint to the API server
+>
+> ## Completed stages
+> - **plan**: success
+>   - Model: claude-sonnet-4-5, 12.4k tokens in / 3.2k out
+>   - Files: docs/plan.md
+> - **test**: success
+>   - Script: `cargo test 2>&1 || true`
+>   - Output:
+> ```
+>
+> running 42 tests ... 41 passed, 1 failed
+>
+> ```
+>
+> ## Context
+> - tests_passed: false
+> ```
 
 The preamble includes:
 
@@ -291,7 +291,7 @@ Compaction failures are **non-fatal**. If the summarization LLM call fails, Fabr
 
 ### Events
 
-Compaction emits three events to the [event stream](/execution/observability#event-stream):
+Compaction emits three events to the [event stream](https://docs.fabro.sh/execution/observability.md#event-stream):
 
 | Event | When | Key fields |
 | - | - | - |

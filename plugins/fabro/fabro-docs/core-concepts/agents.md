@@ -27,10 +27,10 @@ Every agent node uses a **backend** that determines how Fabro interacts with the
 
 Fabro manages the agent loop directly — it calls the LLM provider's API, executes built-in tools in the sandbox, and tracks file changes via tool call events. This is the default and supports the full feature set:
 
-* [Session caching](/execution/context) via `fidelity="full"` + `thread_id`
-* [Sub-agents](/agents/subagents)
+* [Session caching](https://docs.fabro.sh/execution/context.md) via `fidelity="full"` + `thread_id`
+* [Sub-agents](https://docs.fabro.sh/agents/subagents.md)
 * Provider failover
-* All [built-in tools](/agents/tools) and [MCP](/agents/mcp) integrations
+* All [built-in tools](https://docs.fabro.sh/agents/tools.md) and [MCP](https://docs.fabro.sh/agents/mcp.md) integrations
 
 ### ACP backend
 
@@ -90,9 +90,9 @@ Agents have access to a set of built-in tools for interacting with the codebase 
 | `web_search` | Search the web |
 | `web_fetch` | Fetch and summarize a URL |
 
-Additional tools can be added via [MCP servers](/agents/mcp) for integrations like databases, APIs, or custom services.
+Additional tools can be added via [MCP servers](https://docs.fabro.sh/agents/mcp.md) for integrations like databases, APIs, or custom services.
 
-See [Tools](/agents/tools) for the full reference.
+See [Tools](https://docs.fabro.sh/agents/tools.md) for the full reference.
 
 ## Prompts
 
@@ -106,45 +106,43 @@ plan [label="Plan", prompt="Analyze the codebase and write a step-by-step plan."
 simplify [label="Simplify", prompt="@prompts/simplify.md"]
 ```
 
-Fabro also injects a system prompt with context about the workflow goal, prior stage outputs, available tools, and the agent's role. See [Prompts](/agents/prompts) for details.
+Fabro also injects a system prompt with context about the workflow goal, prior stage outputs, available tools, and the agent's role. See [Prompts](https://docs.fabro.sh/agents/prompts.md) for details.
 
 ## Sub-agents
 
 An agent can spawn **sub-agents** to delegate subtasks. Sub-agents run in their own session with their own tool access, and return results to the parent. This is useful for parallelizing research, isolating risky operations, or breaking complex tasks into manageable pieces.
 
-See [Sub-agents](/agents/subagents) for details.
+See [Sub-agents](https://docs.fabro.sh/agents/subagents.md) for details.
 
 ## Skills
 
 Skills are reusable prompt templates that extend an agent's capabilities for common tasks — code review, test writing, refactoring, and more. They're discovered automatically from the project and can be invoked by the agent during its session.
 
-See [Skills](/agents/skills) for details.
+See [Skills](https://docs.fabro.sh/agents/skills.md) for details.
 
 ## Hooks
 
 Hooks are shell commands that run in response to agent lifecycle events (e.g. before a tool executes, after a stage completes). They enable custom validation, notifications, and guardrails without modifying the workflow graph.
 
-See [Hooks](/agents/hooks) for details.
+See [Hooks](https://docs.fabro.sh/agents/hooks.md) for details.
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="Prompts" icon="message" href="/agents/prompts">
-    How prompts are constructed and injected.
-  </Card>
+> **[Prompts](https://docs.fabro.sh/agents/prompts.md)**
+>
+> How prompts are constructed and injected.
 
-  <Card title="Tools" icon="wrench" href="/agents/tools">
-    Built-in tools and custom tool registration.
-  </Card>
+> **[Tools](https://docs.fabro.sh/agents/tools.md)**
+>
+> Built-in tools and custom tool registration.
 
-  <Card title="MCP" icon="plug" href="/agents/mcp">
-    Extend agents with Model Context Protocol servers.
-  </Card>
+> **[MCP](https://docs.fabro.sh/agents/mcp.md)**
+>
+> Extend agents with Model Context Protocol servers.
 
-  <Card title="Sub-agents" icon="users" href="/agents/subagents">
-    Delegate subtasks to child agent sessions.
-  </Card>
-</Columns>
+> **[Sub-agents](https://docs.fabro.sh/agents/subagents.md)**
+>
+> Delegate subtasks to child agent sessions.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

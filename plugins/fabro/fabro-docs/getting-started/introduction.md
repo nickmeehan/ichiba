@@ -8,7 +8,7 @@
 
 Fabro replaces the prompt-wait-review loop with version-controlled workflow graphs that orchestrate AI agents, shell commands, and human decisions into repeatable, long-horizon coding processes.
 
-<img src="https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/runs-board.png?fit=max&auto=format&n=_yTKyxnEAApivGto&q=85&s=a7889b9d99a9f61712eba4a1b90f3627" alt="Fabro Runs board showing workflows across Working, Pending, Verify, and Merge stages" width="2552" height="1558" data-path="images/runs-board.png" />
+![Fabro Runs board showing workflows across Working, Pending, Verify, and Merge stages](https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/runs-board.png?fit=max\&auto=format\&n=_yTKyxnEAApivGto\&q=85\&s=a7889b9d99a9f61712eba4a1b90f3627)
 
 ## Use cases
 
@@ -22,23 +22,21 @@ Fabro replaces the prompt-wait-review loop with version-controlled workflow grap
 * **Inspect every run** — Query durable event streams, checkpoints, conclusions, and stage outputs to understand what happened and improve the workflow.
 * **Specify in natural language** — Define requirements as natural-language specs and let Fabro generate — and regenerate — implementations that conform to them.
 
-<Columns cols={2}>
-  <Card title="Why Fabro?" icon="lightbulb" href="/getting-started/why-fabro">
-    The problems Fabro solves for AI-assisted software teams.
-  </Card>
+> **[Why Fabro?](https://docs.fabro.sh/getting-started/why-fabro.md)**
+>
+> The problems Fabro solves for AI-assisted software teams.
 
-  <Card title="Quick Start" icon="rocket" href="/getting-started/quick-start">
-    Install Fabro and run your first workflow in minutes.
-  </Card>
+> **[Quick Start](https://docs.fabro.sh/getting-started/quick-start.md)**
+>
+> Install Fabro and run your first workflow in minutes.
 
-  <Card title="Workflows" icon="diagram-project" href="/core-concepts/workflows">
-    Learn how workflow graphs orchestrate agents, commands, and human gates.
-  </Card>
+> **[Workflows](https://docs.fabro.sh/core-concepts/workflows.md)**
+>
+> Learn how workflow graphs orchestrate agents, commands, and human gates.
 
-  <Card title="Agents" icon="robot" href="/core-concepts/agents">
-    Understand how Fabro configures and runs LLM agents within workflows.
-  </Card>
-</Columns>
+> **[Agents](https://docs.fabro.sh/core-concepts/agents.md)**
+>
+> Understand how Fabro configures and runs LLM agents within workflows.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

@@ -6,7 +6,7 @@
 
 > How Fabro collects human input during workflow execution
 
-When a workflow reaches a [human gate](/workflows/human-in-the-loop), it needs to pause and wait for a person to respond. The **interviewer** is the abstraction that makes this work — it presents a question, collects an answer, and returns it to the engine so execution can continue.
+When a workflow reaches a [human gate](https://docs.fabro.sh/workflows/human-in-the-loop.md), it needs to pause and wait for a person to respond. The **interviewer** is the abstraction that makes this work — it presents a question, collects an answer, and returns it to the engine so execution can continue.
 
 Fabro ships with several interviewer implementations for different environments: an interactive terminal prompt for the CLI, a web-based queue for the API server and web UI, an auto-approve mode for CI, and record/replay support for testing.
 
@@ -55,14 +55,14 @@ An answer can also carry a `selected_option` (the full `{key, label}` pair) and 
 
 ## How human gates build questions
 
-When the engine reaches a human gate node (`shape=hexagon`), the [human handler](/workflows/human-in-the-loop) builds a question from the node's outgoing edges:
+When the engine reaches a human gate node (`shape=hexagon`), the [human handler](https://docs.fabro.sh/workflows/human-in-the-loop.md) builds a question from the node's outgoing edges:
 
 1. Each edge becomes an option, with the accelerator key parsed from the label (e.g. `[A] Approve` → key `A`, label `[A] Approve`)
 2. Edges with `freeform=true` are excluded from the option list and enable free-text fallback
 3. The question text comes from the node's `label` attribute
 4. The question type defaults to `multiple_choice` when fixed options exist and `freeform` when only a freeform edge exists. Set `question_type="yes_no"`, `question_type="confirmation"`, `question_type="multi_select"`, or another supported value to override it.
 
-The handler then passes the question to the interviewer, waits for an answer, and maps it back to an edge for [transition](/workflows/transitions#human-gate-transitions).
+The handler then passes the question to the interviewer, waits for an answer, and maps it back to an edge for [transition](https://docs.fabro.sh/workflows/transitions.md#human-gate-transitions).
 
 ## Channels
 
@@ -95,7 +95,7 @@ If the pending session disappears before an answer is submitted, the waiting que
 
 ### Slack
 
-Fabro's [Slack integration](/integrations/slack) uses the web interviewer under the hood. When a human gate fires, the pending question is rendered as a Slack message with interactive buttons. When a user clicks a button, the Slack event handler calls `submit_answer()` on the web interviewer, unblocking the workflow.
+Fabro's [Slack integration](https://docs.fabro.sh/integrations/slack.md) uses the web interviewer under the hood. When a human gate fires, the pending question is rendered as a Slack message with interactive buttons. When a user clicks a button, the Slack event handler calls `submit_answer()` on the web interviewer, unblocking the workflow.
 
 Slack interview prompts require Slack server credentials, an enabled `[server.integrations.slack]` table, and a destination channel. Most servers should configure `server.integrations.slack.default_channel`; lifecycle notifications use their own per-route channels instead.
 

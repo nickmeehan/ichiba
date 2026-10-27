@@ -10,9 +10,7 @@ This tutorial builds an implement-test-fix loop — the agent writes code, runs 
 
 ## The workflow
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-branch-loop.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=c07f31a76025a284635c4b80ccf1f929" alt="Branch-Loop workflow: Start → Plan → Implement → Validate → Tests passing? → Pass to Exit or Fix back to Implement" width="977" height="105" data-path="images/tutorial-branch-loop.svg" />
-</Frame>
+![Branch-Loop workflow: Start → Plan → Implement → Validate → Tests passing? → Pass to Exit or Fix back to Implement](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-branch-loop.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=c07f31a76025a284635c4b80ccf1f929)
 
 ```dot title="branch-loop.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph BranchLoop {
@@ -45,7 +43,7 @@ The `validate` node has `shape=parallelogram`, making it a **command node**. It 
 validate [label="Validate", shape=parallelogram, script="python3 -m pytest test_fizzbuzz.py -v 2>&1 || true"]
 ```
 
-The `|| true` ensures the command always exits successfully — this way the node itself doesn't fail even when tests fail. The test output is captured as `command.output` in the [run context](/execution/context) for downstream nodes to use.
+The `|| true` ensures the command always exits successfully — this way the node itself doesn't fail even when tests fail. The test output is captured as `command.output` in the [run context](https://docs.fabro.sh/execution/context.md) for downstream nodes to use.
 
 ## Conditional branching
 
@@ -81,7 +79,7 @@ gate -> deploy [condition="outcome=succeeded && context.tests_passed=true"]
 gate -> retry [condition="!outcome=succeeded"]
 ```
 
-See [Transitions](/workflows/transitions) for the full condition grammar.
+See [Transitions](https://docs.fabro.sh/workflows/transitions.md) for the full condition grammar.
 
 ## The fix loop
 
@@ -152,9 +150,9 @@ This workflow uses four node types:
 
 ## Next
 
-<Card title="Parallel Review" icon="arrow-right" href="/tutorials/parallel-review">
-  Fan out to concurrent branches and merge the results.
-</Card>
+> **[Parallel Review](https://docs.fabro.sh/tutorials/parallel-review.md)**
+>
+> Fan out to concurrent branches and merge the results.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

@@ -10,7 +10,7 @@ After each node finishes, Fabro must decide which edge to follow to the next nod
 
 ## How transitions work
 
-When a node completes, it produces an **outcome** with a [stage outcome](/execution/outcomes) (`succeeded`, `failed`, `partially_succeeded`, or `skipped`) and optional signals like a preferred label or suggested next node. A node's retry policy runs before routing starts. Fabro then selects the next step in this order:
+When a node completes, it produces an **outcome** with a [stage outcome](https://docs.fabro.sh/execution/outcomes.md) (`succeeded`, `failed`, `partially_succeeded`, or `skipped`) and optional signals like a preferred label or suggested next node. A node's retry policy runs before routing starts. Fabro then selects the next step in this order:
 
 1. **Direct jump** — An outcome's `jump_to_node` value bypasses edge selection.
 2. **Condition match** — Edges with a `condition` attribute are evaluated first. If one or more conditions match, the edge with the highest `weight` wins (lexical tiebreak on target node ID).
@@ -95,9 +95,9 @@ When `exit` stops routing, Fabro checkpoints the failed node without a next node
 
 For a parallel node, `exit` and `succeed` see the final outcome returned by the parallel handler. `exit` can stop routing for a failed parallel outcome; `succeed` promotes it. Neither adds branch-level fail-fast behavior, and a `partially_succeeded` parallel outcome continues normally. Inside the fan-out, a branch node whose effective policy is `succeed` counts as `succeeded` in the parent's aggregate when it fails. Branches have no edge routing, so there is no explicit route to prefer.
 
-<Note>
-  `auto_status=true` is the deprecated spelling of node-level `on_failure="succeed"`. Fabro still accepts it as an alias and validation warns with the replacement. See [Node Outcomes](/execution/outcomes#succeed-on-failure).
-</Note>
+> [!NOTE]
+>
+> `auto_status=true` is the deprecated spelling of node-level `on_failure="succeed"`. Fabro still accepts it as an alias and validation warns with the replacement. See [Node Outcomes](https://docs.fabro.sh/execution/outcomes.md#succeed-on-failure).
 
 ## Edge attributes
 
@@ -120,7 +120,7 @@ gate -> implement [label="Fix", condition="outcome=failed"]
 
 | Key | Resolves to |
 | - | - |
-| `outcome` | The stage outcome: `succeeded`, `failed`, `partially_succeeded`, or `skipped`. See [Node Outcomes](/execution/outcomes). |
+| `outcome` | The stage outcome: `succeeded`, `failed`, `partially_succeeded`, or `skipped`. See [Node Outcomes](https://docs.fabro.sh/execution/outcomes.md). |
 | `preferred_label` | The label selected by a human gate |
 | `context.KEY` | A value from the run context (e.g. `context.tests_passed`) |
 | `KEY` | Shorthand for context lookup (without the `context.` prefix) |
@@ -254,9 +254,9 @@ picker -> path_b [weight=1]
 
 In this example, `path_a` is chosen \~75% of the time and `path_b` \~25%. Edges with weight ≤ 0 are treated as weight 1. The cascade priority (conditions → preferred label → suggested next → unconditional) is unchanged — randomness only affects the pick-one-from-candidates step within each tier.
 
-<Note>
-  `selection="random"` cannot be combined with conditional edges on the same node. Validation rejects this combination because condition evaluation order would conflict with random selection. Use unconditional edges with weights instead.
-</Note>
+> [!NOTE]
+>
+> `selection="random"` cannot be combined with conditional edges on the same node. Validation rejects this combination because condition evaluation order would conflict with random selection. Use unconditional edges with weights instead.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

@@ -6,9 +6,9 @@
 
 > Access graphical desktop environments in sandboxes via VNC
 
-<Warning>
-  VNC access is **coming soon** and is not yet available. This page describes the planned feature.
-</Warning>
+> [!WARNING]
+>
+> VNC access is **coming soon** and is not yet available. This page describes the planned feature.
 
 VNC (Virtual Network Computing) provides a graphical desktop environment inside sandboxes, accessible directly from your browser. This enables interaction with GUI applications, visual debugging, and observation of agent-driven desktop automation.
 
@@ -31,9 +31,7 @@ Sandboxes support VNC through a set of pre-installed packages (Xvfb, xfce4, x11v
 
 VNC is useful when the agent needs to interact with a GUI application that can't be driven through a CLI alone. This workflow automates filling out a legacy internal web form that requires browser interaction:
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/vnc-access-workflow.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=6119976f60e1d7c4c32c70507ad0f341" alt="VNC access workflow: Start → Prepare Data → Fill Portal Form → Review Submission → Exit, with a Redo loop back to Fill Portal Form" width="897" height="59" data-path="images/vnc-access-workflow.svg" />
-</Frame>
+![VNC access workflow: Start → Prepare Data → Fill Portal Form → Review Submission → Exit, with a Redo loop back to Fill Portal Form](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/vnc-access-workflow.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=6119976f60e1d7c4c32c70507ad0f341)
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph FillLegacyForm {

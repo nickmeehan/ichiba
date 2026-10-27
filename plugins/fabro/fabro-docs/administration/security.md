@@ -6,9 +6,9 @@
 
 > Security model and best practices
 
-<Warning>
-  Fabro is currently a research preview. It has not yet been subject to third-party penetration testing. There may be vulnerabilities. We strongly recommend only deploying Fabro on private, self-hosted resources within a controlled networking environment.
-</Warning>
+> [!WARNING]
+>
+> Fabro is currently a research preview. It has not yet been subject to third-party penetration testing. There may be vulnerabilities. We strongly recommend only deploying Fabro on private, self-hosted resources within a controlled networking environment.
 
 ## Security controls not in Fabro
 

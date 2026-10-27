@@ -10,9 +10,7 @@ This tutorial builds a plan-approve-implement workflow where a human reviews the
 
 ## The workflow
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-plan-implement.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=0168804ad9e4f7c931a93747810ab0b0" alt="Plan-Implement workflow: Start → Plan → Approve Plan → Implement → Simplify → Exit, with Revise loop back to Plan" width="937" height="59" data-path="images/tutorial-plan-implement.svg" />
-</Frame>
+![Plan-Implement workflow: Start → Plan → Approve Plan → Implement → Simplify → Exit, with Revise loop back to Plan](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-plan-implement.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=0168804ad9e4f7c931a93747810ab0b0)
 
 ```dot title="plan-implement.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph PlanImplement {
@@ -86,7 +84,7 @@ The `simplify` node uses `@prompts/simplify.md` instead of an inline prompt stri
 simplify [label="Simplify", prompt="@prompts/simplify.md"]
 ```
 
-The `@` prefix tells Fabro to load the prompt from a Markdown file, resolved relative to the Graphviz file's location. This keeps Graphviz files concise and lets you version prompts as standalone files. See [Prompts](/agents/prompts) for details.
+The `@` prefix tells Fabro to load the prompt from a Markdown file, resolved relative to the Graphviz file's location. This keeps Graphviz files concise and lets you version prompts as standalone files. See [Prompts](https://docs.fabro.sh/agents/prompts.md) for details.
 
 ## Context flow between nodes
 
@@ -97,7 +95,7 @@ Each node receives a **preamble** summarizing what happened in prior stages. Whe
 * Files touched by prior stages
 * Run context values
 
-The agent reads `plan.md` (as instructed by its prompt), but the preamble gives it additional context about the overall workflow state. See [Context](/execution/context) for the full reference.
+The agent reads `plan.md` (as instructed by its prompt), but the preamble gives it additional context about the overall workflow state. See [Context](https://docs.fabro.sh/execution/context.md) for the full reference.
 
 ## What you've learned
 
@@ -109,9 +107,9 @@ The agent reads `plan.md` (as instructed by its prompt), but the preamble gives 
 
 ## Next
 
-<Card title="Branch & Loop" icon="arrow-right" href="/tutorials/branch-loop">
-  Add conditional branching and automated test validation loops.
-</Card>
+> **[Branch & Loop](https://docs.fabro.sh/tutorials/branch-loop.md)**
+>
+> Add conditional branching and automated test validation loops.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

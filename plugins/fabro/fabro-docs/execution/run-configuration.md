@@ -7,7 +7,7 @@
 > Configure workflow runs with TOML files
 
 A workflow config is a TOML file that bundles a workflow graph with its
-execution behavior — the goal, model, prepare steps, inputs, hooks, and other
+execution behavior — the goal, model, inputs, hooks, and other
 workflow-owned settings. Instead of passing a dozen CLI flags, check
 `workflow.toml` into version control and launch it with a single command:
 
@@ -78,12 +78,6 @@ reasoning_effort = "high"
 [run.model.fallbacks]
 "claude-sonnet-4-5" = ["openai", "gemini"]
 
-[[run.prepare.steps]]
-script = "git clone https://github.com/fabro-sh/fabro repo"
-
-[[run.prepare.steps]]
-script = "cd repo && npm install"
-
 [run.integrations.github.permissions]
 contents = "write"
 pull_requests = "write"
@@ -131,7 +125,7 @@ script = "echo done"
 
 ### `[run.model]`
 
-Override the default model and provider for all nodes that don't have an explicit model assigned via a [stylesheet](/workflows/stylesheets).
+Override the default model and provider for all nodes that don't have an explicit model assigned via a [stylesheet](https://docs.fabro.sh/workflows/stylesheets.md).
 
 ```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [run.model]
@@ -140,7 +134,7 @@ name = "claude-sonnet-4-5"
 
 | Field | Description |
 | - | - |
-| `name` | Canonical model slug or alias (e.g. `claude-sonnet-4-5`, `opus`, `gemini-pro`). See [Models](/core-concepts/models). |
+| `name` | Canonical model slug or alias (e.g. `claude-sonnet-4-5`, `opus`, `gemini-pro`). See [Models](https://docs.fabro.sh/core-concepts/models.md). |
 | `provider` | Optional provider pin. When omitted, Fabro selects among ready offerings by provider priority. When present, an unavailable provider is an error rather than permission to switch. |
 | `fallbacks` | Table of ordered fallback lists keyed by the originally requested model. |
 
@@ -211,28 +205,100 @@ Use the reserved `"..."` marker in one model's list to splice in that model's in
 "gpt-5.6-sol" = ["anthropic", "..."]
 ```
 
-### `[run.prepare]`
+### Setup command migration
 
-Ordered list of steps to run before the workflow starts. Use this to clone repositories, install dependencies, or prepare the environment.
+`run.prepare` is no longer supported in any authored settings file, including
+server, workflow, direct-run, project, and user settings. Move setup into named
+command nodes after `start`. Setup is visible in the graph and timeline and uses
+ordinary stage hooks and failure handling. Review broad hook matchers that
+assume dependencies are already installed: they now also match setup commands.
 
-```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[[run.prepare.steps]]
-script = "pip install -r requirements.txt"
+Before, a workflow whose graph was `start -> work -> exit` could use:
 
-[[run.prepare.steps]]
-command = ["npm", "install"]
-env = { NPM_TOKEN = "{{ secrets.NPM_TOKEN }}" }
+```toml title="workflow.toml (removed syntax)" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[run.prepare]
+timeout = "5m"
+steps = [
+  { command = ["bundle", "install"] },
+  { script = "bundle exec rake db:prepare", env = { TOKEN = "{{ secrets.SETUP_TOKEN }}" } },
+]
 ```
 
-| Field | Description |
-| - | - |
-| `script` | Bash source, evaluated by the sandbox's non-login Bash (`bash -c`). Supports `{{ vars.* }}` and `{{ secrets.* }}` interpolation. |
-| `command` | Argv-style command, mutually exclusive with `script`. Each resolved element is shell-quoted as one argument. |
-| `env` | Additional environment variables for this step. Values support the same interpolation as `script` and `command`. |
+Remove that section. Use the existing workflow-wide environment for secrets:
 
-Each step must exit with status 0. If any step fails, the run aborts before the workflow starts. Prepare steps replace across layers — the higher-precedence layer wins wholesale.
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+_version = 1
+[workflow]
+graph = "workflow.fabro"
 
-Fabro substitutes `{{ vars.* }}` when the server creates the run, then resolves `{{ secrets.* }}` from token entries in the server vault immediately before the worker executes the steps. Secret expressions remain in the persisted run definition; resolved secret values are not persisted. A missing or non-token secret aborts startup with the affected step and token named in the error.
+[run.environment.env]
+SETUP_TOKEN = "{{ secrets.SETUP_TOKEN }}"
+```
+
+Then put setup in the workflow:
+
+```dot title="workflow.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+digraph Workflow {
+  start [shape=Mdiamond]
+  install [shape=parallelogram, script="bundle install", timeout="5m", on_failure="exit", max_retries=0]
+  database [shape=parallelogram, script="TOKEN=\"$SETUP_TOKEN\" bundle exec rake db:prepare", timeout="5m", on_failure="exit", max_retries=0]
+  work [shape=parallelogram, script="bundle exec rake test"]
+  exit [shape=Msquare]
+  start -> install -> database -> work -> exit
+}
+```
+
+The timeout applies **per command**. Set `timeout="5m"` to retain preparation's
+old default; ordinary commands otherwise default to ten minutes. Keep
+`on_failure="exit"` so a failed setup command prevents downstream work. The
+example assumes no graph retry defaults or exhaustion override. Where those
+exist, preserve the inherited retry count and `on_retries_exhausted` policy rather
+than blindly copying `max_retries=0`. Ordinary shell exit failures do not request
+retries; a nonzero graph retry default alone does not retry them.
+
+For branching workflows, move every outgoing edge from `start` to the final
+setup node, preserving its attributes. Keep the edges between setup commands
+unconditional. Keep setup in the scope that owns the checkout and selected
+environment; repository checkout still happens before these commands.
+
+**Secret scope changes:** a formerly per-step secret moved into
+`[run.environment.env]` (or the selected environment's `env` table) is available
+to every command and process in that workflow environment, including `work` in
+this example. Resolution remains late and output remains redacted. This is
+broader exposure than the old per-step overlay. Do not put resolved secrets into
+scripts or print them. When two old steps used `TOKEN` for different secrets,
+use distinct workflow keys such as `FIRST_TOKEN` and `SECOND_TOKEN`, then map
+with `TOKEN="$FIRST_TOKEN" ./scripts/setup-one.sh` and
+`TOKEN="$SECOND_TOKEN" ./scripts/setup-two.sh`. Both source keys remain available
+workflow-wide. Literal values can stay command-local: `MODE=first ./setup.sh`.
+
+Convert argv values to safely quoted shell arguments. For example, the argv
+argument `a space, 'quote'; $HOME` can be expressed without expansion as:
+
+```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+quoted [shape=parallelogram, script="printf '%s\n' 'a space, '\"'\"'quote'\"'\"'; $HOME'", timeout="5m", on_failure="exit", max_retries=0]
+```
+
+Keep supported input/variable template tokens in their existing script renderer;
+do not turn them into shell command substitutions. Quote shell environment
+expansions as in the secret example.
+
+Server-wide setup must move into each applicable workflow, or into a shared
+script explicitly called by those workflows. Fabro does not choose a repository
+or rewrite user files automatically. Environment images and Dockerfiles remain
+available for installing tools and dependencies.
+
+Historical runs retain their saved admitted commands, encoded per-command env
+overlays, graph digests, and events. Reading, resuming, retrying, or forking a saved
+run uses its admission; it does not recompile retired syntax. Submitting an old
+workflow version as a new run does reject it. Executing commands named
+`run_prepare_…`, including old generated commands, now invokes ordinary stage
+hooks; the old prefix-based hook exemption is removed. Existing encoded secret
+overlays keep their original per-command scope.
+
+The resolved settings API no longer emits `run.prepare` or its preparation
+schemas. Upgrade server, workers, and clients together; clients that required
+that response field must update. Saved records are not rewritten by this change.
 
 ### `[run.clone]`
 
@@ -244,7 +310,7 @@ enabled = true
 depth = 100
 ```
 
-Set `enabled = false` to start runs with an empty workspace. Use [prepare steps](#runprepare) to clone or create any files the workflow needs.
+Set `enabled = false` to start runs with an empty workspace. Use [explicit setup commands](#setup-command-migration) to clone or create any files the workflow needs.
 
 | Field | Description |
 | - | - |
@@ -377,7 +443,7 @@ Unlike permissions-only configuration, declared additional repositories are a ha
 
 The higher-precedence list replaces the lower one wholesale — no union and no `...` splice — and `additional_repositories = []` explicitly clears an inherited list. `additional_repositories` and `permissions` resolve independently; if layering leaves repositories declared while permissions were cleared, resolution reports the invalid combination instead of dropping either field.
 
-See [Additional repositories](/integrations/github#additional-repositories) for what works inside stages (`gh`, GitHub API, plain Git over HTTPS and the common SSH spellings) and for the security boundary.
+See [Additional repositories](https://docs.fabro.sh/integrations/github.md#additional-repositories) for what works inside stages (`gh`, GitHub API, plain Git over HTTPS and the common SSH spellings) and for the security boundary.
 
 ### `[run.notifications]`
 
@@ -427,7 +493,7 @@ commit_timeout = "30s"
 
 ### `[run.inputs]`
 
-Define inputs that are rendered into final workflow string attributes. See [Variables](/workflows/variables) for the full reference.
+Define inputs that are rendered into final workflow string attributes. See [Variables](https://docs.fabro.sh/workflows/variables.md) for the full reference.
 
 ```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [run.inputs]
@@ -503,13 +569,13 @@ fabro_tools = true
 
 `fabro_tools` defaults to `false`. Set it to `true` only for runs whose agents should be able to use the same Fabro run-management MCP tool catalog exposed to human MCP clients: workflow version registration, create, search, get, interact, gather, events, and pair.
 
-One workflow-agent exception is intentional: `fabro_run_create` always creates [child runs](/execution/child-runs) parented to the current run. If an agent supplies `parent_id`, it must match the current run ID.
+One workflow-agent exception is intentional: `fabro_run_create` always creates [child runs](https://docs.fabro.sh/execution/child-runs.md) parented to the current run. If an agent supplies `parent_id`, it must match the current run ID.
 
 This setting is independent of `[run.agent.mcps]`, which configures external MCP servers available to the agent.
 
 ### `[run.agent.mcps]`
 
-Configure [MCP servers](/agents/mcp) available to agent stages during the workflow run. Each server is a named TOML table under `[run.agent.mcps]`. All three transport types are supported: `stdio`, `http`, and `sandbox`.
+Configure [MCP servers](https://docs.fabro.sh/agents/mcp.md) available to agent stages during the workflow run. Each server is a named TOML table under `[run.agent.mcps]`. All three transport types are supported: `stdio`, `http`, and `sandbox`.
 
 ```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [run.agent.mcps.playwright]
@@ -541,13 +607,13 @@ id = "sentry"
 | `startup_timeout` | Max duration for server startup + MCP handshake (e.g. `"10s"`, `"1m"`). | `"10s"` |
 | `tool_timeout` | Max duration for a single tool call. | `"60s"` |
 
-Inline transport commands, URLs, env values, and headers support `{{ vars.* }}` and `{{ secrets.* }}` interpolation. As with prepare steps, server variables resolve at run creation and token secrets resolve at launch; missing values fail closed. See [MCP runtime interpolation](/agents/mcp#runtime-interpolation) for the standalone `fabro exec` difference.
+Inline transport commands, URLs, env values, and headers support `{{ vars.* }}` and `{{ secrets.* }}` interpolation. Server variables resolve at run creation and token secrets resolve at launch; missing values fail closed. See [MCP runtime interpolation](https://docs.fabro.sh/agents/mcp.md#runtime-interpolation) for the standalone `fabro exec` difference.
 
-The `sandbox` transport runs the MCP server inside the workflow's sandbox. This is useful for tools that need access to the sandbox environment, such as browser automation with Playwright. See [MCP](/agents/mcp#sandbox) for details.
+The `sandbox` transport runs the MCP server inside the workflow's sandbox. This is useful for tools that need access to the sandbox environment, such as browser automation with Playwright. See [MCP](https://docs.fabro.sh/agents/mcp.md#sandbox) for details.
 
 ### `[run.pull_request]`
 
-Automatically open a GitHub pull request when the workflow run completes successfully. Requires a [GitHub App](/integrations/github) to be configured and a clone-based Docker or Daytona environment; run creation rejects `enabled = true` on a Local environment.
+Automatically open a GitHub pull request when the workflow run completes successfully. Requires a [GitHub App](https://docs.fabro.sh/integrations/github.md) to be configured and a clone-based Docker or Daytona environment; run creation rejects `enabled = true` on a Local environment.
 
 ```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [run.pull_request]
@@ -585,16 +651,16 @@ sandbox = false
 | `id` | Optional merge identity. Hooks with the same `id` replace each other across layers. |
 | `name` | Optional display name for the hook. |
 | `event` | Lifecycle event: `run_start`, `run_complete`, `stage_start`, `stage_complete`, etc. |
-| `script` | Shell-evaluated command (equivalent to the old `type = "command"` shorthand). |
-| `command` | Argv-style command (alternative to `script`). |
+| `script` | Shell command string. |
+| `command` | Command and arguments as an array of strings, such as `["cargo", "fmt"]`; an alternative to `script`. |
 | `matcher` | Regex matched against node ID or handler type. Limits which stages trigger this hook. |
 | `blocking` | Whether the hook must complete before execution continues. Defaults vary by event. |
-| `timeout` | Human-readable hook timeout (e.g. `"30s"`, `"1m"`). Default: `"60s"`. |
+| `timeout` | Human-readable hook timeout (e.g. `"30s"`, `"1m"`). Default: `"30s"` for prompt hooks, `"60s"` for other types. |
 | `sandbox` | Run inside the sandbox (`true`, default) or on the host (`false`). |
 
 Hook merge semantics: hooks with matching `id` values replace in place. Hooks without an `id` from a higher-precedence layer append after the fully merged inherited hook list.
 
-See [Hooks](/agents/hooks) for hook types beyond scripts (HTTP, prompt, agent).
+See [Hooks](https://docs.fabro.sh/agents/hooks.md) for hook types beyond scripts (HTTP, prompt, agent).
 
 ## Graph path resolution
 
@@ -617,15 +683,15 @@ Fabro resolves workflow behavior in this order (first match wins):
 
 | Source | Priority |
 | - | - |
-| Node-level [stylesheet](/workflows/stylesheets) | Highest |
+| Node-level [stylesheet](https://docs.fabro.sh/workflows/stylesheets.md) | Highest |
 | CLI flags (`--model`, `--provider`, `--environment`) | |
 | Run config TOML (`workflow.toml` or equivalent) | |
 | Graphviz graph attributes (`default_model`, `default_provider`) | |
 | Built-in defaults | Lowest |
 
-<Note>
-  Stylesheet rules on individual nodes always take priority over run config values.
-</Note>
+> [!NOTE]
+>
+> Stylesheet rules on individual nodes always take priority over run config values.
 
 ### Project and machine settings
 

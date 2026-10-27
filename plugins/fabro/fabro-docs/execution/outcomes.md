@@ -17,9 +17,9 @@ Every node execution produces an **outcome** that drives edge routing, retry log
 | `partially_succeeded` | The handler did not fully succeed but produced usable results — typically from retries exhausted with `allow_partial=true` |
 | `skipped` | The node was not executed (e.g. a branch not taken in a parallel fan-out) |
 
-<Note>
-  Retry intent is internal to the engine. It triggers re-execution inside the retry loop and is never visible in edge `condition` expressions. Retryable failures emit `stage.retrying` events while the node is still active, then finish as one of the four outcomes above.
-</Note>
+> [!NOTE]
+>
+> Retry intent is internal to the engine. It triggers re-execution inside the retry loop and is never visible in edge `condition` expressions. Retryable failures emit `stage.retrying` events while the node is still active, then finish as one of the four outcomes above.
 
 ## How handlers produce outcomes
 
@@ -28,7 +28,7 @@ Each node type has its own rules for which outcomes it can return:
 | Handler | Produces | Conditions |
 | - | - | - |
 | **Command** | `succeeded`, `failed` | `succeeded` when exit code is 0; `failed` otherwise |
-| **Agent / Prompt** | `succeeded`, `failed`, `partially_succeeded`, `skipped` | Defaults to `succeeded`. The LLM can set any outcome via a [routing directive](/agents/outputs#routing-directives) JSON object in its response. Backend errors request retry when retryable or finish as `failed`. |
+| **Agent / Prompt** | `succeeded`, `failed`, `partially_succeeded`, `skipped` | Defaults to `succeeded`. The LLM can set any outcome via a [routing directive](https://docs.fabro.sh/agents/outputs.md#routing-directives) JSON object in its response. Backend errors request retry when retryable or finish as `failed`. |
 | **Parallel** | `succeeded`, `partially_succeeded`, `failed` | Waits for every branch. `succeeded` when all branches succeed, `failed` when all branches fail, and `partially_succeeded` for mixed or partial results. A static fan-out with no branches remains partial; a valid `for_each` source with zero items succeeds. |
 | **Human** | `succeeded` | Always succeeds — the user's selection becomes a routing signal via `preferred_label` |
 | **Conditional** | `succeeded` | Always succeeds — routing is handled by the engine's edge selection |
@@ -36,7 +36,7 @@ Each node type has its own rules for which outcomes it can return:
 
 ## Retry loop
 
-When a handler returns a retryable failure, the engine enters the retry loop. If retry attempts remain (per the node's [retry policy](/execution/failures#retry-policies)), the handler re-executes after a backoff delay. If attempts are exhausted, the final outcome depends on `allow_partial`:
+When a handler returns a retryable failure, the engine enters the retry loop. If retry attempts remain (per the node's [retry policy](https://docs.fabro.sh/execution/failures.md#retry-policies)), the handler re-executes after a backoff delay. If attempts are exhausted, the final outcome depends on `allow_partial`:
 
 ```
 ┌─────────────┐
@@ -84,7 +84,7 @@ implement [
 
 In this example, if the agent returns a retryable failure and all 5 standard-policy attempts are used, the node finishes with `partially_succeeded` rather than failing the run.
 
-See [Retry policies](/execution/failures#retry-policies) for the available presets and backoff settings.
+See [Retry policies](https://docs.fabro.sh/execution/failures.md#retry-policies) for the available presets and backoff settings.
 
 ## Succeed on failure
 
@@ -103,11 +103,11 @@ scan [
 ]
 ```
 
-Use `on_failure="succeed"` for nodes whose failure should never block the workflow — optional scans, best-effort cleanup steps, or informational commands where the output matters more than the exit code. An explicit `condition="outcome=failed"` edge still takes priority; the promotion applies only when no explicit route matches. The policy applies only to `failed` and leaves `partially_succeeded` unchanged. See [Failed-node routing policy](/workflows/transitions#failed-node-routing-policy) for the full set of policies.
+Use `on_failure="succeed"` for nodes whose failure should never block the workflow — optional scans, best-effort cleanup steps, or informational commands where the output matters more than the exit code. An explicit `condition="outcome=failed"` edge still takes priority; the promotion applies only when no explicit route matches. The policy applies only to `failed` and leaves `partially_succeeded` unchanged. See [Failed-node routing policy](https://docs.fabro.sh/workflows/transitions.md#failed-node-routing-policy) for the full set of policies.
 
-<Note>
-  `auto_status=true` is the deprecated spelling of `on_failure="succeed"`. Fabro still accepts it as an alias, and validation reports an `auto_status_deprecated` warning with the replacement. Unlike the old attribute, the alias no longer promotes `partially_succeeded` outcomes.
-</Note>
+> [!NOTE]
+>
+> `auto_status=true` is the deprecated spelling of `on_failure="succeed"`. Fabro still accepts it as an alias, and validation reports an `auto_status_deprecated` warning with the replacement. Unlike the old attribute, the alias no longer promotes `partially_succeeded` outcomes.
 
 ## Goal gate interaction
 
@@ -120,7 +120,7 @@ Nodes marked with `goal_gate=true` are checked when the workflow reaches the exi
 
 This means `allow_partial=true` on a goal gate node lets the gate pass even if the node exhausted its retries — the promoted `partially_succeeded` outcome counts as passing. Likewise, a `succeeded` outcome promoted by `on_failure="succeed"` satisfies the gate.
 
-See [Goal gates](/execution/failures#goal-gates) for retry target resolution and failure behavior.
+See [Goal gates](https://docs.fabro.sh/execution/failures.md#goal-gates) for retry target resolution and failure behavior.
 
 ## Outcome in edge conditions
 
@@ -137,7 +137,7 @@ gate -> deploy  [condition="outcome=succeeded || outcome=partially_succeeded"]
 gate -> fix     [condition="outcome=failed"]
 ```
 
-See [Transitions](/workflows/transitions) for the full edge selection logic and operator reference.
+See [Transitions](https://docs.fabro.sh/workflows/transitions.md) for the full edge selection logic and operator reference.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

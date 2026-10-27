@@ -6,9 +6,9 @@
 
 > Get up and running with Fabro
 
-<Note>
-  Fabro runs as a server. This quickstart runs everything locally on your laptop — no deployment required. To self-host the server for a team or 24/7 workflows, see [Deployment](/administration/deployment).
-</Note>
+> [!NOTE]
+>
+> Fabro runs as a server. This quickstart runs everything locally on your laptop — no deployment required. To self-host the server for a team or 24/7 workflows, see [Deployment](https://docs.fabro.sh/administration/deployment.md).
 
 ## Supported platforms
 
@@ -20,45 +20,43 @@
 | macOS | x86\_64 (Intel) | No |
 | Windows | any | No |
 
-<Note>
-  On Intel Macs, run Fabro in a Linux x86\_64 container or VM. Native Windows isn't supported; use WSL2 with a supported Linux architecture.
-</Note>
+> [!NOTE]
+>
+> On Intel Macs, run Fabro in a Linux x86\_64 container or VM. Native Windows isn't supported; use WSL2 with a supported Linux architecture.
 
 ## Install
 
-<Tabs>
-  <Tab title="Claude Code">
-    ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-    curl -fsSL https://fabro.sh/install.md | claude
-    ```
-  </Tab>
+**Claude Code**
 
-  <Tab title="Codex">
-    ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-    codex "$(curl -fsSL https://fabro.sh/install.md)"
-    ```
-  </Tab>
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+curl -fsSL https://fabro.sh/install.md | claude
+```
 
-  <Tab title="Homebrew">
-    ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-    brew install fabro-sh/tap/fabro-nightly
-    ```
-  </Tab>
+**Codex**
 
-  <Tab title="Bash">
-    ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-    curl -fsSL https://fabro.sh/install.sh | bash
-    ```
-  </Tab>
-</Tabs>
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+codex "$(curl -fsSL https://fabro.sh/install.md)"
+```
 
-<Tip>
-  Release binaries and the multi-arch Docker image ship with [SLSA Build Provenance](/reference/verifying-releases) attestations you can verify with `gh attestation verify`.
-</Tip>
+**Homebrew**
 
-<Note>
-  Self-hosting the server? See [Self-host with Docker](/administration/self-host-docker) and [Server Operations](/reference/server-operations) for the install wizard, auth, and CLI-pointing.
-</Note>
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+brew install fabro-sh/tap/fabro-nightly
+```
+
+**Bash**
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+curl -fsSL https://fabro.sh/install.sh | bash
+```
+
+> [!TIP]
+>
+> Release binaries and the multi-arch Docker image ship with [SLSA Build Provenance](https://docs.fabro.sh/reference/verifying-releases.md) attestations you can verify with `gh attestation verify`.
+
+> [!NOTE]
+>
+> Self-hosting the server? See [Self-host with Docker](https://docs.fabro.sh/administration/self-host-docker.md) and [Server Operations](https://docs.fabro.sh/reference/server-operations.md) for the install wizard, auth, and CLI-pointing.
 
 ## Initialize your project
 
@@ -79,15 +77,15 @@ OPENAI_API_KEY=sk-...
 GEMINI_API_KEY=AI...
 ```
 
-<Note>
-  You only need one provider key to get started. Add more to enable multi-model workflows.
-
-  For server-backed runs, store provider keys in the server vault instead:
-
-  ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-  fabro secret set ANTHROPIC_API_KEY sk-ant-...
-  ```
-</Note>
+> [!NOTE]
+>
+> You only need one provider key to get started. Add more to enable multi-model workflows.
+>
+> For server-backed runs, store provider keys in the server vault instead:
+>
+> ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+> fabro secret set ANTHROPIC_API_KEY sk-ant-...
+> ```
 
 ## Run your first workflow
 
@@ -97,15 +95,13 @@ fabro run hello
 
 ## Next steps
 
-<Columns cols={2}>
-  <Card title="Why Fabro?" icon="lightbulb" href="/getting-started/why-fabro">
-    Understand the problems Fabro solves.
-  </Card>
+> **[Why Fabro?](https://docs.fabro.sh/getting-started/why-fabro.md)**
+>
+> Understand the problems Fabro solves.
 
-  <Card title="Workflows" icon="diagram-project" href="/core-concepts/workflows">
-    Learn how to define workflow graphs in Graphviz.
-  </Card>
-</Columns>
+> **[Workflows](https://docs.fabro.sh/core-concepts/workflows.md)**
+>
+> Learn how to define workflow graphs in Graphviz.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

@@ -12,9 +12,7 @@ This pattern is useful when you maintain a downstream implementation (e.g., a Go
 
 ## The workflow
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/example-semantic-port.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=adfe94f74bd156898dc140d6d456551d" alt="Semantic Port workflow: Start → Fetch → Analyze → Plan → Implement → Validate → Tests pass? → Finalize → loops back to Fetch, with Skip shortcut from Analyze back to Fetch, Fix loop from gate back to Validate, and Done exit from Fetch" width="960" height="160" data-path="images/example-semantic-port.svg" />
-</Frame>
+![Semantic Port workflow: Start → Fetch → Analyze → Plan → Implement → Validate → Tests pass? → Finalize → loops back to Fetch, with Skip shortcut from Analyze back to Fetch, Fix loop from gate back to Validate, and Done exit from Fetch](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/example-semantic-port.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=adfe94f74bd156898dc140d6d456551d)
 
 ```dot title="semantic-port.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph SemanticPort {
@@ -30,6 +28,8 @@ digraph SemanticPort {
     ]
 
     start [shape=Mdiamond, label="Start"]
+    fetch_upstream [shape=parallelogram, script="git clone https://github.com/openai/openai-agents-python upstream || (cd upstream && git pull)", timeout="5m", on_failure="exit", max_retries=0]
+    install_ledger [shape=parallelogram, script="pip install -r ledger/requirements.txt", timeout="5m", on_failure="exit", max_retries=0]
     exit  [shape=Msquare, label="Exit"]
 
     // Phase 1: Find the next unprocessed commit
@@ -122,7 +122,7 @@ digraph SemanticPort {
     ]
 
     // Wiring
-    start -> fetch
+    start -> fetch_upstream -> install_ledger -> fetch
 
     fetch -> analyze [label="Process", condition="preferred_label=process"]
     fetch -> exit    [label="Done"]
@@ -189,7 +189,7 @@ The `fix` node has `max_visits=3`, preventing infinite retry cycles. If the fix 
 
 ### Skip vs. port branching
 
-The `analyze` node uses [routing directives](/workflows/transitions#agent-transitions) to choose between two paths:
+The `analyze` node uses [routing directives](https://docs.fabro.sh/workflows/transitions.md#agent-transitions) to choose between two paths:
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 analyze -> plan  [label="Port", condition="preferred_label=port"]
@@ -233,12 +233,6 @@ provider = "anthropic"
 "claude-sonnet-4-5" = ["openai"]
 "gemini-3.1-pro-preview" = ["anthropic"]
 
-[[run.prepare.steps]]
-script = "git clone https://github.com/openai/openai-agents-python upstream || (cd upstream && git pull)"
-
-[[run.prepare.steps]]
-script = "pip install -r ledger/requirements.txt"
-
 [run.inputs]
 upstream_repo = "openai/openai-agents-python"
 downstream_lang = "go"
@@ -263,23 +257,21 @@ The core structure is always the same: fetch the next item, analyze it, decide o
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="Transitions" icon="route" href="/workflows/transitions">
-    Edge conditions, routing directives, and how agents control flow.
-  </Card>
+> **[Transitions](https://docs.fabro.sh/workflows/transitions.md)**
+>
+> Edge conditions, routing directives, and how agents control flow.
 
-  <Card title="Model Stylesheets" icon="palette" href="/workflows/stylesheets">
-    CSS-like rules for assigning models to workflow nodes.
-  </Card>
+> **[Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md)**
+>
+> CSS-like rules for assigning models to workflow nodes.
 
-  <Card title="Failures" icon="triangle-exclamation" href="/execution/failures">
-    Retry policies, loop detection, and max\_visits.
-  </Card>
+> **[Failures](https://docs.fabro.sh/execution/failures.md)**
+>
+> Retry policies, loop detection, and max\_visits.
 
-  <Card title="Run Configuration" icon="gear" href="/execution/run-configuration">
-    TOML configs for repeatable, parameterized runs.
-  </Card>
-</Columns>
+> **[Run Configuration](https://docs.fabro.sh/execution/run-configuration.md)**
+>
+> TOML configs for repeatable, parameterized runs.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

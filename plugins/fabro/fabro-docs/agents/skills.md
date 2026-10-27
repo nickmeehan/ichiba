@@ -24,9 +24,9 @@ Within each directory, Fabro looks for `*/SKILL.md` files (one level of nesting)
 
 When the same skill name appears in multiple directories, **later directories override earlier ones**. This means project-level skills take precedence over global skills, letting you customize behavior per-repo.
 
-<Note>
-  You can override the default directories by setting `skill_dirs` in the session configuration. When set, only the specified directories are searched.
-</Note>
+> [!NOTE]
+>
+> You can override the default directories by setting `skill_dirs` in the session configuration. When set, only the specified directories are searched.
 
 ## Invocation
 

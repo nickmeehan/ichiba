@@ -10,9 +10,7 @@ This tutorial runs three code review perspectives in parallel — security, arch
 
 ## The workflow
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-parallel-review.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=157d945602fa398cfff2fd87144eeb6f" alt="Parallel Review workflow: Start → Fan Out → Security Audit, Architecture Review, Code Quality → Merge → Final Report → Exit" width="855" height="203" data-path="images/tutorial-parallel-review.svg" />
-</Frame>
+![Parallel Review workflow: Start → Fan Out → Security Audit, Architecture Review, Code Quality → Merge → Final Report → Exit](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-parallel-review.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=157d945602fa398cfff2fd87144eeb6f)
 
 ```dot title="parallel.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph Parallel {
@@ -60,9 +58,9 @@ fork -> quality
 
 All three branches start concurrently and operate in the same sandbox checkout and working directory. This review is safe because the branches are prompt nodes with no workspace tools.
 
-<Warning>
-  Parallel branches are not isolated from one another. If branches edit files, they can observe, race with, or overwrite each other's changes. Fabro does not lock files, detect overlapping writes, or warn about races. Keep branches read-only or give each branch responsibility for disjoint paths.
-</Warning>
+> [!WARNING]
+>
+> Parallel branches are not isolated from one another. If branches edit files, they can observe, race with, or overwrite each other's changes. Fabro does not lock files, detect overlapping writes, or warn about races. Keep branches read-only or give each branch responsibility for disjoint paths.
 
 The parallel node always waits for every branch to finish before continuing.
 
@@ -150,12 +148,12 @@ A retry keeps the same result index and branch identity, and releases its
 the batch, resuming it reruns every item because per-item checkpoints are not
 created.
 
-<Warning>
-  The randomized fence prevents candidate text from closing its own data block,
-  but it does not sandbox a tool-enabled reviewer. Candidate data can still try
-  to influence the model. Limit the target agent's tools and permissions to the
-  minimum needed for the review.
-</Warning>
+> [!WARNING]
+>
+> The randomized fence prevents candidate text from closing its own data block,
+> but it does not sandbox a tool-enabled reviewer. Candidate data can still try
+> to influence the model. Limit the target agent's tools and permissions to the
+> minimum needed for the review.
 
 ## What you've learned
 
@@ -167,9 +165,9 @@ created.
 
 ## Next
 
-<Card title="Multi-Model Routing" icon="arrow-right" href="/tutorials/multi-model">
-  Assign different models to different workflow nodes using stylesheets.
-</Card>
+> **[Multi-Model Routing](https://docs.fabro.sh/tutorials/multi-model.md)**
+>
+> Assign different models to different workflow nodes using stylesheets.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

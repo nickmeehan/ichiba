@@ -10,7 +10,7 @@ A workflow can pull in another `.fabro` file as a reusable subgraph. Use imports
 
 Imports are resolved at parse time: the imported graph is merged into the parent's graph, with node IDs prefixed to avoid collisions. There is no runtime "sub-workflow" boundary; once merged, an imported node behaves like any other node in the run.
 
-If you need runtime delegation to separate durable runs, use [child runs](/execution/child-runs) instead.
+If you need runtime delegation to separate durable runs, use [child runs](https://docs.fabro.sh/execution/child-runs.md) instead.
 
 ## Basic example
 
@@ -92,7 +92,7 @@ Every node from `validate.fabro` inherits `model="haiku"` and `reasoning_effort=
 
 ## Class propagation
 
-Classes on the placeholder are unioned into every imported node's class list, in addition to a class derived from the placeholder ID itself (lowercased, non-alphanumeric stripped). This lets [stylesheets](/workflows/stylesheets) target imported subgraphs as a group.
+Classes on the placeholder are unioned into every imported node's class list, in addition to a class derived from the placeholder ID itself (lowercased, non-alphanumeric stripped). This lets [stylesheets](https://docs.fabro.sh/workflows/stylesheets.md) target imported subgraphs as a group.
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 validate [import="./validate.fabro", class="fast shared"]
@@ -127,7 +127,7 @@ digraph Lint {
 
 Imported prompts receive the same `{{ goal }}`, `{{ inputs.* }}`, and `{{ vars.* }}` context as prompts in the root graph. The server-managed variable values are the snapshot captured when the run is created.
 
-Do not put templates in `import` paths, node IDs, edge definitions, other structural references, or attributes besides `prompt` — they are literal text. See [Variables](/workflows/variables#expansion-timing) for the rendering pipeline.
+Do not put templates in `import` paths, node IDs, edge definitions, other structural references, or attributes besides `prompt` — they are literal text. See [Variables](https://docs.fabro.sh/workflows/variables.md#expansion-timing) for the rendering pipeline.
 
 ## Nested imports
 

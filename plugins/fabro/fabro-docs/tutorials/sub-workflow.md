@@ -10,15 +10,13 @@ This tutorial uses a **sub-workflow node** to delegate part of a parent workflow
 
 ## Prerequisites
 
-Complete the [Branch & Loop](/tutorials/branch-loop) tutorial — the child workflow in this tutorial reuses that pattern.
+Complete the [Branch & Loop](https://docs.fabro.sh/tutorials/branch-loop.md) tutorial — the child workflow in this tutorial reuses that pattern.
 
 ## The child workflow
 
 First, create a standalone implement-and-test workflow. This is a normal workflow that can run on its own or be invoked as a sub-workflow by a parent.
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-sub-workflow-child.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=fa86e6ac8933f9f2131bdaab8b569fec" alt="Child workflow: Start → Implement → Validate → Tests passing? → Pass to Exit or Fix back to Implement" width="856" height="105" data-path="images/tutorial-sub-workflow-child.svg" />
-</Frame>
+![Child workflow: Start → Implement → Validate → Tests passing? → Pass to Exit or Fix back to Implement](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-sub-workflow-child.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=fa86e6ac8933f9f2131bdaab8b569fec)
 
 ```dot title="implement-and-test.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph ImplementAndTest {
@@ -38,15 +36,13 @@ digraph ImplementAndTest {
 }
 ```
 
-This is the same implement-test-fix loop from the [Branch & Loop](/tutorials/branch-loop) tutorial, packaged as its own file.
+This is the same implement-test-fix loop from the [Branch & Loop](https://docs.fabro.sh/tutorials/branch-loop.md) tutorial, packaged as its own file.
 
 ## The parent workflow
 
 Now create a parent workflow that delegates to the child:
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-sub-workflow.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=f2f38c98eae6995a20b8a70c2d1ee928" alt="Sub-Workflow: Start → Plan (agent) → Implement & Test (house) → Review (agent) → Exit" width="727" height="59" data-path="images/tutorial-sub-workflow.svg" />
-</Frame>
+![Sub-Workflow: Start → Plan (agent) → Implement & Test (house) → Review (agent) → Exit](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-sub-workflow.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=f2f38c98eae6995a20b8a70c2d1ee928)
 
 ```dot title="sub-workflow.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph SubWorkflow {
@@ -124,7 +120,7 @@ Sub-workflows are most valuable when:
 
 For simpler cases, just add more nodes to a single workflow. Sub-workflows add a layer of indirection — use them when the benefits of reuse or encapsulation justify it.
 
-Use [child runs](/execution/child-runs) instead when the delegated work should be a separate durable run that can be listed, approved, cancelled, retried, inspected, and supervised independently.
+Use [child runs](https://docs.fabro.sh/execution/child-runs.md) instead when the delegated work should be a separate durable run that can be listed, approved, cancelled, retried, inspected, and supervised independently.
 
 ## What you've learned
 
@@ -136,23 +132,21 @@ Use [child runs](/execution/child-runs) instead when the delegated work should b
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="Nodes & Stages" icon="shapes" href="/workflows/stages-and-nodes">
-    Complete reference for all node types.
-  </Card>
+> **[Nodes & Stages](https://docs.fabro.sh/workflows/stages-and-nodes.md)**
+>
+> Complete reference for all node types.
 
-  <Card title="Graphviz Language" icon="code" href="/reference/dot-language">
-    Full syntax reference including sub-workflow attributes.
-  </Card>
+> **[Graphviz Language](https://docs.fabro.sh/reference/dot-language.md)**
+>
+> Full syntax reference including sub-workflow attributes.
 
-  <Card title="Context" icon="database" href="/execution/context">
-    How context flows between nodes and across workflow boundaries.
-  </Card>
+> **[Context](https://docs.fabro.sh/execution/context.md)**
+>
+> How context flows between nodes and across workflow boundaries.
 
-  <Card title="Branch & Loop" icon="rotate" href="/tutorials/branch-loop">
-    The implement-test-fix pattern used in the child workflow.
-  </Card>
-</Columns>
+> **[Branch & Loop](https://docs.fabro.sh/tutorials/branch-loop.md)**
+>
+> The implement-test-fix pattern used in the child workflow.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

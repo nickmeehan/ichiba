@@ -51,7 +51,7 @@ Key server config options:
 ### Run lifecycle
 
 1. **Submit** — Register immutable workflow content with `POST /api/v1/workflow-versions`, then submit `POST /api/v1/runs` with its `workflow_version_id` and an explicit target. The run is created with status `submitted` and the response returns immediately with the run ID.
-2. **Start request** — `POST /api/v1/runs/{id}/start` moves normal runs to `runnable`. Parent-generated [child runs](/execution/child-runs) may move to `pending` with `approval_required`.
+2. **Start request** — `POST /api/v1/runs/{id}/start` moves normal runs to `runnable`. Parent-generated [child runs](https://docs.fabro.sh/execution/child-runs.md) may move to `pending` with `approval_required`.
 3. **Approve if needed** — `POST /api/v1/runs/{id}/approve` moves an approval-gated run to `runnable`; `deny` fails it with `approval_denied`.
 4. **Schedule** — A background scheduler promotes `runnable` runs to `running` in FIFO order, up to the concurrency limit.
 5. **Execute** — A worker runs the admitted graph on Petri, streaming events to all subscribers.
@@ -59,11 +59,11 @@ Key server config options:
 
 ### Event streaming
 
-The API streams run events via [Server-Sent Events (SSE)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events). Every significant action — stage starts, LLM calls, tool invocations, edge selections — is emitted as a structured JSON event. The web UI uses this endpoint for real-time run monitoring. Any HTTP client that supports SSE can subscribe. See the [run events endpoint](/api-reference/runs/stream-run-events) in the API reference.
+The API streams run events via [Server-Sent Events (SSE)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events). Every significant action — stage starts, LLM calls, tool invocations, edge selections — is emitted as a structured JSON event. The web UI uses this endpoint for real-time run monitoring. Any HTTP client that supports SSE can subscribe. See the [run events endpoint](https://docs.fabro.sh/api-reference/runs/stream-run-events) in the API reference.
 
 ### Human-in-the-loop
 
-In API mode, human-in-the-loop questions are served over HTTP instead of terminal prompts. The engine blocks the current stage until an answer is received, then continues execution. See the [list questions](/api-reference/human-in-the-loop/list-run-questions) and [submit answer](/api-reference/human-in-the-loop/submit-run-answer) API reference pages.
+In API mode, human-in-the-loop questions are served over HTTP instead of terminal prompts. The engine blocks the current stage until an answer is received, then continues execution. See the [list questions](https://docs.fabro.sh/api-reference/human-in-the-loop/list-run-questions.md) and [submit answer](https://docs.fabro.sh/api-reference/human-in-the-loop/submit-run-answer.md) API reference pages.
 
 ### Authentication
 
@@ -96,7 +96,7 @@ The UI provides:
 
 ## Comparison
 
-See [Deployment](/administration/deployment) for where the Fabro server runs and the trade-offs between local and self-hosted modes.
+See [Deployment](https://docs.fabro.sh/administration/deployment.md) for where the Fabro server runs and the trade-offs between local and self-hosted modes.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

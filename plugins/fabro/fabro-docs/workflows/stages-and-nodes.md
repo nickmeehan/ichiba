@@ -53,7 +53,7 @@ Key attributes:
 | `prompt` | The task instructions for the agent |
 | `reasoning_effort` | `low`, `medium`, or `high` (default: `high`) |
 | `max_tokens` | Maximum tokens for LLM responses |
-| `fidelity` | How much prior context is passed to this node (see [Context](/execution/context#fidelity-controlling-agent-context)) |
+| `fidelity` | How much prior context is passed to this node (see [Context](https://docs.fabro.sh/execution/context.md#fidelity-controlling-agent-context)) |
 | `thread_id` | Groups nodes into a shared conversation thread (advanced — see below) |
 | `timeout` | Execution timeout (e.g. `"900s"`). Time spent waiting for an answer to an agent question does not count. |
 
@@ -68,7 +68,7 @@ Key attributes:
 | `summary:low` | Brief summary with just outcomes per stage |
 | `truncate` | Minimal — only the goal and run ID |
 
-Fidelity can also be set at the graph level (`default_fidelity`) or on individual edges to control the transition between stages. See [Context](/execution/context#fidelity-controlling-agent-context) for the full reference on fidelity precedence, preamble construction, and thread integration.
+Fidelity can also be set at the graph level (`default_fidelity`) or on individual edges to control the transition between stages. See [Context](https://docs.fabro.sh/execution/context.md#fidelity-controlling-agent-context) for the full reference on fidelity precedence, preamble construction, and thread integration.
 
 **Thread ID:**
 
@@ -114,7 +114,7 @@ When a node has no explicit `shape` or `type`, the presence of `script` makes it
 
 | Attribute | Description |
 | - | - |
-| `script` | The shell command to execute (required). Substitutes `{{ goal }}`, `{{ inputs.NAME }}`, and `{{ vars.NAME }}` — see [command node scripts](/workflows/variables#command-node-scripts) |
+| `script` | The shell command to execute (required). Substitutes `{{ goal }}`, `{{ inputs.NAME }}`, and `{{ vars.NAME }}` — see [command node scripts](https://docs.fabro.sh/workflows/variables.md#command-node-scripts) |
 | `language` | `"shell"` (default) or `"python"` |
 | `stdin_source` | Flat runtime context key to pass to the command's standard input. `context.NAME` first checks that exact key, then falls back to `NAME`. |
 
@@ -240,7 +240,7 @@ These attributes can be set on any node type:
 | Attribute | Description |
 | - | - |
 | `label` | Display name shown in the graph visualization |
-| `class` | CSS-like class for [model stylesheet](/workflows/stylesheets) targeting. Separate multiple classes with spaces. |
+| `class` | CSS-like class for [model stylesheet](https://docs.fabro.sh/workflows/stylesheets.md) targeting. Separate multiple classes with spaces. |
 | `max_visits` | Max times this node can execute in a run. Overrides the graph-level `max_node_visits` for this node. |
 | `goal_gate` | When `true`, the workflow fails if this node doesn't succeed |
 | `max_retries` | Override default retry count for this node |

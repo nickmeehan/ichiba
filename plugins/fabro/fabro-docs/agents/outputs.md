@@ -22,7 +22,7 @@ Every agent and prompt node sets three context keys from its response:
 | `last_response` | The response text, truncated to the first 200 characters |
 | `response.{node_id}` | The full response text |
 
-These keys are available to downstream nodes via the [context](/execution/context). The `last_response` key provides a quick preview, while `response.{node_id}` preserves the complete output for nodes that need it.
+These keys are available to downstream nodes via the [context](https://docs.fabro.sh/execution/context.md). The `last_response` key provides a quick preview, while `response.{node_id}` preserves the complete output for nodes that need it.
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 plan -> implement -> review -> exit
@@ -104,7 +104,7 @@ The last-file fallback only reads `.json` and `.md` files (case-insensitive), an
 
 Prompt nodes do not use file fallbacks; they validate or extract routing directives from the response text only. Command nodes likewise have no file fallback and validate only their merged stdout and stderr.
 
-If no source provides routing directives, the transition falls through to condition matching, unconditional edges, or weight-based tiebreaking as described in [Transitions](/workflows/transitions).
+If no source provides routing directives, the transition falls through to condition matching, unconditional edges, or weight-based tiebreaking as described in [Transitions](https://docs.fabro.sh/workflows/transitions.md).
 
 ### Instructing the agent
 
@@ -153,9 +153,9 @@ For example, node `audit` writes its parsed custom output to `output.audit`. Fab
 
 If custom schema validation fails for an agent or prompt node, Fabro sends concise validation feedback to the same prompt conversation or agent session and asks for corrected JSON. After `output_retries` repair turns are exhausted, the node fails terminally with `output schema validation failed after N repair attempt(s)`. A command node instead fails deterministically after its first validation, without a repair turn or command retry.
 
-<Note>
-  Structured output validation applies to agent, prompt, and command nodes. `backend="acp"` does not support `output_schema` in this release. Custom schemas update `output.{node_id}`; routing schemas update routing fields and merge `context_updates` as flat context keys that edge conditions can read. Edge conditions cannot traverse the custom `output.{node_id}` object.
-</Note>
+> [!NOTE]
+>
+> Structured output validation applies to agent, prompt, and command nodes. `backend="acp"` does not support `output_schema` in this release. Custom schemas update `output.{node_id}`; routing schemas update routing fields and merge `context_updates` as flat context keys that edge conditions can read. Edge conditions cannot traverse the custom `output.{node_id}` object.
 
 ## Output logging
 
@@ -215,7 +215,7 @@ Checkpoints, checkpoint-completed events, forks, and resumes persist these `blob
 
 ### Preamble rendering
 
-When Fabro builds a [preamble](/execution/context#preamble-construction) for a downstream stage, it first materializes any blob refs into execution-local files and then renders a reference instead of inlining the full content:
+When Fabro builds a [preamble](https://docs.fabro.sh/execution/context.md#preamble-construction) for a downstream stage, it first materializes any blob refs into execution-local files and then renders a reference instead of inlining the full content:
 
 ```markdown theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 ## Completed stages
@@ -245,9 +245,9 @@ For remote sandboxes (Docker, Daytona), execution-time file access happens insid
 
 In both cases, downstream handlers and agents continue to consume ordinary `file://` pointers during execution.
 
-<Note>
-  For local sandboxes, syncing is a no-op since the agent can already access the host filesystem directly.
-</Note>
+> [!NOTE]
+>
+> For local sandboxes, syncing is a no-op since the agent can already access the host filesystem directly.
 
 ## Automatic asset capture
 
@@ -278,7 +278,7 @@ include = [
 ]
 ```
 
-Patterns are rooted at the sandbox working directory. `*` and `?` stay within one path segment, while `**` crosses directories. See [`[run.artifacts]`](/execution/run-configuration#runartifacts) for the complete matching contract.
+Patterns are rooted at the sandbox working directory. `*` and `?` stay within one path segment, while `**` crosses directories. See [`[run.artifacts]`](https://docs.fabro.sh/execution/run-configuration#runartifacts) for the complete matching contract.
 
 Fabro prunes dependency, cache, and build directories including `.git`, `node_modules`, `target`, `.venv`, `.cache`, and `dist`.
 
@@ -295,7 +295,7 @@ Outputs and artifacts appear in several observability surfaces:
 | `StageCompleted` event | `files_touched` list for the stage |
 | `WorkflowRunCompleted` event | `artifact_count` -- total number of offloaded artifacts across the run |
 | Web UI | Run stage output, artifact version history, individual downloads, and a ZIP of the latest files |
-| [Preambles](/execution/context#preamble-construction) | File list and artifact pointer references for completed stages |
+| [Preambles](https://docs.fabro.sh/execution/context.md#preamble-construction) | File list and artifact pointer references for completed stages |
 | Stage logs | `status.json` in each stage's run directory contains the full outcome including `files_touched` |
 
 

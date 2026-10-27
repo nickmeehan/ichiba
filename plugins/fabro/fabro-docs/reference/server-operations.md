@@ -6,7 +6,7 @@
 
 > Operate the Fabro server: starting, install wizard, auth, web UI, and pointing the CLI at it
 
-This page covers operating the Fabro server once it's running, whether locally on your laptop or self-hosted in a container. For where to run it, see [Deployment](/administration/deployment).
+This page covers operating the Fabro server once it's running, whether locally on your laptop or self-hosted in a container. For where to run it, see [Deployment](https://docs.fabro.sh/administration/deployment.md).
 
 ## Starting the server
 
@@ -50,7 +50,7 @@ Common flags:
 | `--environment` | — | Override default environment slug |
 | `--max-concurrent-runs` | `5` | Maximum concurrent run executions |
 
-See [Server Configuration](/administration/server-configuration) for the full `settings.toml` reference.
+See [Server Configuration](https://docs.fabro.sh/administration/server-configuration.md) for the full `settings.toml` reference.
 
 ### Upgrading from SlateDB
 
@@ -64,7 +64,7 @@ need to recover historical runs using a reader compatible with the older
 storage format.
 
 Artifact files use the separate local or S3 object store configured through
-`[server.artifacts]` in [Server Configuration](/administration/server-configuration).
+`[server.artifacts]` in [Server Configuration](https://docs.fabro.sh/administration/server-configuration.md).
 
 #### Legacy SlateDB settings
 
@@ -117,12 +117,12 @@ run_id=$(curl --fail-with-body -sS http://localhost:3000/api/v1/runs \
 curl --fail-with-body -X POST "http://localhost:3000/api/v1/runs/$run_id/start"
 ```
 
-The server returns immediately with a run ID. After a start request, a background scheduler promotes `runnable` runs to `running` in FIFO order, up to the concurrency limit. Parent-generated [child runs](/execution/child-runs) can remain `pending` until a user approves them.
+The server returns immediately with a run ID. After a start request, a background scheduler promotes `runnable` runs to `running` in FIFO order, up to the concurrency limit. Parent-generated [child runs](https://docs.fabro.sh/execution/child-runs.md) can remain `pending` until a user approves them.
 
 ## Run lifecycle
 
 1. **Submit** — `POST /api/v1/runs` creates the run with status `submitted`.
-2. **Start request** — `POST /api/v1/runs/{id}/start` makes normal runs `runnable`; parent-generated [child runs](/execution/child-runs) may become `pending` with `approval_required`.
+2. **Start request** — `POST /api/v1/runs/{id}/start` makes normal runs `runnable`; parent-generated [child runs](https://docs.fabro.sh/execution/child-runs.md) may become `pending` with `approval_required`.
 3. **Approve if needed** — Approving a pending child run makes it `runnable`; denying it fails with `approval_denied`.
 4. **Schedule** — The scheduler picks up `runnable` runs up to `max_concurrent_runs`.
 5. **Execute** — The engine walks the graph, streaming events to all subscribers.
@@ -141,21 +141,21 @@ The web UI connects to the API server and provides:
 * **Workflows** — Browse available workflows, view their graphs, and see run history
 * **Insights** — SQL-based analysis across runs via DuckDB
 
-<Frame caption="The Runs board shows all active runs organized by status.">
-  <img src="https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/web/runs-board.png?fit=max&auto=format&n=_yTKyxnEAApivGto&q=85&s=a09a64aa9bd13e2e009ba2cd4c758681" alt="Fabro web UI Runs board with Working, Pending, Verify, and Merge columns" width="2400" height="1558" data-path="images/web/runs-board.png" />
-</Frame>
+![Fabro web UI Runs board with Working, Pending, Verify, and Merge columns](https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/web/runs-board.png?fit=max\&auto=format\&n=_yTKyxnEAApivGto\&q=85\&s=a09a64aa9bd13e2e009ba2cd4c758681)
 
-<Frame caption="The run detail view shows stage progress alongside the workflow graph.">
-  <img src="https://mintcdn.com/qltysoftware-21b56213/CeBrW099_Fr5Vnfo/images/web/run-overview.png?fit=max&auto=format&n=CeBrW099_Fr5Vnfo&q=85&s=3f61f24580a49e95d179a9f2dec1ed13" alt="Fabro web UI run detail showing stages and workflow graph" width="2400" height="1558" data-path="images/web/run-overview.png" />
-</Frame>
+The Runs board shows all active runs organized by status.
+
+![Fabro web UI run detail showing stages and workflow graph](https://mintcdn.com/qltysoftware-21b56213/CeBrW099_Fr5Vnfo/images/web/run-overview.png?fit=max\&auto=format\&n=CeBrW099_Fr5Vnfo\&q=85\&s=3f61f24580a49e95d179a9f2dec1ed13)
+
+The run detail view shows stage progress alongside the workflow graph.
 
 ## Event streaming
 
-The API streams run events via [Server-Sent Events (SSE)](/api-reference/runs/stream-run-events). Every stage start, LLM call, tool invocation, and edge selection is emitted as a structured JSON event. Any HTTP client that supports SSE can subscribe — the web UI is just one consumer.
+The API streams run events via [Server-Sent Events (SSE)](https://docs.fabro.sh/api-reference/runs/stream-run-events). Every stage start, LLM call, tool invocation, and edge selection is emitted as a structured JSON event. Any HTTP client that supports SSE can subscribe — the web UI is just one consumer.
 
 ## Human-in-the-loop
 
-Human-in-the-loop questions are served over HTTP. The engine blocks the current stage until an answer is submitted, then continues execution. See the [list questions](/api-reference/human-in-the-loop/list-run-questions) and [submit answer](/api-reference/human-in-the-loop/submit-run-answer) API reference pages.
+Human-in-the-loop questions are served over HTTP. The engine blocks the current stage until an answer is submitted, then continues execution. See the [list questions](https://docs.fabro.sh/api-reference/human-in-the-loop/list-run-questions.md) and [submit answer](https://docs.fabro.sh/api-reference/human-in-the-loop/submit-run-answer.md) API reference pages.
 
 ## Authentication
 
@@ -202,27 +202,25 @@ fabro auth login --server https://fabro.example.com/api/v1 --dev-token fabro_dev
 
 `fabro model list` and `fabro model test` honor `[cli.target]` by default unless you explicitly pass `--storage-dir`. `fabro exec` remains a local agent session and only uses the server when you pass `--server`.
 
-See [User Configuration](/reference/user-configuration#cli-target-section) for the full connection options, including client certificates for proxy-terminated HTTPS endpoints.
+See [User Configuration](https://docs.fabro.sh/reference/user-configuration.md#cli-target-section) for the full connection options, including client certificates for proxy-terminated HTTPS endpoints.
 
 ## Next steps
 
-<Columns cols={2}>
-  <Card title="Deployment" icon="server" href="/administration/deployment">
-    Choose where the server runs: laptop or self-hosted Docker container.
-  </Card>
+> **[Deployment](https://docs.fabro.sh/administration/deployment.md)**
+>
+> Choose where the server runs: laptop or self-hosted Docker container.
 
-  <Card title="Server Configuration" icon="gear" href="/administration/server-configuration">
-    Full settings.toml reference — authentication, reverse-proxy TLS, run defaults, and more.
-  </Card>
+> **[Server Configuration](https://docs.fabro.sh/administration/server-configuration.md)**
+>
+> Full settings.toml reference — authentication, reverse-proxy TLS, run defaults, and more.
 
-  <Card title="API Reference" icon="code" href="/api-reference/overview">
-    REST API for submitting runs, streaming events, and managing resources.
-  </Card>
+> **[API Reference](https://docs.fabro.sh/api-reference/overview.md)**
+>
+> REST API for submitting runs, streaming events, and managing resources.
 
-  <Card title="How Fabro Works" icon="lightbulb" href="/core-concepts/how-fabro-works">
-    The workflow engine and architecture.
-  </Card>
-</Columns>
+> **[How Fabro Works](https://docs.fabro.sh/core-concepts/how-fabro-works.md)**
+>
+> The workflow engine and architecture.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

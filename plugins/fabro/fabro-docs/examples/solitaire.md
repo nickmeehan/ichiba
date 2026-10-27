@@ -12,9 +12,7 @@ This pattern is useful when you want an agent to build something non-trivial fro
 
 ## The workflow
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/example-solitaire.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=5c66ed1407f655b13cdb5b9291427b28" alt="Build Solitaire workflow: Start → Spec → Setup → OK? → Data → OK? → Logic → OK? → UI → OK? → Integrate → OK? → Review → OK? → Exit, with Retry arcs from each gate back to its phase, and a Fix arc from the review gate back to UI" width="1210" height="155" data-path="images/example-solitaire.svg" />
-</Frame>
+![Build Solitaire workflow: Start → Spec → Setup → OK? → Data → OK? → Logic → OK? → UI → OK? → Integrate → OK? → Review → OK? → Exit, with Retry arcs from each gate back to its phase, and a Fix arc from the review gate back to UI](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/example-solitaire.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=5c66ed1407f655b13cdb5b9291427b28)
 
 ```dot title="build-solitaire.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph BuildSolitaire {
@@ -32,6 +30,7 @@ digraph BuildSolitaire {
     ]
 
     start [shape=Mdiamond, label="Start"]
+    install_dependencies [shape=parallelogram, script="python3 -m venv .venv && . .venv/bin/activate && pip install pytest curses", timeout="5m", on_failure="exit", max_retries=0]
     exit  [shape=Msquare, label="Exit"]
 
     // Phase 0: Expand the goal into a detailed spec
@@ -151,7 +150,7 @@ digraph BuildSolitaire {
     check_review [shape=diamond, label="Review OK?"]
 
     // Wiring: linear phases with verify-gate loops
-    start -> expand_spec -> impl_setup -> verify_setup -> check_setup
+    start -> install_dependencies -> expand_spec -> impl_setup -> verify_setup -> check_setup
 
     check_setup -> impl_data  [condition="outcome=succeeded"]
     check_setup -> impl_setup [condition="outcome=failed", label="Retry"]
@@ -274,9 +273,6 @@ provider = "anthropic"
 [run.model.fallbacks]
 "claude-sonnet-4-5" = ["openai", "gemini"]
 
-[[run.prepare.steps]]
-script = "python3 -m venv .venv && . .venv/bin/activate && pip install pytest curses"
-
 [run.environment]
 id = "python-dev"
 
@@ -309,23 +305,21 @@ The structure is always the same: decompose into phases that build on each other
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="Failures" icon="triangle-exclamation" href="/execution/failures">
-    Retry policies, goal gates, retry targets, and circuit breakers.
-  </Card>
+> **[Failures](https://docs.fabro.sh/execution/failures.md)**
+>
+> Retry policies, goal gates, retry targets, and circuit breakers.
 
-  <Card title="Model Stylesheets" icon="palette" href="/workflows/stylesheets">
-    CSS-like rules for assigning models to workflow nodes.
-  </Card>
+> **[Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md)**
+>
+> CSS-like rules for assigning models to workflow nodes.
 
-  <Card title="Nodes & Stages" icon="circle-nodes" href="/workflows/stages-and-nodes">
-    All node types, shapes, and their attributes.
-  </Card>
+> **[Nodes & Stages](https://docs.fabro.sh/workflows/stages-and-nodes.md)**
+>
+> All node types, shapes, and their attributes.
 
-  <Card title="Run Configuration" icon="gear" href="/execution/run-configuration">
-    TOML configs for repeatable, parameterized runs.
-  </Card>
-</Columns>
+> **[Run Configuration](https://docs.fabro.sh/execution/run-configuration.md)**
+>
+> TOML configs for repeatable, parameterized runs.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

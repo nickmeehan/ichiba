@@ -6,7 +6,7 @@
 
 > Complete reference for Fabro's Graphviz workflow language
 
-Fabro workflows are written in a subset of the [Graphviz DOT language](https://graphviz.org/doc/info/lang.html) with extensions for agent orchestration. This page is the complete syntax reference. For conceptual introductions, see [Workflows](/core-concepts/workflows) and [Nodes & Stages](/workflows/stages-and-nodes).
+Fabro workflows are written in a subset of the [Graphviz DOT language](https://graphviz.org/doc/info/lang.html) with extensions for agent orchestration. This page is the complete syntax reference. For conceptual introductions, see [Workflows](https://docs.fabro.sh/core-concepts/workflows.md) and [Nodes & Stages](https://docs.fabro.sh/workflows/stages-and-nodes.md).
 
 ## File structure
 
@@ -78,12 +78,12 @@ rankdir=LR
 | - | - | - |
 | `goal` | String | Workflow objective — guides agent behavior |
 | `rankdir` | Identifier | Layout direction: `LR` (left-to-right) or `TB` (top-to-bottom) |
-| `model_stylesheet` | String | CSS-like rules for model assignment. The root value supports a MiniJinja template with `inputs` and `vars` (see [Model Stylesheets](/workflows/stylesheets)) |
+| `model_stylesheet` | String | CSS-like rules for model assignment. The root value supports a MiniJinja template with `inputs` and `vars` (see [Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md)) |
 | `default_max_retries` | Integer | Default retry count for all nodes (default: 0) |
 | `on_failure` | String | Failed-node policy when no explicit recovery route matches: `route` (default), `exit`, or `succeed` |
 | `retry_target` | String | Default node ID to jump to on retry |
 | `fallback_retry_target` | String | Fallback retry target if primary target fails |
-| `default_fidelity` | String | Default [fidelity level](/execution/context) for all nodes |
+| `default_fidelity` | String | Default [fidelity level](https://docs.fabro.sh/execution/context.md) for all nodes |
 | `default_thread` | String | Default thread ID for all nodes |
 | `max_node_visits` | Integer | Max visits per node across the run (0 = unlimited) |
 | `stall_timeout` | Duration | Timeout for stalled workflows (default: `1800s`, 0 = disabled) |
@@ -151,13 +151,13 @@ subgraph cluster_impl {
 }
 ```
 
-When a subgraph has a `label`, it is converted to a CSS class name and applied to all nodes within the subgraph (e.g. `"Implementation"` becomes class `implementation`, `"Loop A"` becomes `loop-a`). This enables [stylesheet](/workflows/stylesheets) targeting.
+When a subgraph has a `label`, it is converted to a CSS class name and applied to all nodes within the subgraph (e.g. `"Implementation"` becomes class `implementation`, `"Loop A"` becomes `loop-a`). This enables [stylesheet](https://docs.fabro.sh/workflows/stylesheets.md) targeting.
 
 Node and edge defaults declared inside a subgraph are scoped — they don't leak to the outer graph. Edges can cross subgraph boundaries.
 
 ## Node types
 
-Fabro uses an explicit `type` attribute to select a node's handler. Without `type`, the `shape` attribute selects the handler. See [Nodes & Stages](/workflows/stages-and-nodes) for detailed documentation of each type.
+Fabro uses an explicit `type` attribute to select a node's handler. Without `type`, the `shape` attribute selects the handler. See [Nodes & Stages](https://docs.fabro.sh/workflows/stages-and-nodes.md) for detailed documentation of each type.
 
 | Shape | Handler | Purpose |
 | - | - | - |
@@ -199,17 +199,17 @@ Other node types still need their shape, because their attributes don't identify
 | `label` | String | Display name in the graph visualization |
 | `shape` | Identifier | Graphviz shape — determines handler type (see table above) |
 | `type` | String | Explicit handler type (overrides shape) |
-| `class` | String | Classes for [stylesheet](/workflows/stylesheets) targeting. Separate multiple classes with spaces. Commas are also accepted for compatibility. |
+| `class` | String | Classes for [stylesheet](https://docs.fabro.sh/workflows/stylesheets.md) targeting. Separate multiple classes with spaces. Commas are also accepted for compatibility. |
 | `timeout` | Duration | Execution timeout (e.g. `900s`). An agent's wait for human input does not consume this budget. On a human node, this is the response deadline. |
 | `max_visits` | Integer | Max times this node can execute in a run. Overrides the graph-level `max_node_visits` for this node. |
-| `on_failure` | String | Failed-node policy for this node: `route`, `exit`, or `succeed`. Overrides the graph-level `on_failure`. See [Node Outcomes](/execution/outcomes#succeed-on-failure). |
+| `on_failure` | String | Failed-node policy for this node: `route`, `exit`, or `succeed`. Overrides the graph-level `on_failure`. See [Node Outcomes](https://docs.fabro.sh/execution/outcomes.md#succeed-on-failure). |
 | `max_retries` | Integer | Override default retry count |
 | `retry_policy` | String | Named preset: `none`, `standard`, `aggressive`, `linear`, `patient` |
 | `retry_target` | String | Node ID to jump to on retry |
 | `fallback_retry_target` | String | Fallback node ID if primary `retry_target` is unreachable |
-| `goal_gate` | Boolean | When `true`, workflow fails if this node didn't finish with `succeeded` or `partially_succeeded`. See [Node Outcomes](/execution/outcomes#goal-gate-interaction). |
+| `goal_gate` | Boolean | When `true`, workflow fails if this node didn't finish with `succeeded` or `partially_succeeded`. See [Node Outcomes](https://docs.fabro.sh/execution/outcomes.md#goal-gate-interaction). |
 | `auto_status` | Boolean | Deprecated alias for `on_failure="succeed"`. Validation warns when it is present. |
-| `allow_partial` | Boolean | When `true` and retries are exhausted on a retry-requesting failure, promotes the outcome to `partially_succeeded` instead of `failed`. Default `false`. See [Node Outcomes](/execution/outcomes#allow_partial). |
+| `allow_partial` | Boolean | When `true` and retries are exhausted on a retry-requesting failure, promotes the outcome to `partially_succeeded` instead of `failed`. Default `false`. See [Node Outcomes](https://docs.fabro.sh/execution/outcomes.md#allow_partial). |
 | `selection` | String | Edge tiebreaking strategy: `deterministic` (default) or `random` (weighted-random). Cannot be combined with conditional edges. |
 
 ### Agent and prompt nodes
@@ -226,7 +226,7 @@ Other node types still need their shape, because their attributes don't identify
 | `project_memory` | Boolean | When `true` (default), prompt nodes discover and include project docs (`AGENTS.md`, `CLAUDE.md`, etc.) as a system prompt. Set to `false` to disable. |
 | `output_schema` | String | Optional structured output validation. Use `routing` for Fabro's built-in routing directive schema, `@path/to/schema.json` for a JSON Schema file, or an inline JSON Schema object string. Supported on agent, prompt, and command nodes. |
 | `output_retries` | Integer | Corrective structured-output turns inside the same prompt conversation or agent session. Default `2`; `0` validates once and fails without repair; negative values are treated as `0`. Separate from `max_retries`. |
-| `backend` | String | Agent execution backend: `api` (default) or `acp`. `api` runs Fabro's tool loop through provider APIs; `acp` runs an Agent Client Protocol stdio agent inside the active sandbox. Prompt nodes are API-only. See [Agents — Backends](/core-concepts/agents#backends). |
+| `backend` | String | Agent execution backend: `api` (default) or `acp`. `api` runs Fabro's tool loop through provider APIs; `acp` runs an Agent Client Protocol stdio agent inside the active sandbox. Prompt nodes are API-only. See [Agents — Backends](https://docs.fabro.sh/core-concepts/agents.md#backends). |
 | `acp.command` | String | Shell command for nodes with `backend="acp"`. Mutually exclusive with `acp.config`. The value is always parsed as a command string, not JSON. |
 | `acp.config` | String | JSON stdio ACP config for nodes with `backend="acp"`. Mutually exclusive with `acp.command`. |
 
@@ -309,7 +309,7 @@ the target's fan-in node without executing the unparameterized target.
 | Attribute | Type | Description |
 | - | - | - |
 | `question_type` | String | Optional interview question type override: `yes_no`, `confirmation`, `multiple_choice`, `multi_select`, or `freeform`. Defaults to `freeform` when the gate only has a freeform edge; otherwise defaults to `multiple_choice`. |
-| `review_target` | Boolean | When `true`, read and validate the typed `review_target` context value, then present it as the primary link in the question. Fabro generates the question text, so the node's `label` is not used. See [Review targets](/workflows/human-in-the-loop#review-targets). |
+| `review_target` | Boolean | When `true`, read and validate the typed `review_target` context value, then present it as the primary link in the question. Fabro generates the question text, so the node's `label` is not used. See [Review targets](https://docs.fabro.sh/workflows/human-in-the-loop.md#review-targets). |
 | `human.default_choice` | String | Target node to use when the question times out. |
 
 ### Manager loop (sub-workflow) nodes
@@ -331,12 +331,12 @@ the target's fan-in node without executing the unparameterized target.
 | `weight` | Integer | Priority for tiebreaking (higher wins, default: 0) |
 | `fidelity` | String | Override fidelity level for this transition. On a fork-to-branch edge, takes precedence over the branch node; explicit `full` degrades to `summary:high`. |
 | `thread_id` | String | Override thread ID for this transition. Inert on fork-to-branch edges. |
-| `loop_restart` | Boolean | Restart the workflow from this edge's target when taken: stage history and retry counts clear and the context resets to empty (visit counts are kept). Failed outcomes may only take it for `transient_infra` failures — see [Failures](/execution/failures#loop-restart-edges) |
+| `loop_restart` | Boolean | Restart the workflow from this edge's target when taken: stage history and retry counts clear and the context resets to empty (visit counts are kept). Failed outcomes may only take it for `transient_infra` failures — see [Failures](https://docs.fabro.sh/execution/failures.md#loop-restart-edges) |
 | `freeform` | Boolean | When `true` on a human-gate edge, accept free-text input instead of fixed choices |
 
 ## Condition expressions
 
-Edge conditions are boolean expressions evaluated against the stage outcome and run context. See [Transitions](/workflows/transitions) for the full routing logic.
+Edge conditions are boolean expressions evaluated against the stage outcome and run context. See [Transitions](https://docs.fabro.sh/workflows/transitions.md) for the full routing logic.
 
 ### Grammar
 
@@ -355,7 +355,7 @@ Op         ::= '=' | '!=' | '>' | '<' | '>=' | '<='
 
 | Key | Resolves to |
 | - | - |
-| `outcome` | Stage outcome: `succeeded`, `failed`, `partially_succeeded`, or `skipped`. See [Node Outcomes](/execution/outcomes#outcome-in-edge-conditions). |
+| `outcome` | Stage outcome: `succeeded`, `failed`, `partially_succeeded`, or `skipped`. See [Node Outcomes](https://docs.fabro.sh/execution/outcomes.md#outcome-in-edge-conditions). |
 | `preferred_label` | Label selected by a human gate or LLM routing directive |
 | `context.KEY` | Value from the run context |
 | `KEY` | Shorthand for context lookup (without the `context.` prefix) |

@@ -33,7 +33,7 @@ LLM provider probe failures are reported as errors. Use `--verbose` to see the u
 
 **"No API key configured"** — For runs, set at least one provider key in the server vault with `fabro provider login` or `fabro secret set`; workers start from a cleared environment, so exporting a provider key in the server's shell has no effect on runs. `fabro exec` and direct library usage can use env-backed credential sources explicitly. Run `fabro doctor` to verify server connectivity.
 
-**Stall watchdog timeouts** — If runs are cancelled unexpectedly, the agent may be stuck or the LLM provider may be slow. Check `FABRO_LOG=debug` output for `Agent.LlmRetry` events. Increase `stall_timeout` in the graph if needed, or add [fallback providers](/core-concepts/models) to handle outages.
+**Stall watchdog timeouts** — If runs are cancelled unexpectedly, the agent may be stuck or the LLM provider may be slow. Check `FABRO_LOG=debug` output for `Agent.LlmRetry` events. Increase `stall_timeout` in the graph if needed, or add [fallback providers](https://docs.fabro.sh/core-concepts/models.md) to handle outages.
 
 **Sandbox creation failures** — For Docker: run `fabro doctor`; when Docker is enabled, it pings the daemon and reports whether to start Docker, fix socket permissions, or disable the provider. Also ensure the configured image exists. For Daytona: verify `DAYTONA_API_KEY` is stored in the server vault, includes `write:snapshots`, `delete:snapshots`, `write:sandboxes`, and `delete:sandboxes`, and that GitHub access is configured. For Exe: verify your SSH keys are configured for `exe.dev` and that `ssh exe.dev` connects successfully.
 

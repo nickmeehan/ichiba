@@ -8,31 +8,43 @@
 
 Hooks let you run custom logic at key points during a workflow — before a stage starts, after a run completes, when a sandbox is ready, and more. Use them for validation, notifications, guardrails, and orchestration without modifying the workflow graph itself.
 
+The examples below are configuration fragments for `workflow.toml`. Add them to a workflow configuration using the current [run configuration schema](https://docs.fabro.sh/execution/run-configuration.md).
+
 ## Hook types
 
 Fabro supports four hook types, from simple shell commands to full agent sessions:
 
 ### Command
 
-Run a shell command via `sh -c`. The simplest and most common hook type.
+Use `script` for a shell command string. This is the simplest and most common hook type.
 
-```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[[hooks]]
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[[run.hooks]]
 event = "stage_start"
-command = "./scripts/pre-check.sh"
+script = "./scripts/pre-check.sh"
 ```
+
+Alternatively, `command` accepts an array of strings:
+
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[[run.hooks]]
+event = "post_tool_use"
+command = ["cargo", "fmt"]
+matcher = "write_file|edit_file|apply_patch"
+```
+
+Use either `script` or `command` for a command hook.
 
 ### HTTP
 
 POST the event context as JSON to an HTTP endpoint. Useful for webhooks, external APIs, and notification services.
 
-```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[[hooks]]
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[[run.hooks]]
 event = "run_complete"
-type = "http"
 url = "https://hooks.example.com/done"
 
-[hooks.headers]
+[run.hooks.headers]
 X-Deployment-Environment = "{{ vars.DEPLOY_ENV }}"
 ```
 
@@ -48,10 +60,9 @@ X-Deployment-Environment = "{{ vars.DEPLOY_ENV }}"
 
 A single-turn LLM call that evaluates the event context and returns an `ok`/`block` decision. The model responds with structured JSON.
 
-```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[[hooks]]
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[[run.hooks]]
 event = "stage_start"
-type = "prompt"
 prompt = "Should this stage proceed given the current context? Check for any red flags."
 model = "haiku"
 blocking = true
@@ -66,10 +77,10 @@ blocking = true
 
 A multi-turn agent session with full tool access (shell, file read/write, grep, glob). The agent can investigate the workspace before making a decision.
 
-```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[[hooks]]
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[[run.hooks]]
 event = "run_complete"
-type = "agent"
+agent = "enabled"
 prompt = "Verify that all tests pass and the code compiles. Run the test suite."
 model = "sonnet"
 max_tool_rounds = 10
@@ -78,9 +89,12 @@ blocking = true
 
 | Field | Description |
 | - | - |
+| `agent` | Set to `"enabled"` to select an agent hook. |
 | `prompt` | Task instructions for the agent. |
 | `model` | Model alias or ID. Defaults to `haiku`. |
 | `max_tool_rounds` | Maximum tool call rounds before the agent gives up. Default: `50`. |
+
+The `agent = "enabled"` marker selects an agent hook; `prompt` supplies its instructions. Without that marker, `prompt` selects a single-turn prompt hook.
 
 ## Lifecycle events
 
@@ -107,34 +121,41 @@ Each hook fires on a specific lifecycle event:
 
 ## Configuration
 
-Hooks are defined as `[[hooks]]` entries in any of these TOML config files:
+Hooks are defined as `[[run.hooks]]` entries in any of these TOML config files:
 
 * **`.fabro/project.toml`** — project-level hooks, apply to all workflows in the project
 * **`workflow.toml`** — per-workflow hooks
 * **`~/.fabro/settings.toml`** — global defaults for all runs
 
+Each entry selects one transport: `script` or `command`, `url`, `prompt`, or `agent = "enabled"` together with `prompt`. Do not add a `type` field; the transport fields select the hook type.
+
 See [Merging hook configs](#merging-hook-configs) for how these layers combine.
 
-```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[[hooks]]
-name = "pre-check"
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[[run.hooks]]
+id = "pre-check"
+name = "Pre-check script"
 event = "stage_start"
-command = "./scripts/pre-check.sh"
+script = "./scripts/pre-check.sh"
 matcher = "agent"
 blocking = true
-timeout_ms = 30000
+timeout = "30s"
 sandbox = false
 ```
 
 | Field | Description |
 | - | - |
-| `name` | Optional display name. Auto-generated from event and type if omitted. |
+| `id` | Optional merge identity. Hooks with the same `id` replace each other across layers. |
+| `name` | Optional display name; does not control merging. If omitted, the hook uses `id` or an auto-generated label. |
 | `event` | The lifecycle event to listen for (required). |
-| `command` | Shell command shorthand — implies `type = "command"`. |
-| `type` | Explicit hook type: `"command"`, `"http"`, `"prompt"`, or `"agent"`. |
+| `script` | Shell command string. |
+| `command` | Command and arguments as an array of strings, such as `["cargo", "fmt"]`; an alternative to `script`. |
+| `url` | Selects an HTTP hook. |
+| `prompt` | Instructions for a prompt hook, or for an agent hook when `agent` is set. |
+| `agent` | Set to `"enabled"` to select an agent hook. |
 | `matcher` | Regex pattern to filter which stages trigger this hook. |
 | `blocking` | Whether the hook must complete before execution continues. Defaults vary by event. |
-| `timeout_ms` | Hook timeout in milliseconds. Default: `60000` (60s) for most types, `30000` (30s) for prompt hooks. |
+| `timeout` | Duration string with a unit, such as `"500ms"`, `"30s"`, or `"2m"`. Default: `"30s"` for prompt hooks, `"60s"` for other types. |
 | `sandbox` | Run inside the sandbox (`true`, default) or on the host (`false`). |
 
 ## Blocking vs. non-blocking
@@ -208,40 +229,39 @@ The `matcher` field is a regex that filters when a hook fires. Omit `matcher` to
 
 The matcher is a regex, so `write_file|edit_file` matches either tool and `^agent$` matches exactly the handler type `agent`. When an event has multiple matchable fields (e.g., tool events match against both `tool_name` and `node_id`), the hook fires if **any** field matches the regex.
 
-For tool events, the matcher is tested against the tool's internal name (e.g., `shell`, `write_file`, `edit_file`). See [Tools](/agents/tools) for the full list. To match all file-writing tools across providers, use `write_file|edit_file|apply_patch`.
+For tool events, the matcher is tested against the tool's internal name (e.g., `shell`, `write_file`, `edit_file`). See [Tools](https://docs.fabro.sh/agents/tools.md) for the full list. To match all file-writing tools across providers, use `write_file|edit_file|apply_patch`.
 
 ### Examples
 
 This example auto-formats Rust code whenever the agent writes or edits a file:
 
-```toml theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-[[hooks]]
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+[[run.hooks]]
 name = "cargo-fmt"
 event = "post_tool_use"
-command = "cargo fmt"
+script = "cargo fmt"
 matcher = "write_file|edit_file|apply_patch"
 blocking = true
 ```
 
 More examples:
 
-```toml theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 # Only fire for agent handler nodes
-[[hooks]]
+[[run.hooks]]
 event = "stage_start"
-command = "./scripts/agent-guard.sh"
+script = "./scripts/agent-guard.sh"
 matcher = "^agent$"
 
 # Fire for any node with "test" in its ID
-[[hooks]]
+[[run.hooks]]
 event = "stage_complete"
-command = "./scripts/report-test.sh"
+script = "./scripts/report-test.sh"
 matcher = "test"
 
 # Gate shell commands with a guardrail
-[[hooks]]
+[[run.hooks]]
 event = "pre_tool_use"
-type = "prompt"
 prompt = "Is this shell command safe to run?"
 matcher = "^shell$"
 model = "haiku"
@@ -273,26 +293,26 @@ Command hooks receive these environment variables:
 
 The full event context is available as a JSON payload. For command hooks running in the sandbox, it is written to a temp file (path in `FABRO_HOOK_CONTEXT`). For command hooks running on the host (`sandbox = false`), it is piped to stdin. For HTTP hooks, it is the POST body.
 
-<Accordion title="Example hook context JSON">
-  ```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-  {
-    "event": "stage_start",
-    "run_id": "run-abc123",
-    "workflow_name": "ci-pipeline",
-    "cwd": "/workspace",
-    "node_id": "implement",
-    "node_label": "Implement",
-    "handler_type": "agent",
-    "status": null,
-    "edge_from": null,
-    "edge_to": null,
-    "edge_label": null,
-    "failure_reason": null,
-    "attempt": 1,
-    "max_attempts": 3
-  }
-  ```
-</Accordion>
+> **Example hook context JSON**
+>
+> ```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+> {
+>   "event": "stage_start",
+>   "run_id": "run-abc123",
+>   "workflow_name": "ci-pipeline",
+>   "cwd": "/workspace",
+>   "node_id": "implement",
+>   "node_label": "Implement",
+>   "handler_type": "agent",
+>   "status": null,
+>   "edge_from": null,
+>   "edge_to": null,
+>   "edge_label": null,
+>   "failure_reason": null,
+>   "attempt": 1,
+>   "max_attempts": 3
+> }
+> ```
 
 Fields vary by event — `edge_from`/`edge_to`/`edge_label` are only set for `edge_selected`, `failure_reason` for failure events, `attempt`/`max_attempts` for `stage_retrying`, etc. Null fields are omitted from the serialized JSON.
 
@@ -306,18 +326,18 @@ For tool-level events (`pre_tool_use`, `post_tool_use`, `post_tool_use_failure`)
 | `tool_output` | `post_tool_use` | The tool's output string |
 | `error_message` | `post_tool_use_failure` | The error message from the failed tool call |
 
-<Accordion title="Example pre_tool_use context JSON">
-  ```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-  {
-    "event": "pre_tool_use",
-    "run_id": "run-abc123",
-    "workflow_name": "ci-pipeline",
-    "node_id": "implement",
-    "tool_name": "shell",
-    "tool_input": {"command": "rm -rf /tmp/build"}
-  }
-  ```
-</Accordion>
+> **Example pre\_tool\_use context JSON**
+>
+> ```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+> {
+>   "event": "pre_tool_use",
+>   "run_id": "run-abc123",
+>   "workflow_name": "ci-pipeline",
+>   "node_id": "implement",
+>   "tool_name": "shell",
+>   "tool_input": {"command": "rm -rf /tmp/build"}
+> }
+> ```
 
 ## Timeouts
 
@@ -330,7 +350,7 @@ Each hook type has a default timeout:
 | Prompt | 30 seconds |
 | Agent | 60 seconds |
 
-Override with `timeout_ms` on any hook definition. Prompt and agent hooks **fail open** on timeout — execution proceeds as if the hook returned `ok: true`.
+Override with `timeout` on any hook definition, using a duration string such as `timeout = "30s"` or `timeout = "2m"`. Supported units are `ms`, `s`, `m`, `h`, and `d`. Prompt and agent hooks **fail open** on timeout — execution proceeds as if the hook returned `ok: true`.
 
 ## Fail-open behavior
 
@@ -346,61 +366,61 @@ Command hooks do **not** fail open. A non-zero exit code (other than 0 or 2) pro
 
 ## Merging hook configs
 
-Hooks from multiple config files are merged in this order (later layers win on name collisions):
+Hooks from multiple config files are merged in this order (later layers replace hooks with the same `id`):
 
 1. **`~/.fabro/settings.toml`** — global defaults
 2. **`.fabro/project.toml`** — project-level overrides
 3. **`workflow.toml`** — per-workflow overrides
 
-This lets you define global hooks at the server level, project-wide hooks in `.fabro/project.toml`, and override or extend them per workflow.
+Hooks with matching `id` values replace in place. Hooks without an `id` append after inherited hooks, even when their `name` matches. Use `id` when a workflow should override an inherited hook.
+
+This lets you define global hooks at the server level, project-wide hooks in `.fabro/project.toml`, and override or extend them per workflow. See [configuration precedence](https://docs.fabro.sh/execution/run-configuration.md#precedence) for the complete layer order.
 
 ## Full example
 
-```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+```toml title="workflow.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 # Validate environment before the run starts
-[[hooks]]
+[[run.hooks]]
 name = "env-check"
 event = "run_start"
-command = "./scripts/check-env.sh"
+script = "./scripts/check-env.sh"
 blocking = true
 sandbox = false
 
 # Notify Slack when a stage completes
-[[hooks]]
+[[run.hooks]]
 name = "slack-notify"
 event = "stage_complete"
-type = "http"
 url = "https://hooks.slack.com/workflows/T00/B00/abc123"
 tls = "verify"
 blocking = false
 
 # LLM guardrail before agent stages
-[[hooks]]
+[[run.hooks]]
 name = "safety-check"
 event = "stage_start"
-type = "prompt"
 prompt = "Review the event context. Is there any reason this stage should not proceed?"
 model = "haiku"
 matcher = "^agent$"
 blocking = true
-timeout_ms = 15000
+timeout = "15s"
 
 # Post-run verification agent
-[[hooks]]
+[[run.hooks]]
 name = "verify"
 event = "run_complete"
-type = "agent"
+agent = "enabled"
 prompt = "Run the test suite and verify all tests pass. Report any failures."
 model = "sonnet"
 max_tool_rounds = 20
 blocking = true
-timeout_ms = 120000
+timeout = "2m"
 
 # Auto-format Rust files after writes
-[[hooks]]
+[[run.hooks]]
 name = "cargo-fmt"
 event = "post_tool_use"
-command = "cargo fmt"
+script = "cargo fmt"
 matcher = "write_file|edit_file|apply_patch"
 blocking = true
 ```

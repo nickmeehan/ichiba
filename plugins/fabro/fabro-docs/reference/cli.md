@@ -181,7 +181,7 @@ fabro artifact cp [OPTIONS] <SOURCE> [DEST]
 | Name | Description |
 | - | - |
 | `SOURCE` | Source: RUN\_ID (all artifacts) or RUN\_ID:path (specific artifact) |
-| `DEST` | Destination directory (defaults to current directory)<br />Default: `.` |
+| `DEST` | Destination directory (defaults to current directory) Default: `.` |
 
 #### Options
 
@@ -289,7 +289,7 @@ fabro auth login [OPTIONS]
 | `--dev-token <dev_token>` | Log in with a dev-token instead of browser OAuth |
 | `--no-browser` | Print the browser URL instead of opening it automatically |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
-| `--timeout <timeout>` | Timeout in seconds waiting for the browser flow to complete<br />Default: `300` |
+| `--timeout <timeout>` | Timeout in seconds waiting for the browser flow to complete Default: `300` |
 
 #### `fabro auth logout`
 
@@ -332,7 +332,7 @@ fabro completion [OPTIONS] <SHELL>
 
 | Name | Description |
 | - | - |
-| `SHELL` | Shell to generate completions for<br />Values: `bash`, `elvish`, `fish`, `powershell`, `zsh` |
+| `SHELL` | Shell to generate completions for Values: `bash`, `elvish`, `fish`, `powershell`, `zsh` |
 
 ### `fabro create`
 
@@ -511,8 +511,8 @@ fabro graph [OPTIONS] <WORKFLOW>
 | Option | Description |
 | - | - |
 | `--allow-invalid` | Render even when workflow validation reports errors |
-| `-d, --direction <direction>` | Graph layout direction (overrides the DOT file's rankdir)<br />Values: `lr`, `tb` |
-| `--format <format>` | Output format<br />Values: `svg`<br />Default: `svg` |
+| `-d, --direction <direction>` | Graph layout direction (overrides the DOT file's rankdir) Values: `lr`, `tb` |
+| `--format <format>` | Output format Values: `svg` Default: `svg` |
 | `-o, --output <output>` | Output file path (defaults to stdout) |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
@@ -549,7 +549,7 @@ fabro install [OPTIONS] [COMMAND]
 | Option | Description |
 | - | - |
 | `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
-| `--web-url <web_url>` | Base URL for the web UI (used for OAuth callback URLs and generated settings)<br />Default: `http://127.0.0.1:32276` |
+| `--web-url <web_url>` | Base URL for the web UI (used for OAuth callback URLs and generated settings) Default: `http://127.0.0.1:32276` |
 
 #### Subcommands
 
@@ -570,7 +570,7 @@ fabro install github [OPTIONS]
 | Option | Description |
 | - | - |
 | `--owner <owner>` | GitHub App owner: `personal` or `org:<slug>` (app only, requires --non-interactive) |
-| `--strategy <strategy>` | GitHub authentication strategy (requires --non-interactive)<br />Values: `token`, `app` |
+| `--strategy <strategy>` | GitHub authentication strategy (requires --non-interactive) Values: `token`, `app` |
 
 ### `fabro logs`
 
@@ -621,7 +621,7 @@ fabro mcp config [OPTIONS]
 
 | Option | Description |
 | - | - |
-| `--name <name>` | Name of the mcpServers entry; use distinct names to register multiple Fabro servers<br />Default: `fabro` |
+| `--name <name>` | Name of the mcpServers entry; use distinct names to register multiple Fabro servers Default: `fabro` |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 | `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
 
@@ -643,7 +643,7 @@ fabro mcp init [OPTIONS] <AGENT>
 
 | Option | Description |
 | - | - |
-| `--name <name>` | Name of the mcpServers entry; use distinct names to register multiple Fabro servers<br />Default: `fabro` |
+| `--name <name>` | Name of the mcpServers entry; use distinct names to register multiple Fabro servers Default: `fabro` |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 | `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
 
@@ -705,7 +705,7 @@ fabro model test [OPTIONS]
 
 | Option | Description |
 | - | - |
-| `-j, --jobs <jobs>` | Number of model tests to run concurrently in bulk mode<br />Default: `4` |
+| `-j, --jobs <jobs>` | Number of model tests to run concurrently in bulk mode Default: `4` |
 | `-m, --model <model>` | Test a specific model |
 | `-p, --provider <provider>` | Filter by provider |
 | `--reasoning-effort <reasoning_effort>` | Request a reasoning-effort level (minimal, low, medium, high, xhigh, max) |
@@ -868,7 +868,7 @@ fabro pr merge [OPTIONS] <RUN_ID>
 
 | Option | Description |
 | - | - |
-| `--method <method>` | Merge method: merge, squash, or rebase<br />Values: `merge`, `squash`, `rebase`<br />Default: `squash` |
+| `--method <method>` | Merge method: merge, squash, or rebase Values: `merge`, `squash`, `rebase` Default: `squash` |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 
 #### `fabro pr unlink`
@@ -1188,7 +1188,7 @@ fabro sandbox preview [OPTIONS] <RUN> <PORT>
 | `--open` | Open URL in browser (implies --signed) |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 | `--signed` | Generate a signed URL (embeds auth token, no headers needed) |
-| `--ttl <ttl>` | Signed URL expiry in seconds (default 3600, requires --signed)<br />Default: `3600` |
+| `--ttl <ttl>` | Signed URL expiry in seconds (default 3600, requires --signed) Default: `3600` |
 
 #### `fabro sandbox ssh`
 
@@ -1210,7 +1210,7 @@ fabro sandbox ssh [OPTIONS] <RUN>
 | - | - |
 | `--print` | Print the SSH command instead of connecting |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
-| `--ttl <ttl>` | SSH access expiry in minutes (default 60)<br />Default: `60` |
+| `--ttl <ttl>` | SSH access expiry in minutes (default 60) Default: `60` |
 
 ### `fabro secret`
 
@@ -1276,7 +1276,7 @@ fabro secret set [OPTIONS] <KEY> [VALUE]
 | Option | Description |
 | - | - |
 | `--description <description>` | Optional human-readable description |
-| `--type <type>` | Secret storage type<br />Values: `token`, `file`<br />Default: `token` |
+| `--type <type>` | Secret storage type Values: `token`, `file` Default: `token` |
 | `--value-stdin` | Read the secret value from stdin |
 
 ### `fabro server`
@@ -1317,7 +1317,7 @@ fabro server restart [OPTIONS]
 | `--no-web` | Disable the embedded web UI, browser auth routes, and web-only helper endpoints |
 | `--provider <provider>` | Override default LLM provider |
 | `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
-| `--timeout <timeout>` | Seconds to wait for graceful shutdown before SIGKILL<br />Default: `10` |
+| `--timeout <timeout>` | Seconds to wait for graceful shutdown before SIGKILL Default: `10` |
 | `--watch-web` | Run `bun run dev` in apps/fabro-web to watch/recompile web assets (debug only) |
 | `--web` | Enable the embedded web UI and browser auth routes |
 
@@ -1373,7 +1373,7 @@ fabro server stop [OPTIONS]
 | Option | Description |
 | - | - |
 | `--storage-dir <storage_dir>` | Local storage directory (default: \~/.fabro/storage) |
-| `--timeout <timeout>` | Seconds to wait for graceful shutdown before SIGKILL<br />Default: `10` |
+| `--timeout <timeout>` | Seconds to wait for graceful shutdown before SIGKILL Default: `10` |
 
 ### `fabro settings`
 
@@ -1747,7 +1747,7 @@ fabro wait [OPTIONS] <RUN>
 
 | Option | Description |
 | - | - |
-| `--interval <ms>` | Poll interval in milliseconds<br />Default: `1000` |
+| `--interval <ms>` | Poll interval in milliseconds Default: `1000` |
 | `--server <server>` | Fabro server target: http(s) URL or absolute Unix socket path |
 | `--timeout <seconds>` | Maximum time to wait in seconds |
 

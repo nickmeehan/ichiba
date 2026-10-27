@@ -16,9 +16,7 @@ The NLSpec Conformance pattern gives an agent a detailed specification document,
 
 ## The workflow
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/nlspec-conformance.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=b5fd718522c58da7287fcd50ed09016b" alt="NLSpec Conformance workflow: Start → Plan → Implement → Quick Tests → Quick passing? → Full Tests → All passing? → Exit, with Fix Failures loop" width="1527" height="176" data-path="images/nlspec-conformance.svg" />
-</Frame>
+![NLSpec Conformance workflow: Start → Plan → Implement → Quick Tests → Quick passing? → Full Tests → All passing? → Exit, with Fix Failures loop](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/nlspec-conformance.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=b5fd718522c58da7287fcd50ed09016b)
 
 ```dot title="n-l-spec-conformance.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph NLSpecConformance {

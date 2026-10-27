@@ -11,13 +11,13 @@ Fabro separates **environments** from **sandboxes**:
 * An **environment** is reusable desired configuration: provider, image, resources, network, lifecycle, labels, and environment variables.
 * A **sandbox** is the concrete runtime instance Fabro creates for a run from the selected environment.
 
-<Warning>
-  Older pre-v1.0 config files that still use `[run.sandbox]` are temporarily auto-migrated when Fabro loads them from disk. Fabro writes a sibling `*.legacy-sandbox-migration.bak` file, rewrites the config to `[run.environment]` plus an environment definition, and then continues startup.
-
-  Similarly, `[environments.*]` tables in the server's active `settings.toml` are auto-migrated on startup. Existing sibling `environments/*.toml` files are then treated as a legacy import source: Fabro imports missing environment IDs into SQLite once and renames the directory to `environments.imported-<timestamp>.bak`.
-
-  These compatibility rewrites only handle direct field mappings. Unsupported legacy fields fail with a migration message that lists the keys to edit manually. The rewrite paths will be removed before v1.0.
-</Warning>
+> [!WARNING]
+>
+> Older pre-v1.0 config files that still use `[run.sandbox]` are temporarily auto-migrated when Fabro loads them from disk. Fabro writes a sibling `*.legacy-sandbox-migration.bak` file, rewrites the config to `[run.environment]` plus an environment definition, and then continues startup.
+>
+> Similarly, `[environments.*]` tables in the server's active `settings.toml` are auto-migrated on startup. Existing sibling `environments/*.toml` files are then treated as a legacy import source: Fabro imports missing environment IDs into SQLite once and renames the directory to `environments.imported-<timestamp>.bak`.
+>
+> These compatibility rewrites only handle direct field mappings. Unsupported legacy fields fail with a migration message that lists the keys to edit manually. The rewrite paths will be removed before v1.0.
 
 Runs select environments by slug:
 
@@ -244,7 +244,7 @@ host access, use folder targets only in trusted single-tenant deployments.
 Docker and Daytona always reject folder targets. Local environments do not
 support the `none` target. Local folder runs
 work in a clone of the folder's committed `HEAD` (see
-[Checkpoints](/execution/checkpoints)): retries retain the canonical
+[Checkpoints](https://docs.fabro.sh/execution/checkpoints.md)): retries retain the canonical
 folder target, but fork and rewind are unavailable for these runs.
 
 The folder target identifies the source repository, while commands run in the

@@ -87,7 +87,7 @@ Sub-agent management tools (`spawn_agent`, `send_input`, `wait`, `close_agent`) 
 
 The following sequence shows how Fabro decides whether to execute a tool call:
 
-<img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/permission-flow.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=46569cbf21aa41f983976f58cb521db4" alt="Permission flow: tool call is checked against current permission level; if auto-approved it executes, otherwise in interactive mode the user is prompted, in non-interactive mode the tool is denied" width="520" height="420" data-path="images/permission-flow.svg" />
+![Permission flow: tool call is checked against current permission level; if auto-approved it executes, otherwise in interactive mode the user is prompted, in non-interactive mode the tool is denied](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/permission-flow.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=46569cbf21aa41f983976f58cb521db4)
 
 ## Workflow-level permissions
 
@@ -101,23 +101,21 @@ For CLI-backed workflow agents, each provider handles auto-approval differently:
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="Tools" icon="wrench" href="/agents/tools">
-    Full reference for built-in tools and their parameters.
-  </Card>
+> **[Tools](https://docs.fabro.sh/agents/tools.md)**
+>
+> Full reference for built-in tools and their parameters.
 
-  <Card title="Environments" icon="server" href="/execution/environments">
-    Sandbox providers that control execution isolation.
-  </Card>
+> **[Environments](https://docs.fabro.sh/execution/environments.md)**
+>
+> Sandbox providers that control execution isolation.
 
-  <Card title="MCP" icon="plug" href="/agents/mcp">
-    MCP tools follow the same permission model as built-in tools.
-  </Card>
+> **[MCP](https://docs.fabro.sh/agents/mcp.md)**
+>
+> MCP tools follow the same permission model as built-in tools.
 
-  <Card title="Sub-agents" icon="users" href="/agents/subagents">
-    Sub-agents inherit their parent's permission level.
-  </Card>
-</Columns>
+> **[Sub-agents](https://docs.fabro.sh/agents/subagents.md)**
+>
+> Sub-agents inherit their parent's permission level.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

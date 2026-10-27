@@ -8,9 +8,9 @@
 
 Fabro publishes [SLSA Build Provenance](https://slsa.dev/) attestations for every release tarball and the multi-arch Docker image. Attestations are signed via [Sigstore](https://www.sigstore.dev/) and recorded in the public transparency log, so you can verify that an artifact was built by our GitHub Actions workflow from a specific commit in [`fabro-sh/fabro`](https://github.com/fabro-sh/fabro) before you run it.
 
-<Note>
-  Provenance proves **where and how** an artifact was built. It does not vouch for the correctness or security of the source code itself — only that what you downloaded was built by our workflow from the commit it claims.
-</Note>
+> [!NOTE]
+>
+> Provenance proves **where and how** an artifact was built. It does not vouch for the correctness or security of the source code itself — only that what you downloaded was built by our workflow from the commit it claims.
 
 ## Prerequisites
 

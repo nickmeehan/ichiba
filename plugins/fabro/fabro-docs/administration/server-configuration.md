@@ -12,16 +12,16 @@
 
 On a same-machine setup, the CLI and server share one `settings.toml`. On a remote deployment, the server machine has its own `settings.toml`, and the client machine keeps a separate local `settings.toml` for CLI-only values such as `[cli.target]`.
 
-<Note>
-  Fabro only reads `settings.toml`. Older `server.toml`, `user.toml`, and `cli.toml` filenames are no longer part of the supported config surface.
-</Note>
+> [!NOTE]
+>
+> Fabro only reads `settings.toml`. Older `server.toml`, `user.toml`, and `cli.toml` filenames are no longer part of the supported config surface.
 
 ### Which sections are server-owned
 
 | Scope | Examples |
 | - | - |
 | Server-owned (runtime-only from local `settings.toml`) | `[server.listen]`, `[server.api]`, `[server.web]`, `[server.auth]`, `[server.sandbox]`, `[server.storage]`, `[server.artifacts]`, `[server.scheduler]`, `[server.logging]`, `[server.integrations]` |
-| Shared run defaults (layered through `.fabro/project.toml`/`workflow.toml`) | `[run.model]`, `[run.prepare]`, `[run.environment]`, `[environments.<slug>]`, `[run.checkpoint]`, `[run.inputs]`, `[run.pull_request]`, `[run.git]`, `[run.hooks]`, `[run.agent]` |
+| Shared run defaults (layered through `.fabro/project.toml`/`workflow.toml`) | `[run.model]`, `[run.environment]`, `[environments.<slug>]`, `[run.checkpoint]`, `[run.inputs]`, `[run.pull_request]`, `[run.git]`, `[run.hooks]`, `[run.agent]` |
 
 The CLI-only `[cli.*]` sections (including `[cli.target]`) belong in the client machine's `settings.toml`. They tell CLI commands how to reach a server. The server process does not read `[cli.*]` for its own binding or routing.
 
@@ -90,9 +90,6 @@ provider = "anthropic"
 [run.model.fallbacks]
 "claude-sonnet-4-5" = ["gemini", "openai"]
 
-[[run.prepare.steps]]
-script = "npm install"
-
 [run.environment]
 id = "cloud"
 
@@ -134,7 +131,7 @@ Several `settings.toml` settings can be overridden via `fabro server start` flag
 | `--max-concurrent-runs` | `5` | Maximum concurrent run executions |
 | `--config` | `~/.fabro/settings.toml` | Path to server config file |
 
-CLI flags take precedence over `settings.toml` values. See [Run Configuration — Precedence](/execution/run-configuration#precedence) for the full resolution order.
+CLI flags take precedence over `settings.toml` values. See [Run Configuration — Precedence](https://docs.fabro.sh/execution/run-configuration.md#precedence) for the full resolution order.
 
 ### `[server.web]` section
 
@@ -284,7 +281,7 @@ Run creation uses the registered workflow version's `workflow.toml` above the se
 
 Server-owned values like `[server.storage]`, `[server.api]`, `[server.web]`, and `[server.scheduler]` come from the server machine's `settings.toml` or `fabro server start` flags. Environments and MCP server references resolve against the server's catalogs.
 
-Merge rules follow the normative matrix: TOML `[run.inputs]` tables replace wholesale, explicit intent inputs merge per key at highest precedence, environment `env` and `labels` merge by key, `[run.prepare.steps]` replaces whole-list, and `[[run.hooks]]` merge by optional `id`. Most other fields use "higher-precedence wins" field-wise merging.
+Merge rules follow the normative matrix: TOML `[run.inputs]` tables replace wholesale, explicit intent inputs merge per key at highest precedence, environment `env` and `labels` merge by key, `[[run.hooks]]` merge by optional `id`. Most other fields use "higher-precedence wins" field-wise merging.
 
 ### `[server.logging]` section
 
@@ -303,7 +300,7 @@ The CLI has its own `[cli.logging]` section.
 
 ### `[run.git.author]` section
 
-Override the Git author and committer identity for every commit a run creates: Fabro's own checkpoint and metadata commits, and any `git commit` a prepare step, command stage, or agent tool runs inside the sandbox. Fabro resolves one identity per run and injects it as `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` into every workflow command, so the primary checkout, additional clones, and repositories a workflow clones itself all commit as the same identity. It does not write to any Git configuration file.
+Override the Git author and committer identity for every commit a run creates: Fabro's own checkpoint and metadata commits, and any `git commit` a command stage or agent tool runs inside the sandbox. Fabro resolves one identity per run and injects it as `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` into every workflow command, so the primary checkout, additional clones, and repositories a workflow clones itself all commit as the same identity. It does not write to any Git configuration file.
 
 When a field is not set, Fabro derives it from the run's GitHub credential:
 
@@ -365,7 +362,7 @@ Configure checkpoint behavior for all runs.
 | `skip_git_hooks` | When `true`, Fabro-managed run-branch checkpoint commits bypass local Git commit hooks. Defaults to `false`. Does not affect Fabro workflow `[[run.hooks]]` or metadata-branch snapshots. |
 | `commit_timeout` | Max duration for the per-node run-branch checkpoint commit (e.g. `"30s"`, `"10m"`). This commit runs repository commit hooks unless `skip_git_hooks` is `true`. Defaults to `"30s"`. |
 
-`exclude_globs` replaces across layers — the highest-precedence layer wins wholesale. `skip_git_hooks` and `commit_timeout` use normal override semantics. See [Run Configuration — Checkpoint](/execution/run-configuration#runcheckpoint) for per-run configuration.
+`exclude_globs` replaces across layers — the highest-precedence layer wins wholesale. `skip_git_hooks` and `commit_timeout` use normal override semantics. See [Run Configuration — Checkpoint](https://docs.fabro.sh/execution/run-configuration.md#runcheckpoint) for per-run configuration.
 
 ## Secrets and environment variables
 
@@ -426,7 +423,7 @@ fabro secret set BRAVE_SEARCH_API_KEY BSA...
 fabro secret set VENICE_API_KEY venice-...
 ```
 
-The built-in [`web_search`](/agents/tools#web_search) tool selects its backend from these credentials. It uses direct Brave Search when `BRAVE_SEARCH_API_KEY` exists. Otherwise it uses Venice Search when `VENICE_API_KEY` exists. When neither exists, the tool is not registered.
+The built-in [`web_search`](https://docs.fabro.sh/agents/tools#web_search) tool selects its backend from these credentials. It uses direct Brave Search when `BRAVE_SEARCH_API_KEY` exists. Otherwise it uses Venice Search when `VENICE_API_KEY` exists. When neither exists, the tool is not registered.
 
 | Variable | Description |
 | - | - |
@@ -514,6 +511,11 @@ fabro secret set FABRO_SLACK_APP_TOKEN xapp-...
 | - | - | - |
 | `FABRO_LOG` | `info` | Log level: `error`, `warn`, `info`, `debug` |
 | `FABRO_LOG_DESTINATION` | Command-mode default | Server log destination: `file` or `stdout` |
+
+Setup commands belong in each workflow as explicit command nodes after `start`,
+or in a shared script those nodes invoke. The removed `run.prepare` setting is
+rejected even when a workflow would override it. See the
+[setup migration guide](https://docs.fabro.sh/execution/run-configuration.md#setup-command-migration).
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

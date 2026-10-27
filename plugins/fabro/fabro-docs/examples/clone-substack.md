@@ -19,9 +19,7 @@ This pattern is adapted from [Kilroy](https://github.com/danshapiro/kilroy)'s `s
 
 ## The workflow
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/example-clone-substack.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=9358961a786afc885b4e6d38b94eb8a4" alt="Clone Substack workflow: Start → Bootstrap → Plan Fan-Out → Plan A and Plan B → Debate → Implement → Verify Chain → Review Fan-Out → Review A and Review B → Consensus → Exit, with Fix loop from Verify back to Implement, Rejected path from Consensus to Postmortem, and Replan loop from Postmortem back to Plan Fan-Out" width="1250" height="210" data-path="images/example-clone-substack.svg" />
-</Frame>
+![Clone Substack workflow: Start → Bootstrap → Plan Fan-Out → Plan A and Plan B → Debate → Implement → Verify Chain → Review Fan-Out → Review A and Review B → Consensus → Exit, with Fix loop from Verify back to Implement, Rejected path from Consensus to Postmortem, and Replan loop from Postmortem back to Plan Fan-Out](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/example-clone-substack.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=9358961a786afc885b4e6d38b94eb8a4)
 
 ```dot title="clone-substack.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph CloneSubstack {
@@ -639,7 +637,7 @@ Each verify step appends errors to `.workflow/verify_errors.log`. When the `impl
 
 The `verify_fidelity` node is an LLM-based acceptance test. It reads every acceptance criterion (AC1–AC11) from the definition of done, maps each one to concrete files in the implementation, and produces a per-criterion pass/fail verdict. This catches semantic gaps that automated tests miss — a test suite can pass while the app is missing entire features.
 
-The fidelity node communicates its result via [context updates](/workflows/transitions#agent-transitions). It sets `all_acs_pass` to `"true"` or `"false"`, and the downstream gate routes based on that context value:
+The fidelity node communicates its result via [context updates](https://docs.fabro.sh/workflows/transitions.md#agent-transitions). It sets `all_acs_pass` to `"true"` or `"false"`, and the downstream gate routes based on that context value:
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 gate_fidelity -> review_fanout [condition="context.all_acs_pass=true"]
@@ -727,23 +725,21 @@ To adapt for your project:
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="NLSpec Conformance" icon="arrows-rotate" href="/examples/nlspec-conformance">
-    A simpler implement-test-fix loop for spec-driven development.
-  </Card>
+> **[NLSpec Conformance](https://docs.fabro.sh/examples/nlspec-conformance.md)**
+>
+> A simpler implement-test-fix loop for spec-driven development.
 
-  <Card title="Ensemble" icon="users" href="/tutorials/ensemble">
-    Multi-provider fan-out and synthesis.
-  </Card>
+> **[Ensemble](https://docs.fabro.sh/tutorials/ensemble.md)**
+>
+> Multi-provider fan-out and synthesis.
 
-  <Card title="Failures" icon="triangle-exclamation" href="/execution/failures">
-    Retry policies, loop detection, goal gates, and circuit breakers.
-  </Card>
+> **[Failures](https://docs.fabro.sh/execution/failures.md)**
+>
+> Retry policies, loop detection, goal gates, and circuit breakers.
 
-  <Card title="Model Stylesheets" icon="palette" href="/workflows/stylesheets">
-    CSS-like rules for assigning models to workflow nodes.
-  </Card>
-</Columns>
+> **[Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md)**
+>
+> CSS-like rules for assigning models to workflow nodes.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

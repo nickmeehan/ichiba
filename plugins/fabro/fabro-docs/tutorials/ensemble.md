@@ -10,9 +10,7 @@ This tutorial combines parallel execution with multi-model routing to get indepe
 
 ## The workflow
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-ensemble.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=358ce3f0f18530b104e0fcdf125ec7f8" alt="Ensemble workflow: Start → Fan Out → Opus, Gemini, Codex, Mercury → Merge → Synthesize → Exit" width="780" height="275" data-path="images/tutorial-ensemble.svg" />
-</Frame>
+![Ensemble workflow: Start → Fan Out → Opus, Gemini, Codex, Mercury → Merge → Synthesize → Exit](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-ensemble.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=358ce3f0f18530b104e0fcdf125ec7f8)
 
 ```dot title="ensemble.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph Ensemble {
@@ -58,9 +56,9 @@ digraph Ensemble {
 fabro run docs/internal/demo/11-ensemble.fabro
 ```
 
-<Note>
-  This workflow requires API keys for all four providers (`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `OPENAI_API_KEY`, `INCEPTION_API_KEY`). If a provider key is missing, that branch will fail — but the remaining branches still complete.
-</Note>
+> [!NOTE]
+>
+> This workflow requires API keys for all four providers (`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `OPENAI_API_KEY`, `INCEPTION_API_KEY`). If a provider key is missing, that branch will fail — but the remaining branches still complete.
 
 ## How it works
 
@@ -91,8 +89,8 @@ The `synth` node receives all four perspectives in its preamble and produces a u
 
 This workflow combines two patterns from earlier tutorials:
 
-* **Parallel execution** from [Parallel Review](/tutorials/parallel-review) — fan-out/fan-in with join policies
-* **Model routing** from [Multi-Model Routing](/tutorials/multi-model) — stylesheet selectors assigning different providers to each node
+* **Parallel execution** from [Parallel Review](https://docs.fabro.sh/tutorials/parallel-review.md) — fan-out/fan-in with join policies
+* **Model routing** from [Multi-Model Routing](https://docs.fabro.sh/tutorials/multi-model.md) — stylesheet selectors assigning different providers to each node
 
 The key difference from the parallel review tutorial is that here each branch uses a *different provider*, not just a different prompt. This gives you genuinely independent perspectives — each model has different training data, different reasoning patterns, and different blind spots.
 
@@ -115,9 +113,9 @@ The tradeoff is cost and latency — you're making 4x the LLM calls. Use single-
 
 ## Next
 
-<Card title="Sub-Workflows" icon="arrow-right" href="/tutorials/sub-workflow">
-  Delegate to reusable child workflows with the supervisor pattern.
-</Card>
+> **[Sub-Workflows](https://docs.fabro.sh/tutorials/sub-workflow.md)**
+>
+> Delegate to reusable child workflows with the supervisor pattern.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

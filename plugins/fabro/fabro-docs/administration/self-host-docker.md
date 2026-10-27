@@ -38,11 +38,11 @@ The compose file:
 * Exposes port `32276`
 * Loads environment from `.env` if present
 
-<Warning>
-  Mounting `/var/run/docker.sock` gives the container host-root-equivalent access. Only use the bundled compose service in trusted, single-tenant deployments. See [Sandboxing](/administration/sandboxing) for the threat model.
-</Warning>
+> [!WARNING]
+>
+> Mounting `/var/run/docker.sock` gives the container host-root-equivalent access. Only use the bundled compose service in trusted, single-tenant deployments. See [Sandboxing](https://docs.fabro.sh/administration/sandboxing) for the threat model.
 
-After the container is healthy, finish setup in your browser following the [install wizard](/reference/server-operations#first-run-web-install-wizard).
+After the container is healthy, finish setup in your browser following the [install wizard](https://docs.fabro.sh/reference/server-operations.md#first-run-web-install-wizard).
 
 ### Adding a reverse proxy with TLS
 
@@ -85,9 +85,9 @@ tailscale serve status --json
 
 The host must be joined to the tailnet with a device identity allowed to advertise the selected service. Depending on the tailnet policy, a tailnet admin may need to approve the service before the HTTPS name is reachable.
 
-<Warning>
-  Tailscale Services is private tailnet ingress. GitHub webhook deliveries from github.com cannot reach it. If your Fabro deployment needs GitHub webhooks, use `server_url` with a public webhook endpoint, `tailscale_funnel`, or another public relay for the webhook path.
-</Warning>
+> [!WARNING]
+>
+> Tailscale Services is private tailnet ingress. GitHub webhook deliveries from github.com cannot reach it. If your Fabro deployment needs GitHub webhooks, use `server_url` with a public webhook endpoint, `tailscale_funnel`, or another public relay for the webhook path.
 
 ## Bootstrap environment variables
 
@@ -116,7 +116,7 @@ Optional:
 | `FABRO_DOMAIN` | Public hostname when using the Caddy reverse-proxy overlay |
 | `FABRO_WEB_URL` | Canonical external web origin when TLS is terminated by a platform layer such as Tailscale Services |
 
-See [Server Configuration](/administration/server-configuration) for the full settings reference, and [`.env.example`](https://github.com/fabro-sh/fabro/blob/main/.env.example) for the complete list.
+See [Server Configuration](https://docs.fabro.sh/administration/server-configuration.md) for the full settings reference, and [`.env.example`](https://github.com/fabro-sh/fabro/blob/main/.env.example) for the complete list.
 
 ## Cloud container services
 
@@ -132,7 +132,7 @@ In all cases: single replica, persistent `/storage`, expose `$PORT`, and configu
 
 `docker-compose.yaml` uses `:nightly` by default, so `docker compose pull && docker compose up -d` picks up the latest nightly. To pin a specific version, change the `image:` line to `ghcr.io/fabro-sh/fabro:<version>`.
 
-Release artifacts ship with [SLSA Build Provenance](/reference/verifying-releases) attestations you can verify with `gh attestation verify`.
+Release artifacts ship with [SLSA Build Provenance](https://docs.fabro.sh/reference/verifying-releases.md) attestations you can verify with `gh attestation verify`.
 
 ## Pointing the CLI at your server
 
@@ -150,7 +150,7 @@ For dev-token auth, save the token in the CLI auth store:
 fabro auth login --server https://fabro.example.com/api/v1 --dev-token fabro_dev_...
 ```
 
-See [Server Operations](/reference/server-operations#pointing-the-cli-at-a-server) for the full CLI-target options.
+See [Server Operations](https://docs.fabro.sh/reference/server-operations.md#pointing-the-cli-at-a-server) for the full CLI-target options.
 
 ## Caveats
 
@@ -160,23 +160,21 @@ See [Server Operations](/reference/server-operations#pointing-the-cli-at-a-serve
 
 ## Next steps
 
-<Columns cols={2}>
-  <Card title="Server Operations" icon="server" href="/reference/server-operations">
-    Install wizard, web UI, authentication, demo mode, and pointing the CLI at the server.
-  </Card>
+> **[Server Operations](https://docs.fabro.sh/reference/server-operations.md)**
+>
+> Install wizard, web UI, authentication, demo mode, and pointing the CLI at the server.
 
-  <Card title="Server Configuration" icon="gear" href="/administration/server-configuration">
-    Full settings.toml reference — auth, reverse-proxy TLS, run defaults, and more.
-  </Card>
+> **[Server Configuration](https://docs.fabro.sh/administration/server-configuration.md)**
+>
+> Full settings.toml reference — auth, reverse-proxy TLS, run defaults, and more.
 
-  <Card title="Deploy to Railway" icon="train" href="/administration/deploy-railway">
-    One-click managed shortcut for the same Docker image.
-  </Card>
+> **[Deploy to Railway](https://docs.fabro.sh/administration/deploy-railway.md)**
+>
+> One-click managed shortcut for the same Docker image.
 
-  <Card title="Sandboxing" icon="shield" href="/administration/sandboxing">
-    The Docker sandbox provider's security model and trust assumptions.
-  </Card>
-</Columns>
+> **[Sandboxing](https://docs.fabro.sh/administration/sandboxing)**
+>
+> The Docker sandbox provider's security model and trust assumptions.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

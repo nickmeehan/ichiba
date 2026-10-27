@@ -123,15 +123,15 @@ Lifecycle events such as `agent.sub.spawned` and `agent.sub.completed` are emitt
 
 ### API: Server-Sent Events
 
-When running workflows through the API server, subscribe to the [run events endpoint](/api-reference/runs/stream-run-events). Each SSE payload is a serialized run event envelope in the same shape used by `fabro events` and `events.jsonl` exports.
+When running workflows through the API server, subscribe to the [run events endpoint](https://docs.fabro.sh/api-reference/runs/stream-run-events). Each SSE payload is a serialized run event envelope in the same shape used by `fabro events` and `events.jsonl` exports.
 
 ### Web UI
 
 The web frontend consumes the SSE stream automatically and shows stage progress, tool calls, command output, and human interaction as they happen. Use the stage `Chat` view for a readable conversation, `Thread` for the detailed agent transcript and disclosed provider reasoning, and `Debug` for raw stage events. Use the run-level `Run Events` page when you need the full event stream with search and category filters. The `Run Events` page also includes a Waterfall view for comparing stage durations and inspecting timing details from hover popovers.
 
-<Frame caption="The Stages tab shows the full agent conversation including tool calls and responses.">
-  <img src="https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/web/run-stages.png?fit=max&auto=format&n=_yTKyxnEAApivGto&q=85&s=783ac5cd8360fba67b2443e2589ef0e2" alt="Fabro web UI run stages showing agent conversation with tool calls" width="2400" height="1558" data-path="images/web/run-stages.png" />
-</Frame>
+![Fabro web UI run stages showing agent conversation with tool calls](https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/web/run-stages.png?fit=max\&auto=format\&n=_yTKyxnEAApivGto\&q=85\&s=783ac5cd8360fba67b2443e2589ef0e2)
+
+The Stages tab shows the full agent conversation including tool calls and responses.
 
 ### CLI progress
 
@@ -148,7 +148,7 @@ Post-run analysis surfaces include:
 | `fabro inspect <RUN>` | Current durable run state, including run/start/checkpoint/conclusion records |
 | `fabro dump --output <DIR> <RUN>` | Exported `events.jsonl` plus reconstructed JSON and node files |
 
-See [stages](/api-reference/run-internals/list-run-stages) and [turns](/api-reference/run-internals/list-stage-turns) for higher-level analysis views built on top of this event stream.
+See [stages](https://docs.fabro.sh/api-reference/run-internals/list-run-stages.md) and [turns](https://docs.fabro.sh/api-reference/run-internals/list-stage-turns) for higher-level analysis views built on top of this event stream.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

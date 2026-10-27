@@ -8,9 +8,9 @@
 
 When an agent starts a web server or other network service inside a sandbox, you can generate a time-limited preview URL to access it from your browser — no port forwarding or SSH tunnels required. This lets you visually inspect what the agent is building, test interactive features, and verify UI changes while the workflow is still running.
 
-<Note>
-  Preview URLs require the **Daytona** sandbox provider. Local, Docker, and exe.dev sandboxes do not support this feature.
-</Note>
+> [!NOTE]
+>
+> Preview URLs require the **Daytona** sandbox provider. Local, Docker, and exe.dev sandboxes do not support this feature.
 
 ## How it works
 
@@ -31,7 +31,7 @@ fabro sandbox preview <run-id> 3000 --signed     # self-contained signed URL
 fabro sandbox preview <run-id> 3000 --open       # open in browser (implies --signed)
 ```
 
-See [`fabro sandbox preview`](/reference/cli#fabro-sandbox-preview) for the full flag reference.
+See [`fabro sandbox preview`](https://docs.fabro.sh/reference/cli#fabro-sandbox-preview) for the full flag reference.
 
 ## Using preview from the web UI
 
@@ -39,7 +39,7 @@ When viewing a run with an active sandbox, the run detail page shows a **Preview
 
 ## Using preview from the API
 
-Generate a preview URL by calling `POST /api/v1/runs/{id}/preview` with the target port and a TTL in seconds. See the [Preview URL API reference](/api-reference/human-in-the-loop/preview-url) for the full request/response schema.
+Generate a preview URL by calling `POST /api/v1/runs/{id}/preview` with the target port and a TTL in seconds. See the [Preview URL API reference](https://docs.fabro.sh/api-reference/human-in-the-loop/preview-url.md) for the full request/response schema.
 
 ## Common use cases
 
@@ -47,9 +47,7 @@ Generate a preview URL by calling `POST /api/v1/runs/{id}/preview` with the targ
 
 When a workflow builds and serves a web application, use preview to verify the result without waiting for the run to complete:
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/preview-workflow.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=5da76dfdf2fb140c2d7a43fa720ba362" alt="Preview workflow: Start → Build Site → Start Dev Server → Review Preview → Exit, with a Revise loop back to Build Site" width="929" height="105" data-path="images/preview-workflow.svg" />
-</Frame>
+![Preview workflow: Start → Build Site → Start Dev Server → Review Preview → Exit, with a Revise loop back to Build Site](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/preview-workflow.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=5da76dfdf2fb140c2d7a43fa720ba362)
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph BuildAndPreview {

@@ -8,9 +8,9 @@
 
 An agent can spawn **sub-agents** to delegate work to independent child sessions. Each sub-agent gets its own LLM session and tool access, runs concurrently with the parent, and returns its result when finished.
 
-<Note>
-  Sub-agents are only available with the [API backend](/core-concepts/agents#api-backend-default) (the default). Agents using the [ACP backend](/core-concepts/agents#acp-backend) cannot spawn Fabro sub-agents.
-</Note>
+> [!NOTE]
+>
+> Sub-agents are only available with the [API backend](https://docs.fabro.sh/core-concepts/agents.md#api-backend-default) (the default). Agents using the [ACP backend](https://docs.fabro.sh/core-concepts/agents.md#acp-backend) cannot spawn Fabro sub-agents.
 
 ## Tools
 
@@ -102,11 +102,11 @@ Sub-agents are most useful for:
 * **Divide and conquer** -- split an independent task into smaller pieces
 * **Context management** -- offload work when the parent session is getting crowded
 
-Use [child runs](/execution/child-runs) instead when the delegated work should be a separate Fabro run with its own workflow, lifecycle, sandbox, checkpoints, and outputs.
+Use [child runs](https://docs.fabro.sh/execution/child-runs.md) instead when the delegated work should be a separate Fabro run with its own workflow, lifecycle, sandbox, checkpoints, and outputs.
 
-<Note>
-  Sub-agents run until they complete, fail, are cancelled, or hit the session's wall-clock timeout. All active sub-agents are cleaned up automatically when the parent session closes.
-</Note>
+> [!NOTE]
+>
+> Sub-agents run until they complete, fail, are cancelled, or hit the session's wall-clock timeout. All active sub-agents are cleaned up automatically when the parent session closes.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

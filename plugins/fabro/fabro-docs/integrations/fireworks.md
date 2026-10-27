@@ -127,15 +127,13 @@ Catalog prices mirror [Fireworks serverless pricing](https://docs.fireworks.ai/s
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="Models" icon="microchip" href="/core-concepts/models">
-    How Fabro routes model IDs, providers, and fallbacks.
-  </Card>
+> **[Models](https://docs.fabro.sh/core-concepts/models.md)**
+>
+> How Fabro routes model IDs, providers, and fallbacks.
 
-  <Card title="Settings Configuration" icon="gear" href="/reference/user-configuration">
-    Full reference for provider settings and provider-scoped model offerings.
-  </Card>
-</Columns>
+> **[Settings Configuration](https://docs.fabro.sh/reference/user-configuration.md)**
+>
+> Full reference for provider settings and provider-scoped model offerings.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

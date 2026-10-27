@@ -6,7 +6,7 @@
 
 > Run Laguna coding models through Poolside's direct API or OpenRouter
 
-[Poolside](https://poolside.ai/) trains the Laguna family of agentic coding models. Fabro includes Poolside's OpenAI-compatible API as a built-in provider, with Laguna S 2.1 and Laguna XS 2.1 available through both Poolside directly and the opt-in [OpenRouter integration](/integrations/openrouter).
+[Poolside](https://poolside.ai/) trains the Laguna family of agentic coding models. Fabro includes Poolside's OpenAI-compatible API as a built-in provider, with Laguna S 2.1 and Laguna XS 2.1 available through both Poolside directly and the opt-in [OpenRouter integration](https://docs.fabro.sh/integrations/openrouter.md).
 
 ## Prerequisites
 
@@ -97,7 +97,7 @@ For direct API or SDK requests, disable thinking through `provider_options.pools
 
 ## Use Laguna through OpenRouter
 
-Enable OpenRouter and configure its separate API key as described in the [OpenRouter integration](/integrations/openrouter):
+Enable OpenRouter and configure its separate API key as described in the [OpenRouter integration](https://docs.fabro.sh/integrations/openrouter.md):
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [llm.providers.openrouter]
@@ -132,15 +132,13 @@ Fabro does not include promotional `:free` OpenRouter variants in the built-in c
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="Poolside API" icon="code" href="https://docs.poolside.ai/api/overview">
-    Official API endpoints, authentication, model listing, and tool-use examples.
-  </Card>
+> **[Poolside API](https://docs.poolside.ai/api/overview)**
+>
+> Official API endpoints, authentication, model listing, and tool-use examples.
 
-  <Card title="Laguna models" icon="microchip" href="https://poolside.ai/models">
-    Current model capabilities, weights, context windows, and release information.
-  </Card>
-</Columns>
+> **[Laguna models](https://poolside.ai/models)**
+>
+> Current model capabilities, weights, context windows, and release information.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

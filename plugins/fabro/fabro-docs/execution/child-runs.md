@@ -20,7 +20,7 @@ Use child runs when the unit of work is large enough to deserve its own workflow
 * **Manager patterns** - build a parent workflow that creates workers, watches progress, gathers results, and decides what happens next.
 * **Variants and attempts** - run multiple approaches as separate durable runs with separate outputs.
 
-For small subtasks inside one agent stage, use [sub-agents](/agents/subagents). For reusable workflow structure inside one run, use [sub-workflows](/tutorials/sub-workflow) or [imports](/workflows/imports).
+For small subtasks inside one agent stage, use [sub-agents](https://docs.fabro.sh/agents/subagents.md). For reusable workflow structure inside one run, use [sub-workflows](https://docs.fabro.sh/tutorials/sub-workflow.md) or [imports](https://docs.fabro.sh/workflows/imports.md).
 
 ## Enable run tools
 
@@ -31,7 +31,7 @@ Workflow agents can create and manage runs when the parent run opts in to Fabro'
 fabro_tools = true
 ```
 
-This exposes the same Fabro run tools available through [MCP](/agents/mcp):
+This exposes the same Fabro run tools available through [MCP](https://docs.fabro.sh/agents/mcp.md):
 
 | Tool | Purpose |
 | - | - |
@@ -44,9 +44,9 @@ This exposes the same Fabro run tools available through [MCP](/agents/mcp):
 | `fabro_run_events` | Read stored events for a run |
 | `fabro_run_pair` | Pair with an active API-mode agent stage |
 
-<Note>
-  When a workflow agent calls `fabro_run_create`, Fabro always parents the created runs to the current run. If the agent supplies `parent_id`, it must match the current run ID.
-</Note>
+> [!NOTE]
+>
+> When a workflow agent calls `fabro_run_create`, Fabro always parents the created runs to the current run. If the agent supplies `parent_id`, it must match the current run ID.
 
 ## Create child runs
 
@@ -86,7 +86,7 @@ remote workflow in its sandbox and submit the resulting contents. Fabro's native
 tool handler executes outside the sandbox, so registration treats file-map keys
 as virtual relative paths and never reads sandbox paths from the worker host.
 Include the workflow's referenced configuration, prompts, and child workflows in
-the supplied tree. See [MCP](/agents/mcp) for package limits.
+the supplied tree. See [MCP](https://docs.fabro.sh/agents/mcp.md) for package limits.
 
 Workflow content and workspace target are independent. If `target` is omitted,
 a native child inherits the parent's canonical target: `none` or folder as-is,

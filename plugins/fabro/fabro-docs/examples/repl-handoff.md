@@ -19,9 +19,7 @@ This pattern is useful when a task is well-understood enough to plan interactive
 
 ## The workflow
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/KJ59Mt3YEfgsbATQ/images/example-repl-handoff.svg?fit=max&auto=format&n=KJ59Mt3YEfgsbATQ&q=85&s=15265e84ab431c0e96719861a0b61ecf" alt="Start → Toolchain → Preflight Compile → Preflight Lint → Implement → Simplify (Opus) → Simplify (Gemini) → Simplify (GPT-54) → Verify → Format → Exit, with Preflight Lint/Fix Lints retry loop, Verify/Fixup retry loop, and early exit from Toolchain and Preflight Compile on failure" width="1430" height="160" data-path="images/example-repl-handoff.svg" />
-</Frame>
+![Start → Toolchain → Preflight Compile → Preflight Lint → Implement → Simplify (Opus) → Simplify (Gemini) → Simplify (GPT-54) → Verify → Format → Exit, with Preflight Lint/Fix Lints retry loop, Verify/Fixup retry loop, and early exit from Toolchain and Preflight Compile on failure](https://mintcdn.com/qltysoftware-21b56213/KJ59Mt3YEfgsbATQ/images/example-repl-handoff.svg?fit=max\&auto=format\&n=KJ59Mt3YEfgsbATQ\&q=85\&s=15265e84ab431c0e96719861a0b61ecf)
 
 ```dot title="implement.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph ImplementAndSimplify {
@@ -201,23 +199,21 @@ The agent stages (implement, simplify, fixup) work with any language — they us
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="Multi-Model Workflows" icon="users" href="/tutorials/multi-model">
-    Assigning different models to different workflow nodes.
-  </Card>
+> **[Multi-Model Workflows](https://docs.fabro.sh/tutorials/multi-model.md)**
+>
+> Assigning different models to different workflow nodes.
 
-  <Card title="Failures & Retries" icon="triangle-exclamation" href="/execution/failures">
-    Goal gates, retry targets, max visits, and circuit breakers.
-  </Card>
+> **[Failures & Retries](https://docs.fabro.sh/execution/failures.md)**
+>
+> Goal gates, retry targets, max visits, and circuit breakers.
 
-  <Card title="Run Configuration" icon="gear" href="/execution/run-configuration">
-    TOML configs, goal files, and detached runs.
-  </Card>
+> **[Run Configuration](https://docs.fabro.sh/execution/run-configuration.md)**
+>
+> TOML configs, goal files, and detached runs.
 
-  <Card title="Environments" icon="cloud" href="/execution/environments">
-    Running workflows on cloud resources with sandboxed execution.
-  </Card>
-</Columns>
+> **[Environments](https://docs.fabro.sh/execution/environments.md)**
+>
+> Running workflows on cloud resources with sandboxed execution.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

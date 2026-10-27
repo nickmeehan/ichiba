@@ -6,9 +6,9 @@
 
 > Give Fabro agents web search capabilities via the Brave Search API
 
-Fabro's [`web_search`](/agents/tools#web_search) tool lets agents search the web during workflow execution. It uses the [Brave Search API](https://brave.com/search/api/) to return titles, URLs, and descriptions for any query.
+Fabro's [`web_search`](https://docs.fabro.sh/agents/tools#web_search) tool lets agents search the web during workflow execution. It uses the [Brave Search API](https://brave.com/search/api/) to return titles, URLs, and descriptions for any query.
 
-Fabro selects the backend from the credentials in its vault. Direct Brave Search is preferred whenever `BRAVE_SEARCH_API_KEY` is present. When that key is absent, Fabro can use [Venice Search](/integrations/venice-search) with `VENICE_API_KEY` instead.
+Fabro selects the backend from the credentials in its vault. Direct Brave Search is preferred whenever `BRAVE_SEARCH_API_KEY` is present. When that key is absent, Fabro can use [Venice Search](https://docs.fabro.sh/integrations/venice-search.md) with `VENICE_API_KEY` instead.
 
 ## Setup
 
@@ -46,11 +46,11 @@ Agents call the `web_search` tool with a query string. Fabro sends the query to 
 
 If `BRAVE_SEARCH_API_KEY` is not configured, Fabro uses Venice when `VENICE_API_KEY` is available. If neither key is configured, the tool is not registered.
 
-See the [`web_search` tool reference](/agents/tools#web_search) for parameters and details.
+See the [`web_search` tool reference](https://docs.fabro.sh/agents/tools#web_search) for parameters and details.
 
 ## Permissions
 
-`web_search` is classified as a `shell` category tool, requiring the `full` [permission level](/agents/permissions) for auto-approval. At lower permission levels:
+`web_search` is classified as a `shell` category tool, requiring the `full` [permission level](https://docs.fabro.sh/agents/permissions.md) for auto-approval. At lower permission levels:
 
 * **Interactive mode** — the user is prompted to approve each call
 * **Non-interactive mode** (`--auto-approve`) — calls are denied
@@ -59,9 +59,7 @@ See the [`web_search` tool reference](/agents/tools#web_search) for parameters a
 
 A workflow that researches a topic before writing about it:
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/brave-search-research.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=0e94380a1e906eabb7118665d04eaec7" alt="Research workflow: Start → Research → Summarize → Exit" width="489" height="59" data-path="images/brave-search-research.svg" />
-</Frame>
+![Research workflow: Start → Research → Summarize → Exit](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/brave-search-research.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=0e94380a1e906eabb7118665d04eaec7)
 
 ```dot title="research.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph Research {
@@ -88,15 +86,13 @@ digraph Research {
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="Tools" icon="wrench" href="/agents/tools#web_search">
-    Full `web_search` tool reference — parameters, output format, and error handling.
-  </Card>
+> **[Tools](https://docs.fabro.sh/agents/tools.md#web_search)**
+>
+> Full `web_search` tool reference — parameters, output format, and error handling.
 
-  <Card title="Permissions" icon="lock" href="/agents/permissions">
-    How tool permissions control web search access.
-  </Card>
-</Columns>
+> **[Permissions](https://docs.fabro.sh/agents/permissions.md)**
+>
+> How tool permissions control web search access.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

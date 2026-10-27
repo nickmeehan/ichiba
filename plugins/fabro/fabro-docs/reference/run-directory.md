@@ -6,9 +6,9 @@
 
 > Structure of Fabro's per-run directory
 
-<Warning>
-  The run directory structure and file formats described here are internal implementation details and subject to change without notice. Do not build tooling that relies on them. The authoritative source of run state is the event-sourced run store; the scratch directory is now mostly local runtime state and caches.
-</Warning>
+> [!WARNING]
+>
+> The run directory structure and file formats described here are internal implementation details and subject to change without notice. Do not build tooling that relies on them. The authoritative source of run state is the event-sourced run store; the scratch directory is now mostly local runtime state and caches.
 
 Each `fabro run` invocation creates a timestamped directory under `~/.fabro/storage/scratch/`:
 

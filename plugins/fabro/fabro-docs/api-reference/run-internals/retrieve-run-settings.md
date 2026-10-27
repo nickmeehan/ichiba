@@ -239,7 +239,6 @@ components:
         - inputs
         - model
         - git
-        - prepare
         - execution
         - checkpoint
         - clone
@@ -272,8 +271,6 @@ components:
           $ref: '#/components/schemas/RunModelSettings'
         git:
           $ref: '#/components/schemas/RunGitSettings'
-        prepare:
-          $ref: '#/components/schemas/RunPrepareSettings'
         execution:
           $ref: '#/components/schemas/RunExecutionSettings'
         checkpoint:
@@ -460,19 +457,6 @@ components:
           oneOf:
             - $ref: '#/components/schemas/GitAuthorSettings'
             - type: 'null'
-    RunPrepareSettings:
-      type: object
-      required:
-        - steps
-        - timeout_ms
-      properties:
-        steps:
-          type: array
-          items:
-            $ref: '#/components/schemas/PreparedStep'
-        timeout_ms:
-          type: integer
-          format: int64
     RunExecutionSettings:
       type: object
       required:
@@ -818,31 +802,6 @@ components:
           type:
             - string
             - 'null'
-    PreparedStep:
-      description: >
-        A single resolved prepare step. The runnable part preserves the
-
-        script-vs-argv distinction via the `type` discriminator: a `script`
-
-        is a raw shell snippet kept verbatim, while a `command` is an argv
-
-        whose elements are shell-quoted and joined at the run boundary (after
-
-        `{{ secrets.* }}` resolution) so an interpolated value cannot inject
-        shell
-
-        syntax. Optional per-step `env` is shared by both shapes.
-      type: object
-      required:
-        - type
-      oneOf:
-        - $ref: '#/components/schemas/PreparedScriptStep'
-        - $ref: '#/components/schemas/PreparedCommandStep'
-      discriminator:
-        propertyName: type
-        mapping:
-          script: '#/components/schemas/PreparedScriptStep'
-          command: '#/components/schemas/PreparedCommandStep'
     RunMode:
       type: string
       enum:
@@ -967,36 +926,6 @@ components:
             - path
         path:
           type: string
-    PreparedScriptStep:
-      type: object
-      required:
-        - type
-        - script
-      properties:
-        type:
-          type: string
-          enum:
-            - script
-        script:
-          type: string
-        env:
-          $ref: '#/components/schemas/StringMap'
-    PreparedCommandStep:
-      type: object
-      required:
-        - type
-        - command
-      properties:
-        type:
-          type: string
-          enum:
-            - command
-        command:
-          type: array
-          items:
-            type: string
-        env:
-          $ref: '#/components/schemas/StringMap'
     McpTransport:
       description: |
         MCP server transport configuration. The `type` field selects stdio,

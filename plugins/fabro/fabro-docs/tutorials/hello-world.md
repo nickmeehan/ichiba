@@ -10,15 +10,13 @@ This tutorial walks through three minimal workflows that introduce the building 
 
 ## Prerequisites
 
-Complete the [Quick Start](/getting-started/quick-start) so you have a working `fabro` binary and at least one LLM API key configured.
+Complete the [Quick Start](https://docs.fabro.sh/getting-started/quick-start.md) so you have a working `fabro` binary and at least one LLM API key configured.
 
 ## 1. One-shot prompt
 
 The simplest possible workflow has one node that sends a prompt to an LLM and exits.
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-hello.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=91a9609af2f733004f04dbadb118f712" alt="Hello World workflow: Start → Compose → Exit" width="340" height="59" data-path="images/tutorial-hello.svg" />
-</Frame>
+![Hello World workflow: Start → Compose → Exit](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-hello.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=91a9609af2f733004f04dbadb118f712)
 
 ```dot title="hello.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph Hello {
@@ -52,9 +50,7 @@ Every workflow needs exactly one `start` node (`shape=Mdiamond`) and one `exit` 
 
 An **agent node** (the default `box` shape) runs an LLM in a loop with access to tools — bash, file reading, file editing, grep, and glob. The agent calls tools autonomously until it decides the task is complete.
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-tool-use.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=85cc5a9d6c6dff086e8732ed5565eba4" alt="Tool Use workflow: Start → Explore → Exit" width="343" height="59" data-path="images/tutorial-tool-use.svg" />
-</Frame>
+![Tool Use workflow: Start → Explore → Exit](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-tool-use.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=85cc5a9d6c6dff086e8732ed5565eba4)
 
 ```dot title="tool-use.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph ToolUse {
@@ -77,7 +73,7 @@ fabro run docs/internal/demo/02-tool-use.fabro
 ### What's happening
 
 * No `shape` attribute means the default `box` — an **agent node**.
-* The agent has access to [built-in tools](/agents/tools): `shell`, `read_file`, `write_file`, `edit_file`, `grep`, `glob`, `web_search`, and `web_fetch`.
+* The agent has access to [built-in tools](https://docs.fabro.sh/agents/tools.md): `shell`, `read_file`, `write_file`, `edit_file`, `grep`, `glob`, `web_search`, and `web_fetch`.
 * The agent decides which tools to call and when to stop. Fabro handles the tool loop automatically.
 
 ### Prompt vs. agent nodes
@@ -92,9 +88,7 @@ fabro run docs/internal/demo/02-tool-use.fabro
 
 An agent can spawn **sub-agents** to delegate work. Sub-agents run in their own session and return results to the parent.
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-subagent.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=e97c1fd95885b6cbc1751be1762f4704" alt="Sub-agent workflow: Start → Research → Exit" width="360" height="59" data-path="images/tutorial-subagent.svg" />
-</Frame>
+![Sub-agent workflow: Start → Research → Exit](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-subagent.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=e97c1fd95885b6cbc1751be1762f4704)
 
 ```dot title="sub-agent.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph SubAgent {
@@ -120,7 +114,7 @@ fabro run docs/internal/demo/03-subagent.fabro
 * Sub-agents have their own tool access and conversation history — they don't see the parent's context.
 * This pattern is useful for parallelizing research, isolating risky operations, or keeping the parent's context window lean.
 
-See [Sub-agents](/agents/subagents) for the full tool reference.
+See [Sub-agents](https://docs.fabro.sh/agents/subagents.md) for the full tool reference.
 
 ## What you've learned
 
@@ -131,9 +125,9 @@ See [Sub-agents](/agents/subagents) for the full tool reference.
 
 ## Next
 
-<Card title="Plan & Implement" icon="arrow-right" href="/tutorials/plan-implement">
-  Add human gates and revision loops to a multi-step workflow.
-</Card>
+> **[Plan & Implement](https://docs.fabro.sh/tutorials/plan-implement.md)**
+>
+> Add human gates and revision loops to a multi-step workflow.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

@@ -25,7 +25,7 @@ Run `fabro server start` on your machine. State persists under `~/.fabro/`. The 
 
 When your laptop sleeps or shuts off, in-flight workflows pause until the laptop wakes again. For workflows that need to run 24/7 or for teams sharing a single instance, self-host.
 
-See [Server Operations](/reference/server-operations) for starting the server, the install wizard, authentication, and pointing the CLI at it.
+See [Server Operations](https://docs.fabro.sh/reference/server-operations.md) for starting the server, the install wizard, authentication, and pointing the CLI at it.
 
 ## Self-hosted
 
@@ -33,15 +33,13 @@ For team use, production workflows, or running 24/7, self-host the server as a D
 
 Use a public reverse proxy such as Caddy when the server must be reachable from the public internet. Use Tailscale Services when the server should stay private to your tailnet; Fabro still serves plain HTTP locally, and Tailscale provides the HTTPS endpoint.
 
-<Columns cols={2}>
-  <Card title="Self-host with Docker" icon="docker" href="/administration/self-host-docker">
-    Compose-first walkthrough, including Caddy and Tailscale Services options.
-  </Card>
+> **[Self-host with Docker](https://docs.fabro.sh/administration/self-host-docker.md)**
+>
+> Compose-first walkthrough, including Caddy and Tailscale Services options.
 
-  <Card title="Deploy to Railway" icon="train" href="/administration/deploy-railway">
-    One-click managed shortcut for the same Docker image.
-  </Card>
-</Columns>
+> **[Deploy to Railway](https://docs.fabro.sh/administration/deploy-railway.md)**
+>
+> One-click managed shortcut for the same Docker image.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

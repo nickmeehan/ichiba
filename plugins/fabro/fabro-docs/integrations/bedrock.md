@@ -54,9 +54,9 @@ Runs read the bearer token from the vault only. Workers start from a cleared env
 
 The order is fixed by lithos-llm: `AWS_BEARER_TOKEN_BEDROCK`, then `BEDROCK_API_KEY`, then the AWS default chain. Each name is read from the process environment first and the server vault (`fabro secret set`) second — so on a server, prefer `secret set`. To select a non-default AWS profile for SigV4, set `AWS_PROFILE` (it, and the rest of the AWS credential-chain variables, are passed through to workflow workers).
 
-<Warning>
-  **Bearer-vs-SigV4 precedence.** Because the bearer key is tried before SigV4, setting `AWS_BEARER_TOKEN_BEDROCK` makes the `bedrock` (Converse) provider authenticate with that key too — not just the `bedrock-openai` mantle provider below. If your key is valid only for mantle (it lacks `bedrock:InvokeModel*` on the runtime), every Converse model then fails with *"Authentication failed."* Use a key that covers both surfaces, or keep Converse on SigV4 by leaving both Bedrock secret names unset and enabling only `bedrock`.
-</Warning>
+> [!WARNING]
+>
+> **Bearer-vs-SigV4 precedence.** Because the bearer key is tried before SigV4, setting `AWS_BEARER_TOKEN_BEDROCK` makes the `bedrock` (Converse) provider authenticate with that key too — not just the `bedrock-openai` mantle provider below. If your key is valid only for mantle (it lacks `bedrock:InvokeModel*` on the runtime), every Converse model then fails with *"Authentication failed."* Use a key that covers both surfaces, or keep Converse on SigV4 by leaving both Bedrock secret names unset and enabling only `bedrock`.
 
 ## Included models
 
@@ -145,15 +145,13 @@ Bedrock-specific request fields pass through verbatim via `provider_options.bedr
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="Models" icon="microchip" href="/core-concepts/models">
-    How Fabro routes model IDs, providers, and fallbacks.
-  </Card>
+> **[Models](https://docs.fabro.sh/core-concepts/models.md)**
+>
+> How Fabro routes model IDs, providers, and fallbacks.
 
-  <Card title="Settings Configuration" icon="gear" href="/reference/user-configuration">
-    Full reference for provider settings and provider-scoped model offerings.
-  </Card>
-</Columns>
+> **[Settings Configuration](https://docs.fabro.sh/reference/user-configuration.md)**
+>
+> Full reference for provider settings and provider-scoped model offerings.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

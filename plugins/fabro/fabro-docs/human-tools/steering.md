@@ -36,7 +36,7 @@ Multiple steering messages sent in quick succession are all delivered together a
 
 ## Steering vs. human gates
 
-Steering and [human gates](/workflows/human-in-the-loop) serve different purposes:
+Steering and [human gates](https://docs.fabro.sh/workflows/human-in-the-loop.md) serve different purposes:
 
 | | Steering | Human gates |
 | - | - | - |
@@ -47,9 +47,9 @@ Steering and [human gates](/workflows/human-in-the-loop) serve different purpose
 
 Use human gates for structured decisions that are part of the workflow design. Use steering for reactive guidance when you're watching a run and want to intervene.
 
-<Frame caption="The Files Changed tab shows a side-by-side diff of all changes made during the run.">
-  <img src="https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/web/run-files-changed.png?fit=max&auto=format&n=_yTKyxnEAApivGto&q=85&s=9ec61f3149ef6e096eadb1950235494b" alt="Fabro web UI Files Changed tab showing a side-by-side diff" width="2400" height="1558" data-path="images/web/run-files-changed.png" />
-</Frame>
+![Fabro web UI Files Changed tab showing a side-by-side diff](https://mintcdn.com/qltysoftware-21b56213/_yTKyxnEAApivGto/images/web/run-files-changed.png?fit=max\&auto=format\&n=_yTKyxnEAApivGto\&q=85\&s=9ec61f3149ef6e096eadb1950235494b)
+
+The Files Changed tab shows a side-by-side diff of all changes made during the run.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

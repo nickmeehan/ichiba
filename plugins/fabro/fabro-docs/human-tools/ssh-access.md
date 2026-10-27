@@ -6,11 +6,11 @@
 
 > Connect to sandbox environments via SSH for direct inspection and debugging
 
-When a workflow runs in a [Daytona sandbox](/execution/environments#daytona), you can SSH into the sandbox to inspect files, run commands, and debug issues — all while the workflow is still executing.
+When a workflow runs in a [Daytona sandbox](https://docs.fabro.sh/execution/environments.md#daytona), you can SSH into the sandbox to inspect files, run commands, and debug issues — all while the workflow is still executing.
 
-<Note>
-  SSH access is only available with the Daytona sandbox provider. Local, Docker, and exe.dev sandboxes do not support SSH access.
-</Note>
+> [!NOTE]
+>
+> SSH access is only available with the Daytona sandbox provider. Local, Docker, and exe.dev sandboxes do not support SSH access.
 
 ## Connecting to a run's sandbox
 

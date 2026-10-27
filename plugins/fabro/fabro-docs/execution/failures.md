@@ -21,7 +21,7 @@ When a node fails, Fabro classifies the failure into one of six categories. Thes
 | `canceled` | User or system cancellation | Cancel signal, abort |
 | `structural` | Reserved for scope enforcement | Write scope violations |
 
-Classification happens automatically. Fabro inspects SDK error types, HTTP status codes, and error message patterns to assign the right class. The `failure_class` is written to [context](/execution/context) after each stage, so you can route on it in edge conditions:
+Classification happens automatically. Fabro inspects SDK error types, HTTP status codes, and error message patterns to assign the right class. The `failure_class` is written to [context](https://docs.fabro.sh/execution/context.md) after each stage, so you can route on it in edge conditions:
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 implement -> fix       [condition="failure_class=transient_infra"]
@@ -65,7 +65,7 @@ digraph Build {
 
 Fabro still uses an explicit recovery edge, such as `condition="outcome=failed"`, before it applies this policy. Matching preferred labels and suggested next node IDs also remain explicit routes. If no explicit edge matches, `exit` skips the unconditional edge and checks retry targets. The run ends as failed only when no retry target exists.
 
-Set `on_failure` on a node to control that node alone. The node-level attribute overrides the graph level, in both directions: a node can opt out of a graph-level `exit` with `on_failure="route"`, or stop the run on its own failure with `on_failure="exit"` while the rest of the graph keeps the default. A node without the attribute inherits the graph policy. See [Failed-node routing policy](/workflows/transitions#failed-node-routing-policy).
+Set `on_failure` on a node to control that node alone. The node-level attribute overrides the graph level, in both directions: a node can opt out of a graph-level `exit` with `on_failure="route"`, or stop the run on its own failure with `on_failure="exit"` while the rest of the graph keeps the default. A node without the attribute inherits the graph policy. See [Failed-node routing policy](https://docs.fabro.sh/workflows/transitions.md#failed-node-routing-policy).
 
 The policy applies only to `failed`. Other outcomes keep their normal routing behavior. For parallel nodes, the policy uses the completed parallel node's final outcome. It does not stop or cancel individual branches early.
 
@@ -158,11 +158,11 @@ The engine resolves retry configuration in this order:
 
 Not all errors trigger a node retry. The handler's `should_retry` check must return true — generally, only errors classified as transient are retried. Deterministic errors (auth failures, bad config) fail immediately without consuming retry attempts.
 
-When a handler reports a retryable failure, retries always proceed if attempts remain. If retries are exhausted and the node has `allow_partial=true`, the outcome is promoted to `partially_succeeded` instead of `failed`. See [Node Outcomes — Retry loop](/execution/outcomes#retry-loop) for a detailed flow diagram.
+When a handler reports a retryable failure, retries always proceed if attempts remain. If retries are exhausted and the node has `allow_partial=true`, the outcome is promoted to `partially_succeeded` instead of `failed`. See [Node Outcomes — Retry loop](https://docs.fabro.sh/execution/outcomes.md#retry-loop) for a detailed flow diagram.
 
 ## Model fallbacks
 
-When a model provider fails with a provider-local error, Fabro can automatically switch to another target. Configure one fixed chain for each requested model in your [run configuration](/execution/run-configuration):
+When a model provider fails with a provider-local error, Fabro can automatically switch to another target. Configure one fixed chain for each requested model in your [run configuration](https://docs.fabro.sh/execution/run-configuration.md):
 
 ```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [run.model]
@@ -283,9 +283,9 @@ deterministic failure cycle detected: signature ... repeated 3 times (limit 3)
 
 Only `deterministic` and `structural` failures are tracked — transient failures are excluded because they may genuinely resolve on retry.
 
-<Note>
-  Failure signature counts are never reset on success. This is intentional — it prevents cycles like "implement succeeds → verify fails → fix → implement succeeds → verify fails" from running indefinitely.
-</Note>
+> [!NOTE]
+>
+> Failure signature counts are never reset on success. This is intentional — it prevents cycles like "implement succeeds → verify fails → fix → implement succeeds → verify fails" from running indefinitely.
 
 ### Loop restart edges
 
@@ -303,7 +303,7 @@ Loop restart edges also have their own separate circuit breaker (`restart_failur
 
 ## Goal gates
 
-Goal gates are quality checkpoints that are enforced when the workflow reaches an exit node. A node marked with `goal_gate=true` must have completed with `succeeded` or `partially_succeeded` — otherwise the run cannot finish. See [Node Outcomes — Goal gate interaction](/execution/outcomes#goal-gate-interaction) for how `partially_succeeded` and `allow_partial` interact with goal gates.
+Goal gates are quality checkpoints that are enforced when the workflow reaches an exit node. A node marked with `goal_gate=true` must have completed with `succeeded` or `partially_succeeded` — otherwise the run cannot finish. See [Node Outcomes — Goal gate interaction](https://docs.fabro.sh/execution/outcomes.md#goal-gate-interaction) for how `partially_succeeded` and `allow_partial` interact with goal gates.
 
 ```dot theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 verify [shape=box, goal_gate="true"]

@@ -18,7 +18,7 @@ Goal templates can reference inputs and server-managed variables. Prompt templat
 | `{{ inputs.name }}` | A value from `[run.inputs]`, optionally overridden by CLI input flags |
 | `{{ vars.NAME }}` | A server-managed variable snapshotted when the run is created |
 
-The root `model_stylesheet` receives only `inputs` and `vars`. It does not receive `goal`. See [Model Stylesheets](/workflows/stylesheets#template-stylesheets) for examples and output safety guidance.
+The root `model_stylesheet` receives only `inputs` and `vars`. It does not receive `goal`. See [Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md#template-stylesheets) for examples and output safety guidance.
 
 Secrets are **not** available in goal, prompt, or model stylesheet templates. Use `{{ secrets.NAME }}` only in the configuration fields that support run-boundary interpolation.
 
@@ -68,7 +68,7 @@ CLI input values use TOML scalar parsing when possible. Quoted strings, booleans
 
 ## Command node scripts
 
-A [command node](/workflows/stages-and-nodes#command) `script` substitutes `{{ goal }}`, `{{ inputs.NAME }}`, and `{{ vars.NAME }}`:
+A [command node](https://docs.fabro.sh/workflows/stages-and-nodes.md#command) `script` substitutes `{{ goal }}`, `{{ inputs.NAME }}`, and `{{ vars.NAME }}`:
 
 ```dot title="check.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph Check {
@@ -83,7 +83,7 @@ This is value substitution, not templating. Only those three forms are recognize
 report [shape=parallelogram, script="kubectl get pod -o go-template='{{ .status.phase }}' | jq '{phase: .}'"]
 ```
 
-There is no `{% if %}`, no filters, and no loops, and `{{ goal }}` has no dotted form — `{{ goal.title }}` stays literal. Put branching in a [conditional node](/workflows/stages-and-nodes#conditional) or in the shell itself.
+There is no `{% if %}`, no filters, and no loops, and `{{ goal }}` has no dotted form — `{{ goal.title }}` stays literal. Put branching in a [conditional node](https://docs.fabro.sh/workflows/stages-and-nodes.md#conditional) or in the shell itself.
 
 In a shell script, Fabro quotes each substituted value as one shell argument. Put the token where one shell word is valid. Do not add quotes around the token, and do not use a token to inject multiple flags or shell syntax:
 
@@ -109,7 +109,7 @@ deploy [shape=parallelogram, script="deploy --token $DEPLOY_TOKEN"]
 
 In a Python script, read them with `os.environ["NAME"]`.
 
-To make a secret available that way, put it in the [environment's env map](/execution/run-configuration#run-environment-and-environments-slug), where `{{ secrets.* }}` does resolve — at run start, into the sandbox environment rather than into the script text:
+To make a secret available that way, put it in the [environment's env map](https://docs.fabro.sh/execution/run-configuration.md#run-environment-and-environments-slug), where `{{ secrets.* }}` does resolve — at run start, into the sandbox environment rather than into the script text:
 
 ```toml title="run.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [environments.ci.env]

@@ -6,11 +6,11 @@
 
 > Built-in tools for file I/O, shell commands, search, and web access
 
-Every agent in Fabro has access to a set of built-in tools for interacting with the codebase and environment. Tools execute inside the agent's [sandbox](/execution/environments) — whether that's the local machine, a Docker container, or a Daytona VM — so the same tool calls work identically regardless of provider.
+Every agent in Fabro has access to a set of built-in tools for interacting with the codebase and environment. Tools execute inside the agent's [sandbox](https://docs.fabro.sh/execution/environments.md) — whether that's the local machine, a Docker container, or a Daytona VM — so the same tool calls work identically regardless of provider.
 
-<Note>
-  The tools described on this page apply to the **API backend** (the default). When using the [ACP backend](/core-concepts/agents#acp-backend), the external agent process provides its own tools — Fabro's built-in tools are not used.
-</Note>
+> [!NOTE]
+>
+> The tools described on this page apply to the **API backend** (the default). When using the [ACP backend](https://docs.fabro.sh/core-concepts/agents.md#acp-backend), the external agent process provides its own tools — Fabro's built-in tools are not used.
 
 ## Core tools
 
@@ -78,9 +78,9 @@ Creates or overwrites a file.
 | `file_path` | string | yes | Absolute path to the file |
 | `content` | string | yes | Content to write |
 
-<Note>
-  `write_file` replaces the entire file. For changes to an existing file, prefer `edit_file`, which only replaces the string you name.
-</Note>
+> [!NOTE]
+>
+> `write_file` replaces the entire file. For changes to an existing file, prefer `edit_file`, which only replaces the string you name.
 
 ### edit\_file
 
@@ -133,7 +133,7 @@ Searches the web using Brave Search or Venice Search. Fabro selects the backend 
 | `query` | string | yes | Search query. Venice rejects queries longer than 400 characters before the HTTP call. |
 | `max_results` | integer | no | Maximum results (default: 5, max: 20) |
 
-Fabro uses direct [Brave Search](/integrations/brave-search) when `BRAVE_SEARCH_API_KEY` is present. Otherwise it uses [Venice Search](/integrations/venice-search) when `VENICE_API_KEY` is present. If both credentials are present, Brave wins. Venice always uses its Brave search engine.
+Fabro uses direct [Brave Search](https://docs.fabro.sh/integrations/brave-search.md) when `BRAVE_SEARCH_API_KEY` is present. Otherwise it uses [Venice Search](https://docs.fabro.sh/integrations/venice-search.md) when `VENICE_API_KEY` is present. If both credentials are present, Brave wins. Venice always uses its Brave search engine.
 
 Runs read both keys from the server vault. Workers start from a cleared environment, so exporting a key in the server's shell has no effect. The standalone agent CLI reads the keys from the invoking shell instead.
 
@@ -257,27 +257,25 @@ The agent can request a specific timeout via the `timeout_ms` parameter, but it'
 
 ## Extending with MCP
 
-Additional tools can be added via [MCP servers](/agents/mcp). MCP tools appear alongside built-in tools in the agent's tool set and follow the same permission and execution model.
+Additional tools can be added via [MCP servers](https://docs.fabro.sh/agents/mcp.md). MCP tools appear alongside built-in tools in the agent's tool set and follow the same permission and execution model.
 
 ## Further reading
 
-<Columns cols={2}>
-  <Card title="Permissions" icon="lock" href="/agents/permissions">
-    How permissions control which tools are available.
-  </Card>
+> **[Permissions](https://docs.fabro.sh/agents/permissions.md)**
+>
+> How permissions control which tools are available.
 
-  <Card title="Environments" icon="server" href="/execution/environments">
-    Sandbox providers where tools execute.
-  </Card>
+> **[Environments](https://docs.fabro.sh/execution/environments.md)**
+>
+> Sandbox providers where tools execute.
 
-  <Card title="MCP" icon="plug" href="/agents/mcp">
-    Extend agents with Model Context Protocol servers.
-  </Card>
+> **[MCP](https://docs.fabro.sh/agents/mcp.md)**
+>
+> Extend agents with Model Context Protocol servers.
 
-  <Card title="Sub-agents" icon="users" href="/agents/subagents">
-    Sub-agents inherit tools from their parent session.
-  </Card>
-</Columns>
+> **[Sub-agents](https://docs.fabro.sh/agents/subagents.md)**
+>
+> Sub-agents inherit tools from their parent session.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

@@ -43,7 +43,7 @@ In this example:
 
 ## Template stylesheets
 
-The root graph's `model_stylesheet` is a [MiniJinja template](/workflows/variables). It can read typed run inputs and server-managed variables through `inputs` and `vars`:
+The root graph's `model_stylesheet` is a [MiniJinja template](https://docs.fabro.sh/workflows/variables.md). It can read typed run inputs and server-managed variables through `inputs` and `vars`:
 
 ```dot title="variable-effort.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph Review {
@@ -131,9 +131,9 @@ Stylesheets support five properties:
 | `provider` | Provider name (optional — auto-inferred from the model catalog when omitted) | `anthropic`, `openai`, `gemini` |
 | `reasoning_effort` | Reasoning effort level | `low`, `medium`, `high` |
 | `speed` | Output speed mode. `fast` enables Anthropic's fast mode for up to 2.5x faster output at higher cost. | `fast` |
-| `backend` | Agent execution backend — `api` (default) runs Fabro's own tool loop, `cli` delegates to a legacy external CLI tool, and `acp` runs an Agent Client Protocol stdio agent in the active sandbox. See [Backends](/core-concepts/agents#backends). | `api`, `cli`, `acp` |
+| `backend` | Agent execution backend — `api` (default) runs Fabro's own tool loop, `cli` delegates to a legacy external CLI tool, and `acp` runs an Agent Client Protocol stdio agent in the active sandbox. See [Backends](https://docs.fabro.sh/core-concepts/agents.md#backends). | `api`, `cli`, `acp` |
 
-See [Models](/core-concepts/models) for the full list of model IDs and aliases.
+See [Models](https://docs.fabro.sh/core-concepts/models.md) for the full list of model IDs and aliases.
 
 ## Specificity and cascading
 

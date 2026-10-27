@@ -6,9 +6,9 @@
 
 > Introduction to the Fabro REST API
 
-<Warning>
-  The Fabro API is **under active development** and may be subject to change. Endpoints, request/response formats, and authentication mechanisms may evolve as the project matures.
-</Warning>
+> [!WARNING]
+>
+> The Fabro API is **under active development** and may be subject to change. Endpoints, request/response formats, and authentication mechanisms may evolve as the project matures.
 
 The Fabro API is a REST API for managing workflow runs, interactive sessions, and related resources. All requests and responses use JSON.
 

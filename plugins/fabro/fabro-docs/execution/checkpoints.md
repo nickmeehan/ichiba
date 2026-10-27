@@ -22,7 +22,7 @@ The run branch is a regular Git branch. Checkpoint events record its commit SHAs
 
 ### Run branch commits
 
-After each node finishes, Fabro stages file changes and creates a commit on the run branch. Files matching `[run.checkpoint] exclude_globs` patterns (configured in [run.toml](/execution/run-configuration#runcheckpoint) or [settings.toml](/administration/server-configuration#runcheckpoint-section)) are excluded from staging:
+After each node finishes, Fabro stages file changes and creates a commit on the run branch. Files matching `[run.checkpoint] exclude_globs` patterns (configured in [run.toml](https://docs.fabro.sh/execution/run-configuration.md#runcheckpoint) or [settings.toml](https://docs.fabro.sh/administration/server-configuration.md#runcheckpoint-section)) are excluded from staging:
 
 ```
 fabro(01JKXYZ...): plan (succeeded)
@@ -43,7 +43,7 @@ The `git_commit_sha` in a `checkpoint.completed` event identifies the run branch
 
 Fabro disables Git commit and tag signing for checkpoint commits created inside a sandbox. Your personal or repository-level signing settings can stay enabled, but sandbox bookkeeping does not need access to your signing key.
 
-Checkpoint commits and any commit a workflow command or agent creates all carry the run's one resolved Git identity. Fabro derives it from the run's GitHub App bot account or token user, or from the generic `Fabro <noreply@fabro.sh>` identity when the run has no GitHub credential, and `[run.git.author]` overrides it. See [`[run.git.author]`](/administration/server-configuration#rungitauthor-section).
+Checkpoint commits and any commit a workflow command or agent creates all carry the run's one resolved Git identity. Fabro derives it from the run's GitHub App bot account or token user, or from the generic `Fabro <noreply@fabro.sh>` identity when the run has no GitHub credential, and `[run.git.author]` overrides it. See [`[run.git.author]`](https://docs.fabro.sh/administration/server-configuration#rungitauthor-section).
 
 ### Durable execution state
 
@@ -67,7 +67,7 @@ The checkpoint projection captures the execution state needed to resume a run:
 | `completed_nodes` | Ordered list of all completed node IDs |
 | `node_retries` | How many retry attempts each node has used |
 | `node_outcomes` | Full outcome (status, context updates, usage) for each completed node |
-| `context_values` | Snapshot of the entire [run context](/execution/context) |
+| `context_values` | Snapshot of the entire [run context](https://docs.fabro.sh/execution/context.md) |
 | `git_commit_sha` | SHA of the run branch commit at this checkpoint |
 | `loop_failure_signatures` | Failure signature counts for loop detection |
 | `restart_failure_signatures` | Failure signature counts across loop-restart edges |
@@ -94,15 +94,15 @@ fabro resume 01JKXYZ
 
 Fabro resolves the run by ID prefix, validates that durable state contains a checkpoint, and asks the server to continue execution. No workflow file or override flags are needed — all configuration is restored from persisted state.
 
-<Accordion title="What happens during resume">
-  1. Fabro looks up the run directory by ID prefix
-  2. Validates that a checkpoint exists in durable state and no engine process is already running
-  3. Cleans stale local artifacts from the previous execution
-  4. Resets status to `Submitted` and spawns a new engine subprocess with `--resume`
-  5. The engine restores the full context, completed node list, retry counts, and failure signatures from durable state
-  6. If the checkpointed node used `full` fidelity, downgrades the first resumed node to `summary:high` (since the original conversation thread no longer exists in memory)
-  7. Continues execution from `next_node_id`
-</Accordion>
+> **What happens during resume**
+>
+> 1. Fabro looks up the run directory by ID prefix
+> 2. Validates that a checkpoint exists in durable state and no engine process is already running
+> 3. Cleans stale local artifacts from the previous execution
+> 4. Resets status to `Submitted` and spawns a new engine subprocess with `--resume`
+> 5. The engine restores the full context, completed node list, retry counts, and failure signatures from durable state
+> 6. If the checkpointed node used `full` fidelity, downgrades the first resumed node to `summary:high` (since the original conversation thread no longer exists in memory)
+> 7. Continues execution from `next_node_id`
 
 ### Resuming an in-flight stage
 

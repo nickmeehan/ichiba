@@ -6,7 +6,7 @@
 
 > How Fabro compares to AI coding agents, software factories, and orchestration platforms.
 
-Fabro is a [dark software factory](/getting-started/dark-factory). It is not an IDE plugin. It is not a REPL, command line or otherwise. It is not a web application where you drag-and-drop workflows or update technical documents (we have Git for those).
+Fabro is a [dark software factory](https://docs.fabro.sh/getting-started/dark-factory.md). It is not an IDE plugin. It is not a REPL, command line or otherwise. It is not a web application where you drag-and-drop workflows or update technical documents (we have Git for those).
 
 Almost every other tool in AI coding starts from the same place: a developer at a keyboard, typing prompts, reviewing responses and outputs. Fabro starts from a different premise â€” that the highest-leverage work for expert engineers is defining **what** gets built and **how quality is verified**, not supervising each line of code as it's written.
 
@@ -46,9 +46,9 @@ REPLs and Fabro pair nicely. REPLs are ideal for exploring ideas interactively â
 
 ## Comparison Dimensions
 
-<Note>
-  We strive to keep this information accurate, but the landscape changes rapidly. If you spot an inaccuracy, please [let us know](mailto:hello@fabro.sh).
-</Note>
+> [!NOTE]
+>
+> We strive to keep this information accurate, but the landscape changes rapidly. If you spot an inaccuracy, please [let us know](mailto:hello@fabro.sh).
 
 ### Licensing
 

@@ -6,11 +6,11 @@
 
 > Open sandbox environments in VS Code for interactive editing and debugging
 
-When a Daytona sandbox has [SSH access](/human-tools/ssh-access) enabled, you can connect VS Code directly to the sandbox using the built-in [Remote - SSH](https://code.visualstudio.com/docs/remote/ssh) extension. This gives you a full IDE experience — editing, terminal, debugging, port forwarding — inside the same environment where your workflow agents are running.
+When a Daytona sandbox has [SSH access](https://docs.fabro.sh/human-tools/ssh-access.md) enabled, you can connect VS Code directly to the sandbox using the built-in [Remote - SSH](https://code.visualstudio.com/docs/remote/ssh) extension. This gives you a full IDE experience — editing, terminal, debugging, port forwarding — inside the same environment where your workflow agents are running.
 
-<Note>
-  VS Code remote access requires [SSH access](/human-tools/ssh-access), which is only available with the Daytona sandbox provider.
-</Note>
+> [!NOTE]
+>
+> VS Code remote access requires [SSH access](https://docs.fabro.sh/human-tools/ssh-access.md), which is only available with the Daytona sandbox provider.
 
 ## Prerequisites
 
@@ -51,8 +51,8 @@ Once connected, VS Code operates as if the sandbox filesystem were local:
 
 ## Tips
 
-* **Use `--preserve-sandbox`** — Without it, the sandbox is destroyed when the workflow finishes and your VS Code session disconnects. Combine with `auto_stop_interval` in your [run config](/execution/run-configuration) to control idle timeout.
-* **Pair with human gates** — When a workflow pauses at a [human gate](/workflows/human-in-the-loop), connect via VS Code to review the agent's changes before approving.
+* **Use `--preserve-sandbox`** — Without it, the sandbox is destroyed when the workflow finishes and your VS Code session disconnects. Combine with `auto_stop_interval` in your [run config](https://docs.fabro.sh/execution/run-configuration.md) to control idle timeout.
+* **Pair with human gates** — When a workflow pauses at a [human gate](https://docs.fabro.sh/workflows/human-in-the-loop.md), connect via VS Code to review the agent's changes before approving.
 * **SSH credential lifetime** — Daytona SSH credentials expire after 60 minutes by default. If your VS Code session disconnects, run `fabro sandbox ssh <run-id>` again to get fresh credentials (use `--ttl` to set a custom expiry).
 
 

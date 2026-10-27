@@ -124,7 +124,7 @@ DeepSeek does not return an in-band dollar cost. Fabro calculates an estimated c
 
 The `deepseek-v4-flash`, `deepseek-v4-pro`, `deepseek`, `deepseek-v4`, and `deepseek-flash` selectors are portable across direct DeepSeek, Fireworks AI, and OpenRouter routes. Use `--provider` or a provider-qualified model selector when you need a specific route.
 
-See the [Fireworks AI integration](/integrations/fireworks) and [OpenRouter integration](/integrations/openrouter) for gateway setup and provider-specific pricing.
+See the [Fireworks AI integration](https://docs.fabro.sh/integrations/fireworks.md) and [OpenRouter integration](https://docs.fabro.sh/integrations/openrouter.md) for gateway setup and provider-specific pricing.
 
 ## Troubleshooting
 
@@ -136,19 +136,17 @@ See the [Fireworks AI integration](/integrations/fireworks) and [OpenRouter inte
 
 ## Further reading
 
-<Columns cols={3}>
-  <Card title="DeepSeek API" icon="code" href="https://api-docs.deepseek.com/">
-    Official authentication, endpoints, and API reference.
-  </Card>
+> **[DeepSeek API](https://api-docs.deepseek.com/)**
+>
+> Official authentication, endpoints, and API reference.
 
-  <Card title="Models and pricing" icon="money-bill" href="https://api-docs.deepseek.com/quick_start/pricing/">
-    Official limits, features, and token prices.
-  </Card>
+> **[Models and pricing](https://api-docs.deepseek.com/quick_start/pricing/)**
+>
+> Official limits, features, and token prices.
 
-  <Card title="Thinking mode" icon="brain" href="https://api-docs.deepseek.com/guides/thinking_mode/">
-    Official thinking toggles, effort mappings, and tool-call replay rules.
-  </Card>
-</Columns>
+> **[Thinking mode](https://api-docs.deepseek.com/guides/thinking_mode/)**
+>
+> Official thinking toggles, effort mappings, and tool-call replay rules.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

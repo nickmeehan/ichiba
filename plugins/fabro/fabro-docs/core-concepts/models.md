@@ -8,9 +8,7 @@
 
 No single model is best at everything. Fabro lets you assign the right model to each workflow step — cheap, fast models for boilerplate, frontier models for hard reasoning, and a different provider for cross-critique so the reviewer brings fresh eyes. When a provider goes down, Fabro can fail over automatically.
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/ensemble-workflow.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=fdcf8705f3d395ee0790c279779d6962" alt="Ensemble workflow: fan out to Opus and Gemini Pro, merge, then synthesize" width="783" height="131" data-path="images/ensemble-workflow.svg" />
-</Frame>
+![Ensemble workflow: fan out to Opus and Gemini Pro, merge, then synthesize](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/ensemble-workflow.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=fdcf8705f3d395ee0790c279779d6962)
 
 ## Model catalog
 
@@ -35,7 +33,7 @@ For example, the shared `gpt-56-sol` alias can be portable across direct OpenAI 
 | OpenAI and OpenRouter | `gpt-56-sol` | OpenAI, because it has higher priority |
 | Both, with `provider = "openrouter"` | `gpt-56-sol` | OpenRouter, because the provider is pinned |
 
-Fabro performs this selection once when creating a run and persists the chosen provider and canonical slug in the run settings and graph. Resuming that run does not reconsider provider priority when credentials change. Runtime [model fallbacks](/execution/failures#model-fallbacks) are the separate mechanism for handling a later provider failure.
+Fabro performs this selection once when creating a run and persists the chosen provider and canonical slug in the run settings and graph. Resuming that run does not reconsider provider priority when credentials change. Runtime [model fallbacks](https://docs.fabro.sh/execution/failures.md#model-fallbacks) are the separate mechanism for handling a later provider failure.
 
 | Model | Provider | Aliases | Context | Cost (in/out per Mtok) | Speed |
 | - | - | - | - | - | - |
@@ -75,7 +73,7 @@ Fabro performs this selection once when creating a run and persists the chosen p
 | `qwen3.8-max` | venice | `qwen`, `qwen-max`, `qwen3.8`, `qwen-3.8`, `qwen38`, `qwen-3.8-max`, `qwen38-max` | 1M | $2.50 / $7.50 | n/a |
 | `qwen3.8-27b` | venice | `qwen-27b`, `qwen-3.8-27b`, `qwen38-27b` | 262K | $0.45 / $3.20 | n/a |
 
-Each provider requires its own API key. Server-backed workflows read provider credentials from the server vault (for example `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, or `POOLSIDE_API_KEY` set with `fabro secret set` or `fabro provider login`). Standalone SDK/CLI flows can opt into env-backed credential sources explicitly. See the [Quick Start](/getting-started/quick-start) for setup.
+Each provider requires its own API key. Server-backed workflows read provider credentials from the server vault (for example `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, or `POOLSIDE_API_KEY` set with `fabro secret set` or `fabro provider login`). Standalone SDK/CLI flows can opt into env-backed credential sources explicitly. See the [Quick Start](https://docs.fabro.sh/getting-started/quick-start.md) for setup.
 
 Claude Fable 5 is available as an explicit model but is not the default Anthropic model. If Fable refuses a request, Fabro reports the refusal as a content-filter LLM error and applies the configured `run.model.fallbacks` chain when one is present.
 
@@ -83,7 +81,7 @@ Claude Fable 5 is available as an explicit model but is not the default Anthropi
 
 Fabro's catalog is the [lithos-llm](https://docs.rs/lithos-llm) built-in catalog. The `[llm]` table in settings is a second layer over it: a lithos catalog overlay that adds providers and models or changes existing entries. Later layers win. Tables merge key by key and every other value replaces. Models are nested under their provider, so two providers can expose the same model id without overwriting each other.
 
-Provider and model facts use lithos field names: `adapter`, `codecs`, `base_url`, `auth`, `enabled`, `limits`, `capabilities`, `pricing`, `small_default`, `probe`, `family`, and the cutoffs. The coding harness a model expects lives under `metadata.agent`, a namespace lithos ships and other agents such as Pebble read too. See [Settings Configuration](/reference/user-configuration#llm) for every key.
+Provider and model facts use lithos field names: `adapter`, `codecs`, `base_url`, `auth`, `enabled`, `limits`, `capabilities`, `pricing`, `small_default`, `probe`, `family`, and the cutoffs. The coding harness a model expects lives under `metadata.agent`, a namespace lithos ships and other agents such as Pebble read too. See [Settings Configuration](https://docs.fabro.sh/reference/user-configuration.md#llm) for every key.
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [llm.providers.proxy]
@@ -115,7 +113,7 @@ estimated_output_tps = 80
 
 The gateway's API key is `PROXY_API_KEY`: lithos derives the secret name from the provider id (upper case, `-` and `.` as `_`, then `_API_KEY`). Store it with `fabro secret set PROXY_API_KEY ...`.
 
-For [LiteLLM](/integrations/litellm), Fabro ships a disabled provider entry. Enable it in settings and declare the models your proxy exposes:
+For [LiteLLM](https://docs.fabro.sh/integrations/litellm.md), Fabro ships a disabled provider entry. Enable it in settings and declare the models your proxy exposes:
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [llm.providers.litellm]
@@ -132,9 +130,9 @@ capabilities = { text = true, tools = true }
 
 `api_model` is the model name sent to that provider's API. It defaults to the exact model id, so omit it when the two strings match. Fabro does not infer vendor prefixes or rewrite the value.
 
-<Note>
-  A `provider/model` selector such as `openai/gpt-5.6-sol` pins the provider and names the model by id, alias, or wire id. A bare selector with no provider pin picks the highest-priority ready offering; a separate `provider = "openrouter"` pin selects the OpenRouter offering. Providers with `allow_passthrough = true` also accept `provider/model` selectors for models the catalog does not list.
-</Note>
+> [!NOTE]
+>
+> A `provider/model` selector such as `openai/gpt-5.6-sol` pins the provider and names the model by id, alias, or wire id. A bare selector with no provider pin picks the highest-priority ready offering; a separate `provider = "openrouter"` pin selects the OpenRouter offering. Providers with `allow_passthrough = true` also accept `provider/model` selectors for models the catalog does not list. A bare selector the catalog does not know is an error rather than a passthrough, and a bare provider name such as `gemini` is an error too: pin the provider and omit the model to use its default.
 
 Model roles are separate: the provider's `default_model` controls normal model selection for workflow execution, while `small_default = true` on a model row marks the provider's small utility model for metadata tasks such as generated run titles. If a provider has no small default, Fabro falls back to that provider's default model.
 
@@ -150,21 +148,21 @@ Three profiles are selected per model rather than per provider, because they fol
 
 Costs come from the lithos `pricing` table on each model row. Each token bucket (input, output, reasoning, cache read, cache write) prices at its own rate, with optional long-context and speed tiers. Providers that return an authoritative charge, such as OpenRouter, override the catalog estimate; the billing record says which source it came from.
 
-<Note>
-  Provider fields in configuration, APIs, and model routing are provider ID strings. Built-in names like `anthropic`, `openai`, and `gemini` still work, but custom IDs like `proxy` work anywhere a provider ID is accepted.
-</Note>
+> [!NOTE]
+>
+> Provider fields in configuration, APIs, and model routing are provider ID strings. Built-in names like `anthropic`, `openai`, and `gemini` still work, but custom IDs like `proxy` work anywhere a provider ID is accepted.
 
 ### Venice
 
-Fabro ships a built-in [Venice](/integrations/venice) provider with a curated catalog of Venice-hosted Kimi, Grok, GLM, DeepSeek, and Qwen models. Store its API key with `fabro provider login --provider venice`. Pin `provider = "venice"` when a shared model slug must use Venice instead of a higher-priority direct provider.
+Fabro ships a built-in [Venice](https://docs.fabro.sh/integrations/venice.md) provider with a curated catalog of Venice-hosted Kimi, Grok, GLM, DeepSeek, and Qwen models. Store its API key with `fabro provider login --provider venice`. Pin `provider = "venice"` when a shared model slug must use Venice instead of a higher-priority direct provider.
 
 ### Poolside
 
-Fabro ships a built-in [Poolside](/integrations/poolside) provider for Laguna S 2.1 and Laguna XS 2.1 over Poolside's OpenAI-compatible API. Store a direct API key with `fabro provider login --provider poolside`. The same model slugs are also available through the opt-in OpenRouter provider; its vendor-namespaced strings remain provider-only `api_model` values.
+Fabro ships a built-in [Poolside](https://docs.fabro.sh/integrations/poolside.md) provider for Laguna S 2.1 and Laguna XS 2.1 over Poolside's OpenAI-compatible API. Store a direct API key with `fabro provider login --provider poolside`. The same model slugs are also available through the opt-in OpenRouter provider; its vendor-namespaced strings remain provider-only `api_model` values.
 
 ### OpenRouter
 
-Fabro ships an [OpenRouter](/integrations/openrouter) provider definition with a curated model catalog, disabled by default. Enable it in settings and store an API key with `fabro provider login --provider openrouter`:
+Fabro ships an [OpenRouter](https://docs.fabro.sh/integrations/openrouter.md) provider definition with a curated model catalog, disabled by default. Enable it in settings and store an API key with `fabro provider login --provider openrouter`:
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [llm.providers.openrouter]
@@ -173,7 +171,7 @@ enabled = true
 
 ### Modal
 
-Fabro ships a [Modal](/integrations/modal) provider definition for Kimi K3, disabled by default. Modal assigns the endpoint URL and authenticates requests with a two-part proxy token:
+Fabro ships a [Modal](https://docs.fabro.sh/integrations/modal.md) provider definition for Kimi K3, disabled by default. Modal assigns the endpoint URL and authenticates requests with a two-part proxy token:
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [llm.providers.modal]
@@ -190,7 +188,7 @@ fabro secret set MODAL_TOKEN_SECRET ws-...
 
 ### Amazon Bedrock
 
-Fabro ships an [Amazon Bedrock](/integrations/bedrock) provider definition with a curated multi-vendor catalog over Bedrock's Converse API, disabled by default. Enable it and authenticate with a Bedrock API key or AWS SigV4 credentials:
+Fabro ships an [Amazon Bedrock](https://docs.fabro.sh/integrations/bedrock.md) provider definition with a curated multi-vendor catalog over Bedrock's Converse API, disabled by default. Enable it and authenticate with a Bedrock API key or AWS SigV4 credentials:
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [llm.providers.bedrock]
@@ -227,7 +225,7 @@ When no model or provider is specified, Fabro chooses the default offering on th
 
 ## Using models in workflows
 
-Assign models to workflow nodes using [model stylesheets](/workflows/stylesheets), which use a CSS-like syntax:
+Assign models to workflow nodes using [model stylesheets](https://docs.fabro.sh/workflows/stylesheets.md), which use a CSS-like syntax:
 
 ```dot title="example.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph Example {
@@ -292,9 +290,9 @@ The `[run.model.fallbacks]` table is optional. Each key names the originally req
 
 Fabro selects one chain from the original request. It does not switch to the chain configured for a fallback target. When the requested reasoning level is unavailable on a fallback target, Fabro uses the nearest supported level. Equal-distance choices round up.
 
-<Note>
-  The precedence order is: node-level stylesheet > run config TOML > CLI flags > server defaults. More specific settings always win.
-</Note>
+> [!NOTE]
+>
+> The precedence order is: node-level stylesheet > run config TOML > CLI flags > server defaults. More specific settings always win.
 
 ## CLI commands
 

@@ -10,9 +10,7 @@ This tutorial assigns different models to different tasks in a single workflow �
 
 ## The workflow
 
-<Frame>
-  <img src="https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-multi-model.svg?fit=max&auto=format&n=G7Im2lhV2VdE8zmz&q=85&s=b2afa8ce8274c3f198ddc09aaaca943d" alt="Multi-Model workflow: Start → Write Spec (Haiku) → Implement (Sonnet) → Write Tests (Sonnet) → Code Review (Sonnet) → Exit" width="885" height="73" data-path="images/tutorial-multi-model.svg" />
-</Frame>
+![Multi-Model workflow: Start → Write Spec (Haiku) → Implement (Sonnet) → Write Tests (Sonnet) → Code Review (Sonnet) → Exit](https://mintcdn.com/qltysoftware-21b56213/G7Im2lhV2VdE8zmz/images/tutorial-multi-model.svg?fit=max\&auto=format\&n=G7Im2lhV2VdE8zmz\&q=85\&s=b2afa8ce8274c3f198ddc09aaaca943d)
 
 ```dot title="multi-model.fabro" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 digraph MultiModel {
@@ -113,7 +111,7 @@ implement [label="Implement", class="coding", model="claude-opus-4-6"]
 
 This node uses Opus regardless of what `.coding` says.
 
-See [Model Stylesheets](/workflows/stylesheets) for the full reference and [Models](/core-concepts/models) for available model IDs.
+See [Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md) for the full reference and [Models](https://docs.fabro.sh/core-concepts/models.md) for available model IDs.
 
 ## What you've learned
 
@@ -124,9 +122,9 @@ See [Model Stylesheets](/workflows/stylesheets) for the full reference and [Mode
 
 ## Next
 
-<Card title="Ensemble" icon="arrow-right" href="/tutorials/ensemble">
-  Fan out to multiple providers and synthesize their independent opinions.
-</Card>
+> **[Ensemble](https://docs.fabro.sh/tutorials/ensemble.md)**
+>
+> Fan out to multiple providers and synthesize their independent opinions.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

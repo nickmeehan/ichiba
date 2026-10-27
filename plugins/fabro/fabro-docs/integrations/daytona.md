@@ -16,12 +16,12 @@
 | **Snapshots** | Pre-built environment images so each run starts with dependencies already installed |
 | **SSH access** | Connect to a running sandbox for live debugging |
 | **Network controls** | Restrict agent egress with block-all or CIDR-based allow lists |
-| **MCP sandbox transport** | Run [MCP servers](/agents/mcp#sandbox) inside the sandbox — e.g., Playwright for browser automation |
+| **MCP sandbox transport** | Run [MCP servers](https://docs.fabro.sh/agents/mcp.md#sandbox) inside the sandbox — e.g., Playwright for browser automation |
 
 ## Prerequisites
 
 * A `DAYTONA_API_KEY` saved in the Fabro server vault (get one from [app.daytona.io](https://app.daytona.io))
-* GitHub access configured via the default `token` strategy or a [GitHub App](/integrations/github) (required for private repository cloning and checkpoint pushing)
+* GitHub access configured via the default `token` strategy or a [GitHub App](https://docs.fabro.sh/integrations/github.md) (required for private repository cloning and checkpoint pushing)
 
 The Daytona key must include the snapshot and sandbox scopes Fabro uses to create and clean up environments: `write:snapshots`, `delete:snapshots`, `write:sandboxes`, and `delete:sandboxes`. Fabro validates these scopes during install, when you run `fabro secret set DAYTONA_API_KEY`, and in `fabro doctor`.
 
@@ -85,7 +85,7 @@ memory = "8GB"
 disk = "20GB"
 ```
 
-See [Environments](/execution/environments) for the full reference on all environment fields and server defaults.
+See [Environments](https://docs.fabro.sh/execution/environments.md) for the full reference on all environment fields and server defaults.
 
 ### Network access control
 
@@ -133,9 +133,9 @@ The sandbox driver builds the image or Dockerfile into a Daytona snapshot named 
 
 The exact `image.docker` value is part of the snapshot identity. Prefer a digest such as `registry.example.com/team/image@sha256:...` when the image must be reproducible. If a mutable tag moves without its text changing, the existing snapshot continues to be reused.
 
-<Note>
-  If neither image source is configured, sandboxes are created from the `daytona-medium` snapshot, which includes standard dev tools such as Git. To force a new Dockerfile snapshot, change the Dockerfile text, for example by adding a comment.
-</Note>
+> [!NOTE]
+>
+> If neither image source is configured, sandboxes are created from the `daytona-medium` snapshot, which includes standard dev tools such as Git. To force a new Dockerfile snapshot, change the Dockerfile text, for example by adding a comment.
 
 ## Private repositories
 
@@ -180,9 +180,9 @@ fabro sandbox ssh <run-id>
 
 This creates temporary SSH credentials (valid for 60 minutes) and connects directly. Use `--print` to print the SSH command instead of connecting, or `--ttl` to set the credential expiry.
 
-<Note>
-  To keep the sandbox alive after the run completes, pass `--preserve-sandbox` to `fabro run`.
-</Note>
+> [!NOTE]
+>
+> To keep the sandbox alive after the run completes, pass `--preserve-sandbox` to `fabro run`.
 
 ## Sandbox lifecycle
 
@@ -228,7 +228,7 @@ Daytona counts inactivity from the last sandbox interaction (a command, file ope
 
 When running via `fabro server start`, the server config at `~/.fabro/settings.toml` can set default Daytona settings for all runs. Run config TOML values override server defaults. Labels are **merged** — run config labels win on key collisions. The `network` setting uses simple override (run config replaces the server default entirely).
 
-See [Server Configuration](/administration/server-configuration) for details.
+See [Server Configuration](https://docs.fabro.sh/administration/server-configuration.md) for details.
 
 ## Troubleshooting
 

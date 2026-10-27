@@ -6,7 +6,7 @@
 
 > Answer human-in-the-loop questions and receive run lifecycle notifications in Slack
 
-Fabro's Slack integration lets your team answer [human-in-the-loop](/workflows/human-in-the-loop) questions without leaving Slack and receive opt-in run lifecycle notifications. When a workflow reaches a human gate, Fabro posts an interactive message to a Slack channel with buttons for each option. Team members click a button (or reply in a thread for freeform input), and the workflow continues.
+Fabro's Slack integration lets your team answer [human-in-the-loop](https://docs.fabro.sh/workflows/human-in-the-loop.md) questions without leaving Slack and receive opt-in run lifecycle notifications. When a workflow reaches a human gate, Fabro posts an interactive message to a Slack channel with buttons for each option. Team members click a button (or reply in a thread for freeform input), and the workflow continues.
 
 The integration uses Slack's [Socket Mode](https://api.slack.com/apis/socket-mode), so no public URL or webhook endpoint is required — Fabro connects outbound over a WebSocket.
 
@@ -112,7 +112,7 @@ The server runtime does not read Slack tokens from process env or `server.env`. 
 
 Restart the server after changing Slack credentials so the Socket Mode connection is recreated with the new tokens.
 
-Enable Slack in your [server configuration](/administration/server-configuration). You can leave `default_channel` out if you only use per-route lifecycle notification channels:
+Enable Slack in your [server configuration](https://docs.fabro.sh/administration/server-configuration.md). You can leave `default_channel` out if you only use per-route lifecycle notification channels:
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [server.integrations.slack]
@@ -154,7 +154,7 @@ You can also check **Settings > Integrations** in the web UI. The Slack row is c
 
 ## How it works
 
-Fabro uses the same [web interviewer](/execution/interviews#web) that powers the web UI. When a human gate fires:
+Fabro uses the same [web interviewer](https://docs.fabro.sh/execution/interviews#web) that powers the web UI. When a human gate fires:
 
 1. Fabro builds a [Block Kit](https://api.slack.com/block-kit) message from the question, stage hint, upstream context, optional run link, and answer controls
 2. Posts the message to the configured Slack channel
@@ -251,7 +251,7 @@ Both must be set for the Slack integration to activate. If either is missing or 
 
 * **Single workspace** — Fabro connects to one Slack workspace at a time.
 * **One answer per question** — The first person to click a button or reply in a thread provides the answer. Subsequent interactions on the same question are ignored.
-* **No Slack steering** — Slack does not support [steering](/human-tools/steering) running agents.
+* **No Slack steering** — Slack does not support [steering](https://docs.fabro.sh/human-tools/steering.md) running agents.
 * **Lifecycle notifications are one-way** — `run.started`, `run.completed`, and `run.failed` messages are posted once per matching route and are not updated later.
 
 
