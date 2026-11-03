@@ -116,9 +116,9 @@ digraph Example {
 
 ## Direct SDK environment credentials
 
-The built-in Modal provider authenticates with two headers, `Modal-Key` and `Modal-Secret`, read from the secrets `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET`. Direct SDK use reads the same two names from the process environment.
+The built-in Modal provider authenticates with two headers, `Modal-Key` and `Modal-Secret`, read from the secrets `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET`. For environment-backed SDK use, export both names and select `VaultCredentialSource::environment_only()` explicitly. Alternatively, use `VaultCredentialSource::vault_only(...)` with a vault holding both tokens.
 
-For direct SDK use, enable Modal and set its endpoint URL in the `[llm]` overlay, then build the client with `fabro_llm::build_client` over a `VaultCredentialSource` whose vault holds both secrets. The catalog you pass to the client must be built from the same settings file with `fabro_llm::build_catalog`.
+Enable Modal and set its endpoint URL in the `[llm]` overlay, then build the client with `fabro_llm::build_client` over your chosen credential source. The catalog you pass to the client must be built from the same settings file with `fabro_llm::build_catalog`.
 
 ```toml title="settings.toml" theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 [llm.providers.modal]
@@ -146,11 +146,11 @@ Dedicated Auto Endpoints use Modal compute billing instead of the Shared API tok
 
 ## Further reading
 
-> **[Modal Kimi K3](https://modal.com/library/moonshot/kimi-k3)**
+> [card] [Modal Kimi K3](https://modal.com/library/moonshot/kimi-k3)
 >
 > Shared API prices, model specifications, and Auto Endpoint setup.
 
-> **[Modal endpoint authentication](https://modal.com/docs/guide/endpoints#proxy-tokens)**
+> [card] [Modal endpoint authentication](https://modal.com/docs/guide/endpoints#proxy-tokens)
 >
 > Proxy-token headers and endpoint calling conventions.
 

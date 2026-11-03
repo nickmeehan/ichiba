@@ -26,29 +26,29 @@
 
 ## Install
 
-**Claude Code**
+> [tab] Claude Code
+>
+> ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+> curl -fsSL https://fabro.sh/install.md | claude
+> ```
 
-```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-curl -fsSL https://fabro.sh/install.md | claude
-```
+> [tab] Codex
+>
+> ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+> codex "$(curl -fsSL https://fabro.sh/install.md)"
+> ```
 
-**Codex**
+> [tab] Homebrew
+>
+> ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+> brew install fabro-sh/tap/fabro-nightly
+> ```
 
-```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-codex "$(curl -fsSL https://fabro.sh/install.md)"
-```
-
-**Homebrew**
-
-```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-brew install fabro-sh/tap/fabro-nightly
-```
-
-**Bash**
-
-```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-curl -fsSL https://fabro.sh/install.sh | bash
-```
+> [tab] Bash
+>
+> ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+> curl -fsSL https://fabro.sh/install.sh | bash
+> ```
 
 > [!TIP]
 >
@@ -69,23 +69,17 @@ This creates `.fabro/project.toml` and a starter workflow under `.fabro/workflow
 
 ## Configure API keys
 
-For local CLI runs, export at least one LLM provider key in your shell:
+`fabro run` uses the Fabro server even when you run it from a local terminal. If installation has not already configured a provider, store a key in that server's vault:
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-ANTHROPIC_API_KEY=sk-ant-...
-OPENAI_API_KEY=sk-...
-GEMINI_API_KEY=AI...
+fabro secret set ANTHROPIC_API_KEY sk-ant-...
 ```
+
+You can also use `fabro provider login --provider anthropic` for guided setup. You only need one provider to get started; add more to enable multi-model workflows.
 
 > [!NOTE]
 >
-> You only need one provider key to get started. Add more to enable multi-model workflows.
->
-> For server-backed runs, store provider keys in the server vault instead:
->
-> ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
-> fabro secret set ANTHROPIC_API_KEY sk-ant-...
-> ```
+> Exporting a provider key in your shell does not configure server-backed workflows. For a remote server, use `fabro secret --server https://fabro.example.com set ANTHROPIC_API_KEY sk-ant-...` and `fabro run --server https://fabro.example.com hello` so both commands use the same server. Direct `fabro exec` and SDK callers have different [credential sources](https://docs.fabro.sh/core-concepts/models.md#credential-sources).
 
 ## Run your first workflow
 
@@ -95,11 +89,11 @@ fabro run hello
 
 ## Next steps
 
-> **[Why Fabro?](https://docs.fabro.sh/getting-started/why-fabro.md)**
+> [card] [Why Fabro?](https://docs.fabro.sh/getting-started/why-fabro.md)
 >
 > Understand the problems Fabro solves.
 
-> **[Workflows](https://docs.fabro.sh/core-concepts/workflows.md)**
+> [card] [Workflows](https://docs.fabro.sh/core-concepts/workflows.md)
 >
 > Learn how to define workflow graphs in Graphviz.
 

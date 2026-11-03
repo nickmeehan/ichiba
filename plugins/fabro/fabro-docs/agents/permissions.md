@@ -101,19 +101,19 @@ For CLI-backed workflow agents, each provider handles auto-approval differently:
 
 ## Further reading
 
-> **[Tools](https://docs.fabro.sh/agents/tools.md)**
+> [card] [Tools](https://docs.fabro.sh/agents/tools.md)
 >
 > Full reference for built-in tools and their parameters.
 
-> **[Environments](https://docs.fabro.sh/execution/environments.md)**
+> [card] [Environments](https://docs.fabro.sh/execution/environments.md)
 >
 > Sandbox providers that control execution isolation.
 
-> **[MCP](https://docs.fabro.sh/agents/mcp.md)**
+> [card] [MCP](https://docs.fabro.sh/agents/mcp.md)
 >
 > MCP tools follow the same permission model as built-in tools.
 
-> **[Sub-agents](https://docs.fabro.sh/agents/subagents.md)**
+> [card] [Sub-agents](https://docs.fabro.sh/agents/subagents.md)
 >
 > Sub-agents inherit their parent's permission level.
 

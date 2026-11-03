@@ -132,11 +132,11 @@ Fabro does not include promotional `:free` OpenRouter variants in the built-in c
 
 ## Further reading
 
-> **[Poolside API](https://docs.poolside.ai/api/overview)**
+> [card] [Poolside API](https://docs.poolside.ai/api/overview)
 >
 > Official API endpoints, authentication, model listing, and tool-use examples.
 
-> **[Laguna models](https://poolside.ai/models)**
+> [card] [Laguna models](https://poolside.ai/models)
 >
 > Current model capabilities, weights, context windows, and release information.
 

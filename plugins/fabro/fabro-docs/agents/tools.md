@@ -261,19 +261,19 @@ Additional tools can be added via [MCP servers](https://docs.fabro.sh/agents/mcp
 
 ## Further reading
 
-> **[Permissions](https://docs.fabro.sh/agents/permissions.md)**
+> [card] [Permissions](https://docs.fabro.sh/agents/permissions.md)
 >
 > How permissions control which tools are available.
 
-> **[Environments](https://docs.fabro.sh/execution/environments.md)**
+> [card] [Environments](https://docs.fabro.sh/execution/environments.md)
 >
 > Sandbox providers where tools execute.
 
-> **[MCP](https://docs.fabro.sh/agents/mcp.md)**
+> [card] [MCP](https://docs.fabro.sh/agents/mcp.md)
 >
 > Extend agents with Model Context Protocol servers.
 
-> **[Sub-agents](https://docs.fabro.sh/agents/subagents.md)**
+> [card] [Sub-agents](https://docs.fabro.sh/agents/subagents.md)
 >
 > Sub-agents inherit tools from their parent session.
 

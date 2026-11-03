@@ -47,11 +47,13 @@ For a server-owned secret:
 fabro secret set LITELLM_API_KEY sk-proxy-key
 ```
 
-`fabro exec` and direct `fabro-llm` SDK usage can use an env-backed credential source explicitly:
+For direct `fabro exec` (no server target), export the key in the invoking shell. SDK callers can explicitly choose an environment-backed credential source:
 
 ```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 export LITELLM_API_KEY=sk-proxy-key
 ```
+
+`fabro exec --server ...` uses the target Fabro server's vault, even when the CLI has a key in its own environment. See [Credential sources](https://docs.fabro.sh/core-concepts/models.md#credential-sources).
 
 If your local LiteLLM proxy does not enforce authentication, use a placeholder value such as `anything`; the OpenAI-compatible client still needs a credential value.
 
@@ -100,7 +102,7 @@ The provider's `default_model` names its default. You may also mark one small ut
 
 ## Troubleshooting
 
-**"No API key configured"** — For runs, set `vault:LITELLM_API_KEY` with `fabro secret set LITELLM_API_KEY ...`. Exporting it in the server's shell has no effect on runs: workers start from a cleared environment and provider keys are not inherited. For `fabro exec` or direct SDK usage, export `LITELLM_API_KEY` in the invoking shell and use an env-backed credential source.
+**"No API key configured"** — For runs, store `LITELLM_API_KEY` in the target server vault with `fabro secret set LITELLM_API_KEY ...`. Exporting it in the server's shell has no effect on runs: workers start from a cleared environment and provider keys are not inherited. For direct `fabro exec` (no server target), export `LITELLM_API_KEY` in the invoking shell or store it in the local secret store. SDK callers must choose the appropriate credential source.
 
 **Connection refused** — Confirm the LiteLLM proxy is running and that `base_url` is reachable from the Fabro process. For Docker deployments, `localhost` means the Fabro container unless you point it at a host or service name.
 
@@ -108,11 +110,11 @@ The provider's `default_model` names its default. You may also mark one small ut
 
 ## Further reading
 
-> **[Models](https://docs.fabro.sh/core-concepts/models.md)**
+> [card] [Models](https://docs.fabro.sh/core-concepts/models.md)
 >
 > How Fabro routes model IDs, providers, and fallbacks.
 
-> **[Settings Configuration](https://docs.fabro.sh/reference/user-configuration.md)**
+> [card] [Settings Configuration](https://docs.fabro.sh/reference/user-configuration.md)
 >
 > Full reference for provider settings and provider-scoped model offerings.
 

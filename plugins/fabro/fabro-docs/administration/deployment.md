@@ -33,11 +33,11 @@ For team use, production workflows, or running 24/7, self-host the server as a D
 
 Use a public reverse proxy such as Caddy when the server must be reachable from the public internet. Use Tailscale Services when the server should stay private to your tailnet; Fabro still serves plain HTTP locally, and Tailscale provides the HTTPS endpoint.
 
-> **[Self-host with Docker](https://docs.fabro.sh/administration/self-host-docker.md)**
+> [card] [Self-host with Docker](https://docs.fabro.sh/administration/self-host-docker.md)
 >
 > Compose-first walkthrough, including Caddy and Tailscale Services options.
 
-> **[Deploy to Railway](https://docs.fabro.sh/administration/deploy-railway.md)**
+> [card] [Deploy to Railway](https://docs.fabro.sh/administration/deploy-railway.md)
 >
 > One-click managed shortcut for the same Docker image.
 

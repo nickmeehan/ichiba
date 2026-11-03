@@ -72,11 +72,11 @@ See the [`web_search` tool reference](https://docs.fabro.sh/agents/tools#web_sea
 
 ## Further reading
 
-> **[Tools](https://docs.fabro.sh/agents/tools.md#web_search)**
+> [card] [Tools](https://docs.fabro.sh/agents/tools.md#web_search)
 >
 > Full `web_search` tool reference — parameters, output format, and error handling.
 
-> **[Brave Search](https://docs.fabro.sh/integrations/brave-search.md)**
+> [card] [Brave Search](https://docs.fabro.sh/integrations/brave-search.md)
 >
 > Direct Brave Search backend, preferred whenever its key is configured.
 

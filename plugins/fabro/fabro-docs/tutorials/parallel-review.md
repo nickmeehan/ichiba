@@ -165,7 +165,7 @@ created.
 
 ## Next
 
-> **[Multi-Model Routing](https://docs.fabro.sh/tutorials/multi-model.md)**
+> [card] [Multi-Model Routing](https://docs.fabro.sh/tutorials/multi-model.md)
 >
 > Assign different models to different workflow nodes using stylesheets.
 

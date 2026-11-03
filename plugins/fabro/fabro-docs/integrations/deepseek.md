@@ -136,15 +136,15 @@ See the [Fireworks AI integration](https://docs.fabro.sh/integrations/fireworks.
 
 ## Further reading
 
-> **[DeepSeek API](https://api-docs.deepseek.com/)**
+> [card] [DeepSeek API](https://api-docs.deepseek.com/)
 >
 > Official authentication, endpoints, and API reference.
 
-> **[Models and pricing](https://api-docs.deepseek.com/quick_start/pricing/)**
+> [card] [Models and pricing](https://api-docs.deepseek.com/quick_start/pricing/)
 >
 > Official limits, features, and token prices.
 
-> **[Thinking mode](https://api-docs.deepseek.com/guides/thinking_mode/)**
+> [card] [Thinking mode](https://api-docs.deepseek.com/guides/thinking_mode/)
 >
 > Official thinking toggles, effort mappings, and tool-call replay rules.
 

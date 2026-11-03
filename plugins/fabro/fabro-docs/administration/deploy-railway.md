@@ -73,11 +73,11 @@ Railway re-pulls the GHCR image on every deploy. The template uses the `:nightly
 
 ## Next steps
 
-> **[Server Operations](https://docs.fabro.sh/reference/server-operations.md)**
+> [card] [Server Operations](https://docs.fabro.sh/reference/server-operations.md)
 >
 > Auth, dev tokens, submitting runs, and pointing the CLI at your deployment.
 
-> **[Server Configuration](https://docs.fabro.sh/administration/server-configuration.md)**
+> [card] [Server Configuration](https://docs.fabro.sh/administration/server-configuration.md)
 >
 > Full `settings.toml` reference — reverse-proxy TLS, auth methods, concurrency, and more.
 

@@ -20,7 +20,7 @@ These flags apply to all subcommands:
 | `-h, --help` | Print help |
 | `-V, --version` | Print version |
 
-Connection-target flags like `--storage-dir` and `--server` are command-specific, not global. Fabro no longer auto-loads `~/.fabro/.env`; persist server-owned credentials with `fabro provider login` / `fabro secret set`, or provide environment variables in the invoking shell.
+Connection-target flags like `--storage-dir` and `--server` are command-specific, not global. Fabro no longer auto-loads `~/.fabro/.env`. Configure server model credentials with `fabro provider login` or `fabro secret set` on the target server; shell provider keys do not configure `fabro run` or `fabro exec --server ...`. Direct `fabro exec` (no server target) checks the invoking process environment before the local secret store for conventional API-key names. See [Credential sources](https://docs.fabro.sh/core-concepts/models.md#credential-sources), including the separate Bedrock SigV4 mechanism.
 
 ## Configuration
 
@@ -49,7 +49,7 @@ url = "https://fabro.example.com/api/v1"
 
 `[cli.exec]` config applies to `fabro exec`. `[run.model]` sets the default workflow model/provider for commands like `fabro run` and `fabro preflight`. `[cli.target]` stores connection info for commands that can target a remote Fabro server.
 
-`fabro model` uses `[cli.target]` by default when no explicit `--storage-dir` is passed. `fabro exec` remains a local session unless you pass `--server`, even if `[cli.target]` is configured.
+`fabro model` uses `[cli.target]` by default when no explicit `--storage-dir` is passed. `fabro exec` remains a direct session unless you select a server with `--server` or `FABRO_SERVER`, even if `[cli.target]` is configured.
 
 Explicit `http(s)://...` targets are always treated as remote servers. They do not inherit identity from a local daemon, a local storage dir, or `~/.fabro/dev-token`. For remote URLs, use `fabro auth login --server ...` or a stored CLI auth session.
 

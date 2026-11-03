@@ -127,11 +127,11 @@ Catalog prices mirror [Fireworks serverless pricing](https://docs.fireworks.ai/s
 
 ## Further reading
 
-> **[Models](https://docs.fabro.sh/core-concepts/models.md)**
+> [card] [Models](https://docs.fabro.sh/core-concepts/models.md)
 >
 > How Fabro routes model IDs, providers, and fallbacks.
 
-> **[Settings Configuration](https://docs.fabro.sh/reference/user-configuration.md)**
+> [card] [Settings Configuration](https://docs.fabro.sh/reference/user-configuration.md)
 >
 > Full reference for provider settings and provider-scoped model offerings.
 

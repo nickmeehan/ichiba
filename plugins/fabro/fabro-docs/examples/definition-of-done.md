@@ -919,19 +919,19 @@ Both variants end with a human gate. Even after automated verification, a human 
 
 ## Further reading
 
-> **[Multi-Model Workflows](https://docs.fabro.sh/tutorials/multi-model.md)**
+> [card] [Multi-Model Workflows](https://docs.fabro.sh/tutorials/multi-model.md)
 >
 > Assigning different models to different workflow nodes.
 
-> **[Ensemble Review](https://docs.fabro.sh/tutorials/ensemble.md)**
+> [card] [Ensemble Review](https://docs.fabro.sh/tutorials/ensemble.md)
 >
 > Independent assessments merged into consensus decisions.
 
-> **[Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md)**
+> [card] [Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md)
 >
 > CSS-like rules for assigning models to workflow nodes.
 
-> **[Human-in-the-Loop](https://docs.fabro.sh/workflows/human-in-the-loop.md)**
+> [card] [Human-in-the-Loop](https://docs.fabro.sh/workflows/human-in-the-loop.md)
 >
 > Human approval gates and review checkpoints.
 

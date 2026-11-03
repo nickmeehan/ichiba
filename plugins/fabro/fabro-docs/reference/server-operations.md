@@ -206,19 +206,19 @@ See [User Configuration](https://docs.fabro.sh/reference/user-configuration.md#c
 
 ## Next steps
 
-> **[Deployment](https://docs.fabro.sh/administration/deployment.md)**
+> [card] [Deployment](https://docs.fabro.sh/administration/deployment.md)
 >
 > Choose where the server runs: laptop or self-hosted Docker container.
 
-> **[Server Configuration](https://docs.fabro.sh/administration/server-configuration.md)**
+> [card] [Server Configuration](https://docs.fabro.sh/administration/server-configuration.md)
 >
 > Full settings.toml reference — authentication, reverse-proxy TLS, run defaults, and more.
 
-> **[API Reference](https://docs.fabro.sh/api-reference/overview.md)**
+> [card] [API Reference](https://docs.fabro.sh/api-reference/overview.md)
 >
 > REST API for submitting runs, streaming events, and managing resources.
 
-> **[How Fabro Works](https://docs.fabro.sh/core-concepts/how-fabro-works.md)**
+> [card] [How Fabro Works](https://docs.fabro.sh/core-concepts/how-fabro-works.md)
 >
 > The workflow engine and architecture.
 

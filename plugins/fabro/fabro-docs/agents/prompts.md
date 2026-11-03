@@ -102,7 +102,7 @@ The prompt the agent receives is not just the `prompt` attribute. Fabro prepends
 
 The preamble is controlled by the **fidelity** setting. See [Context: Fidelity](https://docs.fabro.sh/execution/context.md#fidelity-controlling-agent-context) for the full reference.
 
-> **Example assembled prompt**
+> [accordion] Example assembled prompt
 >
 > Given a plan-then-implement workflow where the plan stage completed, the `implement` node with `fidelity="compact"` would receive:
 >
@@ -145,7 +145,7 @@ The system prompt varies by LLM provider. Each provider has its own identity tex
 [Skills: available skill templates]
 ```
 
-> **Example system prompt (Anthropic provider)**
+> [accordion] Example system prompt (Anthropic provider)
 >
 > This is the full system prompt sent to Claude as the LLM system message. The `<environment>` block is filled in at runtime.
 >

@@ -22,19 +22,19 @@ Fabro replaces the prompt-wait-review loop with version-controlled workflow grap
 * **Inspect every run** — Query durable event streams, checkpoints, conclusions, and stage outputs to understand what happened and improve the workflow.
 * **Specify in natural language** — Define requirements as natural-language specs and let Fabro generate — and regenerate — implementations that conform to them.
 
-> **[Why Fabro?](https://docs.fabro.sh/getting-started/why-fabro.md)**
+> [card] [Why Fabro?](https://docs.fabro.sh/getting-started/why-fabro.md)
 >
 > The problems Fabro solves for AI-assisted software teams.
 
-> **[Quick Start](https://docs.fabro.sh/getting-started/quick-start.md)**
+> [card] [Quick Start](https://docs.fabro.sh/getting-started/quick-start.md)
 >
 > Install Fabro and run your first workflow in minutes.
 
-> **[Workflows](https://docs.fabro.sh/core-concepts/workflows.md)**
+> [card] [Workflows](https://docs.fabro.sh/core-concepts/workflows.md)
 >
 > Learn how workflow graphs orchestrate agents, commands, and human gates.
 
-> **[Agents](https://docs.fabro.sh/core-concepts/agents.md)**
+> [card] [Agents](https://docs.fabro.sh/core-concepts/agents.md)
 >
 > Understand how Fabro configures and runs LLM agents within workflows.
 

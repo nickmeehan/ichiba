@@ -113,7 +113,7 @@ The tradeoff is cost and latency — you're making 4x the LLM calls. Use single-
 
 ## Next
 
-> **[Sub-Workflows](https://docs.fabro.sh/tutorials/sub-workflow.md)**
+> [card] [Sub-Workflows](https://docs.fabro.sh/tutorials/sub-workflow.md)
 >
 > Delegate to reusable child workflows with the supervisor pattern.
 

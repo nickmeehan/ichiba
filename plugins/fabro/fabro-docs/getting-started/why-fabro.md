@@ -24,27 +24,27 @@ AI coding agents have transformed software engineering productivity, but the sur
 
 Fabro gives you a deterministic harness around non-deterministic AI. You define **workflow graphs** in Graphviz files that specify exactly what happens, in what order, with which models, and where humans weigh in. Fabro handles orchestration, parallelism, model routing, verification, and observability.
 
-> **Version-controlled workflows**
+> [card] Version-controlled workflows
 >
 > Define workflows as code in Graphviz. Nodes are agents, shell commands, or human input gates. Fan out, loop, branch, and resume — all traceable and repeatable.
 
-> **Multi-model orchestration**
+> [card] Multi-model orchestration
 >
 > Route tasks to the right model using CSS-like stylesheets. Cross-critique with fresh eyes, delegate simple tasks to fast models, and fail over automatically when providers go down.
 
-> **Human-in-the-loop**
+> [card] Human-in-the-loop
 >
 > Steer while the agent runs, not after. Approval gates, interviews, and steering let you intervene at the right moments without waiting for a pull request.
 
-> **Adaptive verification**
+> [card] Adaptive verification
 >
 > Combine LLM-as-judge, test suites, third-party tools, and human review. Verifications act as an eval suite tailored to your organization, building confidence over time.
 
-> **Observability**
+> [card] Observability
 >
 > Every tool call, agent turn, and shell command is captured in a unified event stream. Query run data with SQL via DuckDB and inspect the full execution trail.
 
-> **Open source**
+> [card] Open source
 >
 > Licensed under MIT. Written in Rust with minimal dependencies. Runs on a single node with no databases to set up.
 
@@ -79,7 +79,7 @@ This workflow plans a change, asks a human to approve it, implements the plan, a
 
 ## Next steps
 
-> **[Quick Start](https://docs.fabro.sh/getting-started/quick-start.md)**
+> [card] [Quick Start](https://docs.fabro.sh/getting-started/quick-start.md)
 >
 > Install Fabro and run your first workflow in minutes.
 

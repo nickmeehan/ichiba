@@ -199,19 +199,19 @@ The agent stages (implement, simplify, fixup) work with any language — they us
 
 ## Further reading
 
-> **[Multi-Model Workflows](https://docs.fabro.sh/tutorials/multi-model.md)**
+> [card] [Multi-Model Workflows](https://docs.fabro.sh/tutorials/multi-model.md)
 >
 > Assigning different models to different workflow nodes.
 
-> **[Failures & Retries](https://docs.fabro.sh/execution/failures.md)**
+> [card] [Failures & Retries](https://docs.fabro.sh/execution/failures.md)
 >
 > Goal gates, retry targets, max visits, and circuit breakers.
 
-> **[Run Configuration](https://docs.fabro.sh/execution/run-configuration.md)**
+> [card] [Run Configuration](https://docs.fabro.sh/execution/run-configuration.md)
 >
 > TOML configs, goal files, and detached runs.
 
-> **[Environments](https://docs.fabro.sh/execution/environments.md)**
+> [card] [Environments](https://docs.fabro.sh/execution/environments.md)
 >
 > Running workflows on cloud resources with sandboxed execution.
 

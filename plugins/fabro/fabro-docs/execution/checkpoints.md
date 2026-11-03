@@ -94,7 +94,7 @@ fabro resume 01JKXYZ
 
 Fabro resolves the run by ID prefix, validates that durable state contains a checkpoint, and asks the server to continue execution. No workflow file or override flags are needed — all configuration is restored from persisted state.
 
-> **What happens during resume**
+> [accordion] What happens during resume
 >
 > 1. Fabro looks up the run directory by ID prefix
 > 2. Validates that a checkpoint exists in durable state and no engine process is already running

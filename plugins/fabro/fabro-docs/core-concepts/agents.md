@@ -128,19 +128,19 @@ See [Hooks](https://docs.fabro.sh/agents/hooks.md) for details.
 
 ## Further reading
 
-> **[Prompts](https://docs.fabro.sh/agents/prompts.md)**
+> [card] [Prompts](https://docs.fabro.sh/agents/prompts.md)
 >
 > How prompts are constructed and injected.
 
-> **[Tools](https://docs.fabro.sh/agents/tools.md)**
+> [card] [Tools](https://docs.fabro.sh/agents/tools.md)
 >
 > Built-in tools and custom tool registration.
 
-> **[MCP](https://docs.fabro.sh/agents/mcp.md)**
+> [card] [MCP](https://docs.fabro.sh/agents/mcp.md)
 >
 > Extend agents with Model Context Protocol servers.
 
-> **[Sub-agents](https://docs.fabro.sh/agents/subagents.md)**
+> [card] [Sub-agents](https://docs.fabro.sh/agents/subagents.md)
 >
 > Delegate subtasks to child agent sessions.
 

@@ -73,7 +73,7 @@ Fabro performs this selection once when creating a run and persists the chosen p
 | `qwen3.8-max` | venice | `qwen`, `qwen-max`, `qwen3.8`, `qwen-3.8`, `qwen38`, `qwen-3.8-max`, `qwen38-max` | 1M | $2.50 / $7.50 | n/a |
 | `qwen3.8-27b` | venice | `qwen-27b`, `qwen-3.8-27b`, `qwen38-27b` | 262K | $0.45 / $3.20 | n/a |
 
-Each provider requires its own API key. Server-backed workflows read provider credentials from the server vault (for example `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, or `POOLSIDE_API_KEY` set with `fabro secret set` or `fabro provider login`). Standalone SDK/CLI flows can opt into env-backed credential sources explicitly. See the [Quick Start](https://docs.fabro.sh/getting-started/quick-start.md) for setup.
+Providers can use API keys, OAuth, AWS credentials, or no authentication, depending on their configuration. See [Credential sources](#credential-sources) below and the [Quick Start](https://docs.fabro.sh/getting-started/quick-start.md#configure-api-keys) for setup.
 
 Claude Fable 5 is available as an explicit model but is not the default Anthropic model. If Fable refuses a request, Fabro reports the refusal as a content-filter LLM error and applies the configured `run.model.fallbacks` chain when one is present.
 
@@ -136,7 +136,7 @@ capabilities = { text = true, tools = true }
 
 Model roles are separate: the provider's `default_model` controls normal model selection for workflow execution, while `small_default = true` on a model row marks the provider's small utility model for metadata tasks such as generated run titles. If a provider has no small default, Fabro falls back to that provider's default model.
 
-Provider auth has two parts. The lithos `auth` scheme says how a credential is sent: `{ type = "bearer" }`, `{ type = "header", name = "x-api-key" }`, `{ type = "headers" }` for providers that take several secret headers, `{ type = "none" }`, or `{ type = "aws" }`. lithos also says which secret names a provider reads: `OPENAI_API_KEY` for `openai`, `GEMINI_API_KEY` then `GOOGLE_API_KEY` for `gemini`, `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` for `modal`, and `<PROVIDER>_API_KEY` for a provider you define. Fabro looks each name up in the process environment first and the server vault second. Custom headers for any provider go in `default_headers` as literal text or `{{ secrets.NAME }}` tokens; put credentials in secrets and reference them with `{{ secrets.NAME }}` instead of a bare literal.
+Provider auth has two parts. The lithos `auth` scheme says how a credential is sent: `{ type = "bearer" }`, `{ type = "header", name = "x-api-key" }`, `{ type = "headers" }` for providers that take several secret headers, `{ type = "none" }`, or `{ type = "aws" }`. lithos also says which secret names a provider reads: `OPENAI_API_KEY` for `openai`, `GEMINI_API_KEY` then `GOOGLE_API_KEY` for `gemini`, `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` for `modal`, and `<PROVIDER>_API_KEY` for a provider you define. The source of those values depends on how the model call is made; see [Credential sources](#credential-sources). Custom headers for any provider go in `default_headers` as literal text or `{{ secrets.NAME }}` tokens. Secret tokens resolve against the vault, not process environment variables; put credentials in secrets and reference them instead of using a bare literal.
 
 Workflow runs add `x-session-id: <run-id>` to native HTTP model requests, including model-based hooks, run titles, Ask Fabro and pull request descriptions. The ID stays the same across retries, provider fallback and resume; separate runs get separate IDs. Explicit provider `default_headers` take precedence regardless of header-name casing. Calls outside a run do not receive an automatic session header.
 
@@ -151,6 +151,34 @@ Costs come from the lithos `pricing` table on each model row. Each token bucket 
 > [!NOTE]
 >
 > Provider fields in configuration, APIs, and model routing are provider ID strings. Built-in names like `anthropic`, `openai`, and `gemini` still work, but custom IDs like `proxy` work anywhere a provider ID is accepted.
+
+## Credential sources
+
+`fabro exec` is direct when neither `--server` nor `FABRO_SERVER` selects a server. With either target selector, it sends model calls through that server.
+
+For `fabro run`, server model calls, and `fabro exec --server ...`, store provider API keys and OAuth credentials in the **target server's vault**. This also applies when the server runs locally on your laptop. Exporting a provider API key in either the CLI's shell or the server's shell does not configure or override that server's model credentials.
+
+```bash theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
+fabro secret set OPENAI_API_KEY sk-...
+# For a remote server, target the same server used for model calls:
+fabro secret --server https://fabro.example.com set OPENAI_API_KEY sk-...
+```
+
+Use `fabro provider login` for supported API-key and OAuth login flows. The provider's secret names are the vault entry names, not instructions to export environment variables. For providers that require an API-key secret, an environment-only key leaves the server provider unconfigured; with conflicting environment and vault values, the server uses the vault value. Workers do not inherit conventional provider API keys from the server's environment.
+
+| Model-call context | Credential source |
+| - | - |
+| Workflows and server model calls, including `fabro exec --server ...` | Target server's vault for provider API keys and OAuth records. |
+| Direct `fabro exec` (no server target) | For conventional API-key names, the invoking process environment first, then the local Fabro secret store. Stored OAuth records are resolved separately. |
+| Direct SDK use | The caller chooses the credential source. `VaultCredentialSource::environment_only()` explicitly reads conventional keys from the process environment; `vault_only(...)` disables that lookup. |
+
+Installation can accept a key explicitly from stdin or a named environment variable and save it to the vault. That is a provisioning step, not a server credential fallback. Startup does not import provider keys from process environment variables, `.env`, or `server.env`.
+
+Endpoint settings are separate from credentials. For example, `OPENAI_BASE_URL` can change the normal server's OpenAI endpoint without making `OPENAI_API_KEY` an environment-backed server credential.
+
+[Bedrock SigV4](https://docs.fabro.sh/integrations/bedrock.md#configure-credentials) is a separate authentication mechanism: it uses the AWS default credential chain, whose identity inputs are deliberately available to workers. Bedrock bearer API keys still follow the vault rule above. Providers configured with `auth = { type = "none" }` do not need an API key. External ACP agents manage their own model authentication; this section describes Fabro's model client.
+
+## Provider integrations
 
 ### Venice
 

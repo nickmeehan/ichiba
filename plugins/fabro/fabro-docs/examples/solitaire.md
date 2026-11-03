@@ -305,19 +305,19 @@ The structure is always the same: decompose into phases that build on each other
 
 ## Further reading
 
-> **[Failures](https://docs.fabro.sh/execution/failures.md)**
+> [card] [Failures](https://docs.fabro.sh/execution/failures.md)
 >
 > Retry policies, goal gates, retry targets, and circuit breakers.
 
-> **[Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md)**
+> [card] [Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md)
 >
 > CSS-like rules for assigning models to workflow nodes.
 
-> **[Nodes & Stages](https://docs.fabro.sh/workflows/stages-and-nodes.md)**
+> [card] [Nodes & Stages](https://docs.fabro.sh/workflows/stages-and-nodes.md)
 >
 > All node types, shapes, and their attributes.
 
-> **[Run Configuration](https://docs.fabro.sh/execution/run-configuration.md)**
+> [card] [Run Configuration](https://docs.fabro.sh/execution/run-configuration.md)
 >
 > TOML configs for repeatable, parameterized runs.
 

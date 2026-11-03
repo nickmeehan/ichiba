@@ -48,11 +48,11 @@ fabro secret set AWS_BEARER_TOKEN_BEDROCK bedrock-api-key-...
 fabro secret set BEDROCK_API_KEY bedrock-api-key-...
 ```
 
-Runs read the bearer token from the vault only. Workers start from a cleared environment and the bearer token is not on the inherited allowlist, so exporting it in the server's shell has no effect on runs. `fabro exec` and direct `fabro-llm` SDK usage do read it from process env.
+Runs read the bearer token from the vault only. Workers start from a cleared environment and the bearer token is not on the inherited allowlist, so exporting it in the server's shell has no effect on runs. Direct `fabro exec` (no server target) checks process environment before the local secret store for these names; SDK callers can explicitly choose an environment-backed source. `fabro exec --server ...` uses the target server's vault.
 
 **AWS SigV4** (IAM-scoped): with no API key configured, Fabro signs each request using the AWS default credential chain — environment keys, shared profile, EC2/ECS instance roles, IRSA/web identity, SSO. Expiring session credentials refresh automatically.
 
-The order is fixed by lithos-llm: `AWS_BEARER_TOKEN_BEDROCK`, then `BEDROCK_API_KEY`, then the AWS default chain. Each name is read from the process environment first and the server vault (`fabro secret set`) second — so on a server, prefer `secret set`. To select a non-default AWS profile for SigV4, set `AWS_PROFILE` (it, and the rest of the AWS credential-chain variables, are passed through to workflow workers).
+The order is fixed by lithos-llm: `AWS_BEARER_TOKEN_BEDROCK`, then `BEDROCK_API_KEY`, then the AWS default chain. For server model calls and workflows, those two bearer-token names are read from the vault only. The AWS default chain is separate from bearer-token lookup; it can use environment credentials and other AWS identity sources. To select a non-default AWS profile for SigV4, set `AWS_PROFILE` (it, and the rest of the AWS credential-chain variables, are passed through to workflow workers).
 
 > [!WARNING]
 >
@@ -127,7 +127,7 @@ Bedrock-specific request fields pass through verbatim via `provider_options.bedr
 
 ## Troubleshooting
 
-**"no AWS credentials provider found"** — Neither an API key nor any AWS chain source resolved. Set `AWS_BEARER_TOKEN_BEDROCK` (or `BEDROCK_API_KEY`), or configure standard AWS credentials.
+**"no AWS credentials provider found"** — Neither an API key nor any AWS chain source resolved. Store `AWS_BEARER_TOKEN_BEDROCK` (or `BEDROCK_API_KEY`) with `fabro secret set` on the target server, or configure the AWS default credential chain. For direct execution, follow the [credential-source rules](https://docs.fabro.sh/core-concepts/models.md#credential-sources).
 
 **`AccessDeniedException` / 403** — The IAM principal lacks `bedrock:InvokeModel*` for the model, or model access has not been granted in the Bedrock console for your Region (Claude needs the per-Region use-case approval; third-party models need `aws-marketplace:Subscribe`).
 
@@ -145,11 +145,11 @@ Bedrock-specific request fields pass through verbatim via `provider_options.bedr
 
 ## Further reading
 
-> **[Models](https://docs.fabro.sh/core-concepts/models.md)**
+> [card] [Models](https://docs.fabro.sh/core-concepts/models.md)
 >
 > How Fabro routes model IDs, providers, and fallbacks.
 
-> **[Settings Configuration](https://docs.fabro.sh/reference/user-configuration.md)**
+> [card] [Settings Configuration](https://docs.fabro.sh/reference/user-configuration.md)
 >
 > Full reference for provider settings and provider-scoped model offerings.
 

@@ -46,19 +46,19 @@ The goal is to spend your time on the parts that require human judgment — what
 
 ## Further reading
 
-> **[Workflows](https://docs.fabro.sh/core-concepts/workflows.md)**
+> [card] [Workflows](https://docs.fabro.sh/core-concepts/workflows.md)
 >
 > Learn how workflow graphs orchestrate agents, commands, and human gates.
 
-> **[Human-in-the-Loop](https://docs.fabro.sh/workflows/human-in-the-loop.md)**
+> [card] [Human-in-the-Loop](https://docs.fabro.sh/workflows/human-in-the-loop.md)
 >
 > Control where and how humans intervene in workflows.
 
-> **Quality Verification**
+> [card] Quality Verification
 >
 > Build verification into your workflows.
 
-> **[Observability](https://docs.fabro.sh/execution/observability.md)**
+> [card] [Observability](https://docs.fabro.sh/execution/observability.md)
 >
 > Inspect event streams, logs, and exported run state.
 

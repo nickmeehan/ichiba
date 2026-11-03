@@ -122,7 +122,7 @@ See [Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md) for the 
 
 ## Next
 
-> **[Ensemble](https://docs.fabro.sh/tutorials/ensemble.md)**
+> [card] [Ensemble](https://docs.fabro.sh/tutorials/ensemble.md)
 >
 > Fan out to multiple providers and synthesize their independent opinions.
 

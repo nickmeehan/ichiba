@@ -150,7 +150,7 @@ This workflow uses four node types:
 
 ## Next
 
-> **[Parallel Review](https://docs.fabro.sh/tutorials/parallel-review.md)**
+> [card] [Parallel Review](https://docs.fabro.sh/tutorials/parallel-review.md)
 >
 > Fan out to concurrent branches and merge the results.
 

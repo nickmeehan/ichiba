@@ -107,7 +107,7 @@ The agent reads `plan.md` (as instructed by its prompt), but the preamble gives 
 
 ## Next
 
-> **[Branch & Loop](https://docs.fabro.sh/tutorials/branch-loop.md)**
+> [card] [Branch & Loop](https://docs.fabro.sh/tutorials/branch-loop.md)
 >
 > Add conditional branching and automated test validation loops.
 

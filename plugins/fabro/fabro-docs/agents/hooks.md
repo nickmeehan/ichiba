@@ -293,7 +293,7 @@ Command hooks receive these environment variables:
 
 The full event context is available as a JSON payload. For command hooks running in the sandbox, it is written to a temp file (path in `FABRO_HOOK_CONTEXT`). For command hooks running on the host (`sandbox = false`), it is piped to stdin. For HTTP hooks, it is the POST body.
 
-> **Example hook context JSON**
+> [accordion] Example hook context JSON
 >
 > ```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 > {
@@ -326,7 +326,7 @@ For tool-level events (`pre_tool_use`, `post_tool_use`, `post_tool_use_failure`)
 | `tool_output` | `post_tool_use` | The tool's output string |
 | `error_message` | `post_tool_use_failure` | The error message from the failed tool call |
 
-> **Example pre\_tool\_use context JSON**
+> [accordion] Example pre\_tool\_use context JSON
 >
 > ```json theme={"languages":{"custom":["/languages/dot.json","/languages/fabro.json"]}}
 > {

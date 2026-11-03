@@ -394,7 +394,7 @@ fabro secret set OPENAI_API_KEY sk-...
 fabro secret set GEMINI_API_KEY AI...
 ```
 
-`fabro exec` and direct library usage can opt into env-backed credential sources explicitly. Runs cannot: the Fabro server reads provider keys from the vault after the temporary startup migration, and workers start from a cleared environment that does not inherit provider keys.
+Exporting a conventional provider API key in the server's shell neither configures the provider nor overrides a vault value. Workers start from a cleared environment that does not inherit those keys. `fabro exec --server ...` also uses the target server's credentials. Direct `fabro exec` (no server target) checks the invoking process environment before its local secret store for conventional API-key names; SDK callers choose their credential source. Bedrock SigV4 uses the separate AWS default credential chain. See [Credential sources](https://docs.fabro.sh/core-concepts/models.md#credential-sources) for the full distinction.
 
 | Variable | Provider |
 | - | - |

@@ -725,19 +725,19 @@ To adapt for your project:
 
 ## Further reading
 
-> **[NLSpec Conformance](https://docs.fabro.sh/examples/nlspec-conformance.md)**
+> [card] [NLSpec Conformance](https://docs.fabro.sh/examples/nlspec-conformance.md)
 >
 > A simpler implement-test-fix loop for spec-driven development.
 
-> **[Ensemble](https://docs.fabro.sh/tutorials/ensemble.md)**
+> [card] [Ensemble](https://docs.fabro.sh/tutorials/ensemble.md)
 >
 > Multi-provider fan-out and synthesis.
 
-> **[Failures](https://docs.fabro.sh/execution/failures.md)**
+> [card] [Failures](https://docs.fabro.sh/execution/failures.md)
 >
 > Retry policies, loop detection, goal gates, and circuit breakers.
 
-> **[Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md)**
+> [card] [Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md)
 >
 > CSS-like rules for assigning models to workflow nodes.
 

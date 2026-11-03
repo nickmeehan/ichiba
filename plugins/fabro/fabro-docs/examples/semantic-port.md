@@ -257,19 +257,19 @@ The core structure is always the same: fetch the next item, analyze it, decide o
 
 ## Further reading
 
-> **[Transitions](https://docs.fabro.sh/workflows/transitions.md)**
+> [card] [Transitions](https://docs.fabro.sh/workflows/transitions.md)
 >
 > Edge conditions, routing directives, and how agents control flow.
 
-> **[Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md)**
+> [card] [Model Stylesheets](https://docs.fabro.sh/workflows/stylesheets.md)
 >
 > CSS-like rules for assigning models to workflow nodes.
 
-> **[Failures](https://docs.fabro.sh/execution/failures.md)**
+> [card] [Failures](https://docs.fabro.sh/execution/failures.md)
 >
 > Retry policies, loop detection, and max\_visits.
 
-> **[Run Configuration](https://docs.fabro.sh/execution/run-configuration.md)**
+> [card] [Run Configuration](https://docs.fabro.sh/execution/run-configuration.md)
 >
 > TOML configs for repeatable, parameterized runs.
 

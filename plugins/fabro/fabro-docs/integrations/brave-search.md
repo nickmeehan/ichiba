@@ -86,11 +86,11 @@ digraph Research {
 
 ## Further reading
 
-> **[Tools](https://docs.fabro.sh/agents/tools.md#web_search)**
+> [card] [Tools](https://docs.fabro.sh/agents/tools.md#web_search)
 >
 > Full `web_search` tool reference — parameters, output format, and error handling.
 
-> **[Permissions](https://docs.fabro.sh/agents/permissions.md)**
+> [card] [Permissions](https://docs.fabro.sh/agents/permissions.md)
 >
 > How tool permissions control web search access.
 

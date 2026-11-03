@@ -334,7 +334,9 @@ The `fabro_llm::catalog` module reads Fabro policy from the catalog: `enabled_pr
 
 `ClientOptions::standard()` turns on the lithos retry middleware (three attempts with short exponential backoff) and local attachment inlining. Add middleware with `with_middleware`, replace a provider's adapter with `with_adapter`, or set `http` to inject a configured HTTP client. `fabro_llm::build_offline_client(catalog, options)` builds a client whose only providers are custom adapters, which is how `fabro exec --server` routes every call through a Fabro server.
 
-Credential sources live in `fabro-auth`: `VaultCredentialSource` reads a Fabro vault with an optional process-environment fallback (`VaultCredentialSource::environment_only()` for SDK callers with no vault), and `SqlVaultCredentialSource` reads the server's secret store. lithos-llm decides which secret names a provider reads (`OPENAI_API_KEY`, `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET`, or `<PROVIDER>_API_KEY` for an operator-defined provider); Fabro's vault is keyed by those same names.
+Credential sources live in `fabro-auth`. For conventional API-key names, `VaultCredentialSource::new(...)` and `SqlVaultCredentialSource::new(...)` check process environment first, then their in-memory vault or SQL secret store. Use `VaultCredentialSource::environment_only()` when the SDK should read only process environment keys, or either source's `vault_only(...)` constructor to disable environment lookup. Stored OAuth records and `{{ secrets.NAME }}` header tokens resolve through the vault separately.
+
+The Fabro server uses `SqlVaultCredentialSource::vault_only(...)`; an SDK's choice of source does not change server behavior. lithos-llm decides which secret names a provider reads (`OPENAI_API_KEY`, `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET`, or `<PROVIDER>_API_KEY` for an operator-defined provider); Fabro's vault is keyed by those same names. Bedrock SigV4 retains its separate AWS default credential chain. See [Credential sources](https://docs.fabro.sh/core-concepts/models.md#credential-sources).
 
 #### Requests and responses
 

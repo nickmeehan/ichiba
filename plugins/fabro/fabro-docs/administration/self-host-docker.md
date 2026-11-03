@@ -160,19 +160,19 @@ See [Server Operations](https://docs.fabro.sh/reference/server-operations.md#poi
 
 ## Next steps
 
-> **[Server Operations](https://docs.fabro.sh/reference/server-operations.md)**
+> [card] [Server Operations](https://docs.fabro.sh/reference/server-operations.md)
 >
 > Install wizard, web UI, authentication, demo mode, and pointing the CLI at the server.
 
-> **[Server Configuration](https://docs.fabro.sh/administration/server-configuration.md)**
+> [card] [Server Configuration](https://docs.fabro.sh/administration/server-configuration.md)
 >
 > Full settings.toml reference — auth, reverse-proxy TLS, run defaults, and more.
 
-> **[Deploy to Railway](https://docs.fabro.sh/administration/deploy-railway.md)**
+> [card] [Deploy to Railway](https://docs.fabro.sh/administration/deploy-railway.md)
 >
 > One-click managed shortcut for the same Docker image.
 
-> **[Sandboxing](https://docs.fabro.sh/administration/sandboxing)**
+> [card] [Sandboxing](https://docs.fabro.sh/administration/sandboxing)
 >
 > The Docker sandbox provider's security model and trust assumptions.
 

@@ -269,15 +269,13 @@ components:
           description: Whether this is the provider's small/default utility model.
         configured:
           type: boolean
-          description: >
-            Whether credential material is present for this model's provider on
-            the
-
-            server (vault entry or environment variable). Does NOT imply the
-
-            credential is valid or that requests will succeed; call
-
-            `POST /models/{id}/test` to verify usability.
+          description: |
+            Whether the server resolved credentials and built a client for this
+            model's provider. Provider API keys and OAuth records come from the
+            server vault, not process environment variables. Bedrock SigV4 uses
+            the separate AWS default credential chain; no-auth providers need no
+            key. Does NOT imply authentication or model requests will succeed;
+            call `POST /models/{id}/test` to test usability.
     PaginationMeta:
       description: Pagination metadata included in every paginated response.
       type: object

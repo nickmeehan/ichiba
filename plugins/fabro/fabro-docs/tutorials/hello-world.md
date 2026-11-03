@@ -125,7 +125,7 @@ See [Sub-agents](https://docs.fabro.sh/agents/subagents.md) for the full tool re
 
 ## Next
 
-> **[Plan & Implement](https://docs.fabro.sh/tutorials/plan-implement.md)**
+> [card] [Plan & Implement](https://docs.fabro.sh/tutorials/plan-implement.md)
 >
 > Add human gates and revision loops to a multi-step workflow.
 

@@ -132,19 +132,19 @@ Use [child runs](https://docs.fabro.sh/execution/child-runs.md) instead when the
 
 ## Further reading
 
-> **[Nodes & Stages](https://docs.fabro.sh/workflows/stages-and-nodes.md)**
+> [card] [Nodes & Stages](https://docs.fabro.sh/workflows/stages-and-nodes.md)
 >
 > Complete reference for all node types.
 
-> **[Graphviz Language](https://docs.fabro.sh/reference/dot-language.md)**
+> [card] [Graphviz Language](https://docs.fabro.sh/reference/dot-language.md)
 >
 > Full syntax reference including sub-workflow attributes.
 
-> **[Context](https://docs.fabro.sh/execution/context.md)**
+> [card] [Context](https://docs.fabro.sh/execution/context.md)
 >
 > How context flows between nodes and across workflow boundaries.
 
-> **[Branch & Loop](https://docs.fabro.sh/tutorials/branch-loop.md)**
+> [card] [Branch & Loop](https://docs.fabro.sh/tutorials/branch-loop.md)
 >
 > The implement-test-fix pattern used in the child workflow.
 

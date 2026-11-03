@@ -200,7 +200,7 @@ When a run is resumed from a checkpoint, the first node after resume degrades `f
 
 For non-`full` fidelity modes, Fabro builds a preamble from runtime data and prepends it to the node's prompt.
 
-> **Example compact preamble**
+> [accordion] Example compact preamble
 >
 > Given a plan-test-implement workflow where the plan and test stages have completed, the `implement` node would receive a preamble like this prepended to its prompt:
 >
