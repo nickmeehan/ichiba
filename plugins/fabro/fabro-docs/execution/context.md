@@ -210,7 +210,7 @@ For non-`full` fidelity modes, Fabro builds a preamble from runtime data and pre
 > ## Completed stages
 > - **plan**: success
 >   - Model: claude-sonnet-4-5, 12.4k tokens in / 3.2k out
->   - Files: docs/plan.md
+>   - Files: ["docs/plan.md"]
 > - **test**: success
 >   - Script: `cargo test 2>&1 || true`
 >   - Output:
@@ -234,6 +234,18 @@ The preamble includes:
 * Non-internal context values that weren't already rendered inline
 
 Internal keys (prefixed with `internal.`, `current`, `graph.`, `thread.`, `response.`) are excluded from preambles to avoid noise.
+
+Native agent stages include their tracked file paths in `compact`,
+`summary:medium`, and `summary:high` preambles. The list includes successful
+native write, edit, and patch calls across the stage's turns, including repair
+turns and child-agent writes. Paths are sorted and listed once. A moved file
+uses its destination; deletions and changes made only through shell commands
+are not tracked. ACP agents and prompt-only stages do not produce this list.
+
+The file list follows the preamble size limit below; the complete list remains
+in the recorded stage output. `full`, `truncate`, and `summary:low` do not add a
+file-list detail. Continuing a shared conversation does not attribute an
+earlier stage's edits to the next stage.
 
 ### Large preamble values
 

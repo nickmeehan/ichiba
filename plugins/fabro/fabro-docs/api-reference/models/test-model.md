@@ -4,7 +4,7 @@
 
 # Test Model
 
-> Tests a model by sending a simple prompt and reporting pass/fail.
+> Runs the lithos-llm probe and returns its versioned report, including the canonical route, outcome, elapsed time and token usage. Unknown or unavailable models and provider failures produce HTTP 200 reports with a failed outcome. Invalid query options remain HTTP 400 errors.
 
 
 
@@ -71,7 +71,11 @@ paths:
       tags:
         - Models
       summary: Test Model
-      description: Tests a model by sending a simple prompt and reporting pass/fail.
+      description: >-
+        Runs the lithos-llm probe and returns its versioned report, including
+        the canonical route, outcome, elapsed time and token usage. Unknown or
+        unavailable models and provider failures produce HTTP 200 reports with a
+        failed outcome. Invalid query options remain HTTP 400 errors.
       operationId: testModel
       parameters:
         - name: id
@@ -79,28 +83,21 @@ paths:
           required: true
           schema:
             type: string
-          description: The canonical model ID or an alias.
+          description: >-
+            A model selector resolved by lithos-llm (canonical ID, alias or
+            provider-qualified selector).
         - $ref: '#/components/parameters/ModelTestProviderParam'
         - $ref: '#/components/parameters/ModelTestModeParam'
         - $ref: '#/components/parameters/ModelTestReasoningEffortParam'
       responses:
         '200':
-          description: Test result
+          description: Probe report (passed, failed or incorrect)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ModelTestResult'
+                $ref: '#/components/schemas/ProbeReport'
         '400':
           description: Invalid test mode or reasoning effort
-          headers:
-            x-request-id:
-              $ref: '#/components/headers/XRequestId'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Model not found
           headers:
             x-request-id:
               $ref: '#/components/headers/XRequestId'
@@ -137,34 +134,38 @@ components:
         $ref: '#/components/schemas/ReasoningEffort'
       example: high
   schemas:
-    ModelTestResult:
-      description: Result of testing a model in `basic` or `deep` mode.
+    ProbeReport:
+      description: >-
+        The lithos-llm version-1 probe report. The route is the canonical
+        provider/model selected by the probe, or null if selection failed. Probe
+        failures are findings in a successful HTTP response; API authentication,
+        malformed options and server setup failures remain HTTP errors. Provider
+        errors are redacted at the server disclosure boundary.
       type: object
       required:
-        - model_id
-        - provider
-        - status
+        - version
+        - route
+        - outcome
+        - latency_ms
+        - usage
       properties:
-        model_id:
-          type: string
-          description: The canonical model ID that was tested.
-          example: claude-opus-4-6
-        provider:
-          $ref: '#/components/schemas/ProviderId'
-        status:
-          type: string
+        version:
+          type: integer
           enum:
-            - ok
-            - error
-            - skip
-          description: >-
-            Whether the model responded successfully, failed, or was skipped
-            because its provider is not configured.
-        error_message:
+            - 1
+        route:
           type:
             - string
             - 'null'
-          description: Error details when status is "error".
+          pattern: ^[^/]+/.+$
+        outcome:
+          $ref: '#/components/schemas/ProbeOutcome'
+        latency_ms:
+          type: integer
+          format: uint64
+          minimum: 0
+        usage:
+          $ref: '#/components/schemas/TokenCounts'
     ErrorResponse:
       description: Standard error response containing one or more error entries.
       type: object
@@ -218,6 +219,56 @@ components:
         - high
         - xhigh
         - max
+    ProbeOutcome:
+      oneOf:
+        - $ref: '#/components/schemas/ProbePassed'
+        - $ref: '#/components/schemas/ProbeFailed'
+        - $ref: '#/components/schemas/ProbeIncorrect'
+      discriminator:
+        propertyName: status
+        mapping:
+          passed: '#/components/schemas/ProbePassed'
+          failed: '#/components/schemas/ProbeFailed'
+          incorrect: '#/components/schemas/ProbeIncorrect'
+    TokenCounts:
+      description: >
+        lithos `TokenCounts`: five disjoint token buckets. Every token is
+        counted in exactly one, so their plain sum is the total. `input`
+        excludes cache reads and writes, while `output` excludes reasoning
+        tokens when the provider reports them separately. A bucket that is
+        absent reads as zero.
+      type: object
+      properties:
+        input:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Prompt tokens that were neither read from nor written to a cache.
+        output:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Completion tokens that are not reasoning tokens.
+        reasoning:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Completion tokens spent on reasoning, priced at the output rate.
+        cache_read:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Prompt tokens served from a provider cache.
+        cache_write:
+          type: integer
+          format: uint64
+          minimum: 0
+          default: 0
+          description: Prompt tokens written into a provider cache.
     ErrorResponseEntry:
       description: A single error entry in an error response.
       type: object
@@ -254,6 +305,131 @@ components:
           description: >-
             Optional structured details specific to the error `code`, for
             clients that act on them. Each code documents the members it sets.
+    ProbePassed:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - passed
+    ProbeFailed:
+      type: object
+      required:
+        - status
+        - error
+      properties:
+        status:
+          type: string
+          enum:
+            - failed
+        error:
+          $ref: '#/components/schemas/LlmErrorData'
+    ProbeIncorrect:
+      type: object
+      required:
+        - status
+        - detail
+      properties:
+        status:
+          type: string
+          enum:
+            - incorrect
+        detail:
+          type: string
+    LlmErrorData:
+      description: >-
+        Structured lithos-llm failure, subject to the server's disclosure
+        policy.
+      type: object
+      required:
+        - kind
+        - message
+        - retry
+      properties:
+        kind:
+          $ref: '#/components/schemas/LlmErrorKind'
+        message:
+          type: string
+        provider:
+          $ref: '#/components/schemas/ProviderId'
+        status:
+          type: integer
+          minimum: 0
+          maximum: 65535
+        provider_code:
+          type: string
+        retry:
+          $ref: '#/components/schemas/LlmRetryClassification'
+        raw_data:
+          description: Provider response data; omitted by the model-test endpoint.
+        provider_retry_after_millis:
+          type: integer
+          format: uint64
+          minimum: 0
+        source_message:
+          type: string
+          description: Internal source detail; omitted by the model-test endpoint.
+    LlmErrorKind:
+      description: >-
+        The model layer's stable failure category. Known values are
+        `configuration`, `model_selection`, `authentication`, `access_denied`,
+        `not_found`, `invalid_request`, `context_length`, `rate_limit`,
+        `quota_exceeded`, `content_filter`, `server`, `provider`, `network`,
+        `timeout`, `stream_decode`, `response_decode`, `resource_limit`,
+        `middleware`, and `cancelled`. A category written by a newer model layer
+        is carried as its own spelling.
+      type: string
+      example: rate_limit
+    LlmRetryClassification:
+      description: Whether repeating the same resolved model call is safe.
+      oneOf:
+        - $ref: '#/components/schemas/LlmRetryClassificationNever'
+        - $ref: '#/components/schemas/LlmRetryClassificationSafe'
+        - $ref: '#/components/schemas/LlmRetryClassificationAfter'
+      discriminator:
+        propertyName: type
+        mapping:
+          never: '#/components/schemas/LlmRetryClassificationNever'
+          safe: '#/components/schemas/LlmRetryClassificationSafe'
+          after: '#/components/schemas/LlmRetryClassificationAfter'
+    LlmRetryClassificationNever:
+      description: Repeating the call cannot succeed.
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - never
+    LlmRetryClassificationSafe:
+      description: Repeating the call is safe on the caller's own schedule.
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - safe
+    LlmRetryClassificationAfter:
+      description: Repeating the call is safe after the given delay.
+      type: object
+      required:
+        - type
+        - after_millis
+      properties:
+        type:
+          type: string
+          enum:
+            - after
+        after_millis:
+          type: integer
+          format: uint64
+          minimum: 0
+          description: The delay in milliseconds.
   headers:
     XRequestId:
       description: >
